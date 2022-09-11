@@ -48,4 +48,10 @@ public class App extends Application {
         }
     }
 
+    public void stop(){
+        controller.shutdownExecutorService();
+        controller.getScreenMonitoringService().cancel();
+        log.info("shut down");
+    }
+
 }

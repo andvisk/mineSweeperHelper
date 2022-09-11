@@ -6,10 +6,17 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.geometry.Point2D;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseButton;
+import javafx.scene.robot.Robot;
 import javafx.stage.Screen;
+
+import java.awt.image.BufferedImage;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.opencv.core.Mat;
 
 import java.math.BigDecimal;
 
@@ -22,11 +29,26 @@ public class ScreenMonitoringService extends Service<Void> {
     private ObjectProperty<Long> step = new SimpleObjectProperty<>(0L);
 
     public ScreenMonitoringService(ControllerMain controllerMain) {
+
         this.controllerMain = controllerMain;
+
+        Robot robot = new Robot();
+
         step.addListener((observable, oldValue, newValue) -> {
 
-            log.info("step: " + oldValue + " -> " + newValue);
-            controllerMain.getStage().requestFocus();
+            if(controllerMain.getSwitchButton().getValue().get()){
+                HelpScreenRendering helpScreenRendering = new HelpScreenRendering(controllerMain);
+                helpScreenRendering.redrawScreen();
+            }
+            /* Rectangle2D screenBounds = Screen.getPrimary().getBounds();
+
+            WritableImage writableImage = new WritableImage((int) screenBounds.getWidth(),
+                    (int) screenBounds.getHeight());
+
+            robot.getScreenCapture(writableImage,
+                    new Rectangle2D(0, 0, screenBounds.getWidth(), screenBounds.getHeight()));
+ */
+            //Mat imageMat = ImageUtils.writableImageToMat(writableImage);
 
         });
     }
