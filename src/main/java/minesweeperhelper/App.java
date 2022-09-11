@@ -1,6 +1,7 @@
 package minesweeperhelper;
 
 import javafx.application.Application;
+import javafx.scene.layout.Background;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -32,10 +33,13 @@ public class App extends Application {
     public void start(Stage primaryStage) {
         try {
 
-            //primaryStage.initStyle(StageStyle.TRANSPARENT);
+            primaryStage.initStyle(StageStyle.TRANSPARENT);
             primaryStage.setAlwaysOnTop(true);
+            primaryStage.setX(5);
+            primaryStage.setY(5);
 
             BorderPane rootElement = new BorderPane();
+            rootElement.setBackground(Background.EMPTY);
             controller = new ControllerMain();
             controller.init(primaryStage, rootElement);
 

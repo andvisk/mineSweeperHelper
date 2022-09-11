@@ -24,19 +24,10 @@ public class ScreenMonitoringService extends Service<Void> {
     public ScreenMonitoringService(ControllerMain controllerMain) {
         this.controllerMain = controllerMain;
         step.addListener((observable, oldValue, newValue) -> {
+
             log.info("step: " + oldValue + " -> " + newValue);
-
-            Point2D initMousePosition = controllerMain.getRobot().getMousePosition();
-
-            log.info("mouse possition " + initMousePosition);
-
             controllerMain.getStage().requestFocus();
 
-            /* controllerMain.getRobot().mouseMove(controllerMain.getStage().getX() + 10,
-                    controllerMain.getStage().getY() + 30);
-            controllerMain.getRobot().mouseClick(MouseButton.PRIMARY);
-            controllerMain.getRobot().mouseMove(initMousePosition);
- */
         });
     }
 
@@ -50,12 +41,7 @@ public class ScreenMonitoringService extends Service<Void> {
 
                 while (!isCancelled()) {
 
-                    Screen screen = Screen.getPrimary();
-                    BigDecimal dpi = BigDecimal.valueOf(screen.getDpi());
-
                     updateValue(++step);
-
-                    log.info("screen monitoring is on");
 
                     try {
                         Thread.sleep(1000);

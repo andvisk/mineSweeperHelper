@@ -3,10 +3,14 @@ package minesweeperhelper;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.geometry.Point2D;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.paint.Color;
 import javafx.scene.robot.Robot;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 import java.io.File;
@@ -24,9 +28,12 @@ public class ControllerMain {
 
     private Stage stage;
 
-    private Robot robot;
-
     private ScreenMonitoringService screenMonitoringService;
+
+    private SwitchButton switchButton;
+
+    private int stageSmallWidth = 200;
+    private int stageSmallHeight = 100;
 
     protected void init(Stage stage, BorderPane rootElement) {
 
@@ -34,20 +41,46 @@ public class ControllerMain {
 
         this.stage = stage;
 
-        this.robot = new Robot();
-
-        Scene scene = new Scene(rootElement, 1300, 800);
+        Scene scene = new Scene(rootElement, stageSmallWidth, stageSmallHeight);
+        scene.setFill(Color.TRANSPARENT);
 
         ImageView imageView = new ImageView();
+        rootElement.setCenter(imageView);
+
         String initImage = System.getProperty("user.dir") + File.separatorChar + "mineSweeper.png";
 
         Mat srcImage = Imgcodecs.imread(initImage);
         ImageProcessing imageProcessing = new ImageProcessing();
         Grid grid = imageProcessing.processView(srcImage);
 
-        //updateImageView(imageView, ImageProcessing.mat2Image(mat));
+        Robot robot = new Robot();
 
-        rootElement.setCenter(imageView);
+        this.switchButton = new SwitchButton();
+        this.switchButton.getValue().addListener((observable, oldValue, newValue) -> {
+            
+            if (newValue) {
+                Rectangle2D screenBounds = Screen.getPrimary().getBounds();
+                stage.setWidth(screenBounds.getWidth());
+                stage.setHeight(screenBounds.getHeight());
+
+                WritableImage writableImage = new WritableImage((int) screenBounds.getWidth(),
+                        (int) screenBounds.getHeight());
+
+                robot.getScreenCapture(writableImage,
+                        new Rectangle2D(0, 0, screenBounds.getWidth(), screenBounds.getHeight()));
+
+                imageView.imageProperty().set(new ImageView(writableImage).getImage());
+
+                //updateImageView(imageView, ImageProcessing.mat2Image(srcImage));
+
+            } else {
+                stage.setHeight(stageSmallHeight);
+                stage.setWidth(stageSmallWidth);
+                updateImageView(imageView, null);
+            }
+        });
+
+        rootElement.setTop(this.switchButton);
 
         stage.setScene(scene);
         stage.sizeToScene();
@@ -55,10 +88,6 @@ public class ControllerMain {
 
         stage.setMinWidth(stage.getWidth());
         stage.setMinHeight(stage.getHeight());
-
-        Point2D initMousePosition = robot.getMousePosition();
-
-                    log.info("mouse possition " + initMousePosition);
 
         screenMonitoringService = new ScreenMonitoringService(this);
         screenMonitoringService.restart();
@@ -75,12 +104,8 @@ public class ControllerMain {
         });
     }
 
-    public Stage getStage(){
+    public Stage getStage() {
         return stage;
-    }
-
-    public Robot getRobot(){
-        return robot;
     }
 
 }
