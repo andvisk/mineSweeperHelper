@@ -97,10 +97,15 @@ test {
     useJUnitPlatform()
 }
 
+import org.apache.tools.ant.taskdefs.condition.Os
+
 run {
     jvmArgs = [
             '--enable-preview'
     ]
-    //systemProperties['java.library.path'] = '/usr/local/share/java/opencv4'
-    systemProperties['java.library.path'] = 'C:/opencv/build/java/x64'
+    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        systemProperties['java.library.path'] = 'C:/opencv/build/java/x64'
+    } else {
+        systemProperties['java.library.path'] = '/usr/local/share/java/opencv4'
+    }    
 }

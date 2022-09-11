@@ -1,7 +1,12 @@
 package minesweeperhelper;
 
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
+import javafx.geometry.Point2D;
+import javafx.scene.input.MouseButton;
 import javafx.stage.Screen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,20 +19,41 @@ public class ScreenMonitoringService extends Service<Void> {
 
     private ControllerMain controllerMain;
 
+    private ObjectProperty<Long> step = new SimpleObjectProperty<>(0L);
+
     public ScreenMonitoringService(ControllerMain controllerMain) {
         this.controllerMain = controllerMain;
+        step.addListener((observable, oldValue, newValue) -> {
+            log.info("step: " + oldValue + " -> " + newValue);
+
+            Point2D initMousePosition = controllerMain.getRobot().getMousePosition();
+
+            log.info("mouse possition " + initMousePosition);
+
+            controllerMain.getStage().requestFocus();
+
+            /* controllerMain.getRobot().mouseMove(controllerMain.getStage().getX() + 10,
+                    controllerMain.getStage().getY() + 30);
+            controllerMain.getRobot().mouseClick(MouseButton.PRIMARY);
+            controllerMain.getRobot().mouseMove(initMousePosition);
+ */
+        });
     }
 
     @Override
     protected Task<Void> createTask() {
         Task task = new Task<>() {
+
+            long step = 0;
+
             protected Void call() {
 
                 while (!isCancelled()) {
 
                     Screen screen = Screen.getPrimary();
                     BigDecimal dpi = BigDecimal.valueOf(screen.getDpi());
-                    updateValue(dpi);
+
+                    updateValue(++step);
 
                     log.info("screen monitoring is on");
 
@@ -44,7 +70,7 @@ public class ScreenMonitoringService extends Service<Void> {
 
         };
 
-        //controllerMain.dpiProperty().bind(Bindings.when(task.valueProperty().isNotNull()).then(task.valueProperty()).otherwise(controllerMain.dpiProperty().getValue()));
+        this.step.bind(Bindings.when(task.valueProperty().isNotNull()).then(task.valueProperty()).otherwise(0L));
 
         return task;
     }

@@ -2,9 +2,11 @@ package minesweeperhelper;
 
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
+import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.robot.Robot;
 import javafx.stage.Stage;
 
 import java.io.File;
@@ -22,6 +24,8 @@ public class ControllerMain {
 
     private Stage stage;
 
+    private Robot robot;
+
     private ScreenMonitoringService screenMonitoringService;
 
     protected void init(Stage stage, BorderPane rootElement) {
@@ -30,12 +34,12 @@ public class ControllerMain {
 
         this.stage = stage;
 
+        this.robot = new Robot();
+
         Scene scene = new Scene(rootElement, 1300, 800);
 
         ImageView imageView = new ImageView();
         String initImage = System.getProperty("user.dir") + File.separatorChar + "mineSweeper.png";
-
-        log.error(initImage + " ===========================================================");
 
         Mat srcImage = Imgcodecs.imread(initImage);
         ImageProcessing imageProcessing = new ImageProcessing();
@@ -52,6 +56,10 @@ public class ControllerMain {
         stage.setMinWidth(stage.getWidth());
         stage.setMinHeight(stage.getHeight());
 
+        Point2D initMousePosition = robot.getMousePosition();
+
+                    log.info("mouse possition " + initMousePosition);
+
         screenMonitoringService = new ScreenMonitoringService(this);
         screenMonitoringService.restart();
 
@@ -65,6 +73,14 @@ public class ControllerMain {
         Platform.runLater(() -> {
             property.set(value);
         });
+    }
+
+    public Stage getStage(){
+        return stage;
+    }
+
+    public Robot getRobot(){
+        return robot;
     }
 
 }

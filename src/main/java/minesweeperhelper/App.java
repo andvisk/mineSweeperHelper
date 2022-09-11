@@ -3,6 +3,8 @@ package minesweeperhelper;
 import javafx.application.Application;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,6 +31,9 @@ public class App extends Application {
     @Override
     public void start(Stage primaryStage) {
         try {
+
+            //primaryStage.initStyle(StageStyle.TRANSPARENT);
+            primaryStage.setAlwaysOnTop(true);
 
             BorderPane rootElement = new BorderPane();
             controller = new ControllerMain();
