@@ -40,6 +40,8 @@ public class App extends Application {
 
             BorderPane rootElement = new BorderPane();
             rootElement.setBackground(Background.EMPTY);
+            //rootElement.setMouseTransparent(true);
+
             controller = new ControllerMain();
             controller.init(primaryStage, rootElement);
 

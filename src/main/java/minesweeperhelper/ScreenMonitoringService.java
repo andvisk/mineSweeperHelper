@@ -1,10 +1,12 @@
 package minesweeperhelper;
 
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
+import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.image.WritableImage;
@@ -36,19 +38,28 @@ public class ScreenMonitoringService extends Service<Void> {
 
         step.addListener((observable, oldValue, newValue) -> {
 
-            if(controllerMain.getSwitchButton().getValue().get()){
-                HelpScreenRendering helpScreenRendering = new HelpScreenRendering(controllerMain);
-                helpScreenRendering.redrawScreen();
+            if (controllerMain.getSwitchButton().getValue().get()) {
+
+                Rectangle2D screenBounds = Screen.getPrimary().getBounds();
+
+                Bounds boundsBorderPaneCenterLocal = controllerMain.getRootElement().getBoundsInLocal();
+                Bounds boundsBorderPaneCenter = controllerMain.getRootElement().getLeft()
+                        .localToScreen(boundsBorderPaneCenterLocal);
+
+                WritableImage writableImage = new WritableImage((int) Math.ceil(screenBounds.getWidth()),
+                        (int) Math.ceil(screenBounds.getHeight()));
+
+                controllerMain.getImageView().setImage(null);
+                robot.getScreenCapture(writableImage,
+                        new Rectangle2D(boundsBorderPaneCenter.getMinX(),
+                                boundsBorderPaneCenter.getMinY() + 2.2,
+                                screenBounds.getWidth(),
+                                screenBounds.getHeight()));
+
+                controllerMain.updateImageView(controllerMain.getImageView(),
+                        ImageUtils.mat2Image(ImageUtils.writableImageToMat(writableImage)));
+
             }
-            /* Rectangle2D screenBounds = Screen.getPrimary().getBounds();
-
-            WritableImage writableImage = new WritableImage((int) screenBounds.getWidth(),
-                    (int) screenBounds.getHeight());
-
-            robot.getScreenCapture(writableImage,
-                    new Rectangle2D(0, 0, screenBounds.getWidth(), screenBounds.getHeight()));
- */
-            //Mat imageMat = ImageUtils.writableImageToMat(writableImage);
 
         });
     }

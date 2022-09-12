@@ -54,7 +54,8 @@ public class ControllerMain {
         scene.setFill(Color.TRANSPARENT);
 
         imageView = new ImageView();
-        rootElement.setCenter(imageView);
+        imageView.setMouseTransparent(true);
+        rootElement.setLeft(imageView);
 
         String initImage = System.getProperty("user.dir") + File.separatorChar + "mineSweeper.png";
 
@@ -65,6 +66,7 @@ public class ControllerMain {
         startExecutorService();
 
         this.switchButton = new SwitchButton();
+        
         this.switchButton.getValue().addListener((observable, oldValue, newValue) -> {
 
             if (newValue) {
@@ -156,4 +158,7 @@ public class ControllerMain {
         return imageView;
     }
 
+    public BorderPane getRootElement(){
+        return rootElement;
+    }
 }
