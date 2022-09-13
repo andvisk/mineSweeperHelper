@@ -1,8 +1,10 @@
 package minesweeperhelper;
 
 import javafx.application.Application;
+import javafx.geometry.Pos;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
@@ -18,6 +20,7 @@ public class App extends Application {
     private static Logger log = LogManager.getLogger(App.class);
 
     private ControllerMain controller;
+    private ControllerHelpScreen controllerHelpScreen;
 
     public static void main(String[] args) {
 
@@ -33,27 +36,49 @@ public class App extends Application {
     public void start(Stage primaryStage) {
         try {
 
-            primaryStage.initStyle(StageStyle.TRANSPARENT);
-            primaryStage.setAlwaysOnTop(true);
-            primaryStage.setX(5);
-            primaryStage.setY(5);
+            Stage helpScreenStage = initHelpScreenStage();
 
-            BorderPane rootElement = new BorderPane();
-            rootElement.setBackground(Background.EMPTY);
-            //rootElement.setMouseTransparent(true);
-
-            controller = new ControllerMain();
-            controller.init(primaryStage, rootElement);
+            initPrimaryStage(primaryStage, helpScreenStage, controllerHelpScreen);
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    private void initPrimaryStage(Stage primaryStage, Stage helpScreenStage, ControllerHelpScreen controllerHelpScreen){
+        primaryStage.initStyle(StageStyle.TRANSPARENT);
+        primaryStage.setAlwaysOnTop(true);
+        primaryStage.setX(0);
+        primaryStage.setY(0);
+
+        StackPane rootElement = new StackPane();
+        rootElement.setAlignment(Pos.TOP_LEFT);
+        rootElement.setBackground(Background.EMPTY);
+
+        controller = new ControllerMain();
+        controller.init(primaryStage, rootElement, helpScreenStage, controllerHelpScreen);
+    }
+
+    private Stage initHelpScreenStage(){
+        Stage helpScreenStage = new Stage();
+        helpScreenStage.initStyle(StageStyle.TRANSPARENT);
+        helpScreenStage.setAlwaysOnTop(true);
+
+        helpScreenStage.setMaximized(true);
+
+        StackPane rootElementHelpScreen = new StackPane();
+        rootElementHelpScreen.setAlignment(Pos.TOP_LEFT);
+        rootElementHelpScreen.setBackground(Background.EMPTY);
+        rootElementHelpScreen.setMouseTransparent(true);
+
+        controllerHelpScreen = new ControllerHelpScreen();
+        controllerHelpScreen.init(helpScreenStage, rootElementHelpScreen);
+
+        return helpScreenStage;
+    }
+
     public void stop(){
-        controller.shutdownExecutorService();
         controller.getScreenMonitoringService().cancel();
-        log.info("shut down");
     }
 
 }

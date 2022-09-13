@@ -18,7 +18,13 @@ import java.awt.image.BufferedImage;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 
 import java.math.BigDecimal;
 
@@ -26,13 +32,15 @@ public class ScreenMonitoringService extends Service<Void> {
 
     private Logger log = LogManager.getLogger(this.getClass());
 
+    private ControllerHelpScreen controllerHelpScreen;
     private ControllerMain controllerMain;
 
     private ObjectProperty<Long> step = new SimpleObjectProperty<>(0L);
 
-    public ScreenMonitoringService(ControllerMain controllerMain) {
+    public ScreenMonitoringService(ControllerMain controllerMain, ControllerHelpScreen controllerHelpScreen) {
 
         this.controllerMain = controllerMain;
+        this.controllerHelpScreen = controllerHelpScreen;
 
         Robot robot = new Robot();
 
@@ -42,22 +50,45 @@ public class ScreenMonitoringService extends Service<Void> {
 
                 Rectangle2D screenBounds = Screen.getPrimary().getBounds();
 
-                Bounds boundsBorderPaneCenterLocal = controllerMain.getRootElement().getBoundsInLocal();
-                Bounds boundsBorderPaneCenter = controllerMain.getRootElement().getLeft()
-                        .localToScreen(boundsBorderPaneCenterLocal);
+                Bounds boundsStackPaneLocal = controllerHelpScreen.getRootElement().getBoundsInLocal();
+                Bounds boundsStackPane = controllerHelpScreen.getRootElement().localToScreen(boundsStackPaneLocal);
 
                 WritableImage writableImage = new WritableImage((int) Math.ceil(screenBounds.getWidth()),
                         (int) Math.ceil(screenBounds.getHeight()));
 
-                controllerMain.getImageView().setImage(null);
-                robot.getScreenCapture(writableImage,
-                        new Rectangle2D(boundsBorderPaneCenter.getMinX(),
-                                boundsBorderPaneCenter.getMinY() + 2.2,
-                                screenBounds.getWidth(),
-                                screenBounds.getHeight()));
+                //controllerHelpScreen.getImageView().setImage(null);
 
-                controllerMain.updateImageView(controllerMain.getImageView(),
-                        ImageUtils.mat2Image(ImageUtils.writableImageToMat(writableImage)));
+                Mat atom_image = new Mat((int) writableImage.getHeight(), (int) writableImage.getWidth(),
+                        CvType.CV_8UC4, new Scalar(255, 255, 255, 0));
+                        
+
+                int thickness = 2;
+                int lineType = 8;
+                int shift = 0;
+                Imgproc.ellipse(atom_image,
+                        new Point(writableImage.getHeight() / 2, writableImage.getHeight() / 2),
+                        new Size(writableImage.getHeight() / 4, writableImage.getHeight() / 16),
+                        45,
+                        0.0,
+                        360.0,
+                        new Scalar(255, 0, 0, 255),
+                        thickness,
+                        lineType,
+                        shift);
+
+                controllerHelpScreen.updateImageView(controllerHelpScreen.getImageView(),
+                        ImageUtils.mat2Image(atom_image));
+
+                /*
+                 * robot.getScreenCapture(writableImage,
+                 * new Rectangle2D(boundsStackPane.getMinX(),
+                 * boundsStackPane.getMinY(),
+                 * screenBounds.getWidth(),
+                 * screenBounds.getHeight()));
+                 * 
+                 * controllerHelpScreen.updateImageView(controllerHelpScreen.getImageView(),
+                 * ImageUtils.mat2Image(ImageUtils.writableImageToMat(writableImage)));
+                 */
 
             }
 
