@@ -20,18 +20,19 @@ public class ControllerHelpScreen {
 
     private StackPane rootElement;
 
+    private Stage stage;
+
     protected void init(Stage stage, StackPane rootElement) {
 
         this.rootElement = rootElement;
+        this.stage = stage;
 
         Rectangle2D screenBounds = Screen.getPrimary().getBounds();
 
         Scene scene = new Scene(rootElement, screenBounds.getWidth(), screenBounds.getHeight());
-        scene.setFill(Color.TRANSPARENT);
+        //scene.setFill(Color.TRANSPARENT);
 
         imageView = new ImageView();
-        imageView.setOpacity(0.5);
-        imageView.setMouseTransparent(true);
         rootElement.getChildren().add(imageView);
 
         stage.setScene(scene);
@@ -57,6 +58,10 @@ public class ControllerHelpScreen {
 
     public ImageView getImageView() {
         return imageView;
+    }
+
+    public Stage getStage(){
+        return this.stage;
     }
 
 }

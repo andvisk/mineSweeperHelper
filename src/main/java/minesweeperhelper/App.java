@@ -62,23 +62,17 @@ public class App extends Application {
     private Stage initHelpScreenStage(){
         Stage helpScreenStage = new Stage();
         helpScreenStage.initStyle(StageStyle.TRANSPARENT);
-        helpScreenStage.setAlwaysOnTop(true);
 
         helpScreenStage.setMaximized(true);
 
         StackPane rootElementHelpScreen = new StackPane();
         rootElementHelpScreen.setAlignment(Pos.TOP_LEFT);
         rootElementHelpScreen.setBackground(Background.EMPTY);
-        rootElementHelpScreen.setMouseTransparent(true);
 
         controllerHelpScreen = new ControllerHelpScreen();
         controllerHelpScreen.init(helpScreenStage, rootElementHelpScreen);
 
         return helpScreenStage;
-    }
-
-    public void stop(){
-        controller.getScreenMonitoringService().cancel();
     }
 
 }

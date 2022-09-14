@@ -2,11 +2,15 @@ package minesweeperhelper;
 
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
+import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -34,40 +38,43 @@ public class ControllerMain {
 
     private Stage stage;
 
-    private ScreenMonitoringService screenMonitoringService;
-
-    private SwitchButton switchButton;
+    private Button showHelpButton;
 
     private int stageSmallWidth = 200;
     private int stageSmallHeight = 100;
 
     private Stage helpScreenStage;
 
-    protected void init(Stage stage, StackPane rootElement, Stage helpScreenStage, ControllerHelpScreen controllerHelpScreen) {
+    protected void init(Stage stage, StackPane rootElement, Stage helpScreenStage,
+            ControllerHelpScreen controllerHelpScreen) {
 
         this.rootElement = rootElement;
 
         this.stage = stage;
-        
+
         this.helpScreenStage = helpScreenStage;
-        
+
         Scene scene = new Scene(rootElement, stageSmallWidth, stageSmallHeight);
         scene.setFill(Color.TRANSPARENT);
 
-        this.switchButton = new SwitchButton();
-        
-        this.switchButton.getValue().addListener((observable, oldValue, newValue) -> {
+        this.showHelpButton = new Button("Press and hold to get  help");
 
-            if (newValue) {
-                helpScreenStage.show();
-
-            } else {
-                //updateImageView(imageView, null);
-
+        EventHandler<MouseEvent> showButtonMouseClickHandler = event -> {
+            if (MouseButton.PRIMARY.equals(event.getButton())) {
+                HelpScreen.showHelpScreen(controllerHelpScreen);
             }
-        });
+        };
 
-        rootElement.getChildren().add(this.switchButton);
+        EventHandler<MouseEvent> showButtonMouseReleaseHandler = event -> {
+            if (MouseButton.PRIMARY.equals(event.getButton())) {
+                controllerHelpScreen.getStage().hide();
+            }
+        };
+
+        this.showHelpButton.setOnMousePressed(showButtonMouseClickHandler);
+        this.showHelpButton.setOnMouseReleased(showButtonMouseReleaseHandler);
+
+        rootElement.getChildren().add(this.showHelpButton);
 
         stage.setScene(scene);
         stage.sizeToScene();
@@ -76,13 +83,6 @@ public class ControllerMain {
         stage.setMinWidth(stage.getWidth());
         stage.setMinHeight(stage.getHeight());
 
-        screenMonitoringService = new ScreenMonitoringService(this, controllerHelpScreen);
-        screenMonitoringService.restart();
-
-    }
-
-    public ScreenMonitoringService getScreenMonitoringService() {
-        return screenMonitoringService;
     }
 
     public void updateImageView(ImageView view, javafx.scene.image.Image image) {
@@ -99,8 +99,12 @@ public class ControllerMain {
         return stage;
     }
 
-    public SwitchButton getSwitchButton() {
-        return switchButton;
+    public Button getHelpButton() {
+        return showHelpButton;
+    }
+
+    public void stop() {
+        helpScreenStage.close();
     }
 
 }
