@@ -36,7 +36,7 @@ public class ImageProcessing {
 
         // Mat outImage = Imgcodecs.imread(System.getProperty("user.dir") + File.separatorChar + "mineSweeper.png");
 
-        for (int i = 1; i <= 7; i++) {
+        for (int i = 0; i <= 10; i++) {
 
             List<Rect> numbersLocations = new ArrayList<>();
 
