@@ -30,7 +30,6 @@ public class ControllerHelpScreen {
         Rectangle2D screenBounds = Screen.getPrimary().getBounds();
 
         Scene scene = new Scene(rootElement, screenBounds.getWidth(), screenBounds.getHeight());
-        //scene.setFill(Color.TRANSPARENT);
 
         imageView = new ImageView();
         rootElement.getChildren().add(imageView);

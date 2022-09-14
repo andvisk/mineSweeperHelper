@@ -25,50 +25,68 @@ import java.math.BigDecimal;
 
 public class HelpScreen {
 
-    private Logger log = LogManager.getLogger(this.getClass());
+        private Logger log = LogManager.getLogger(this.getClass());
 
-    public static void showHelpScreen(ControllerHelpScreen controllerHelpScreen) {
+        public void showHelpScreen(ControllerHelpScreen controllerHelpScreen) {
 
-        Rectangle2D screenBounds = Screen.getPrimary().getBounds();
+                Rectangle2D screenBounds = Screen.getPrimary().getBounds();
 
-        Bounds boundsStackPaneLocal = controllerHelpScreen.getRootElement().getBoundsInLocal();
-        Bounds boundsStackPane = controllerHelpScreen.getRootElement().localToScreen(boundsStackPaneLocal);
+                Bounds boundsStackPaneLocal = controllerHelpScreen.getRootElement().getBoundsInLocal();
+                Bounds boundsStackPane = controllerHelpScreen.getRootElement().localToScreen(boundsStackPaneLocal);
 
-        WritableImage writableImage = new WritableImage((int) Math.ceil(screenBounds.getWidth()),
-                (int) Math.ceil(screenBounds.getHeight()));
+                WritableImage writableImage = new WritableImage((int) Math.ceil(screenBounds.getWidth()),
+                                (int) Math.ceil(screenBounds.getHeight()));
 
-        new Robot().getScreenCapture(writableImage,
-                new Rectangle2D(boundsStackPane.getMinX(),
-                        boundsStackPane.getMinY(),
-                        screenBounds.getWidth(),
-                        screenBounds.getHeight()));
+                new Robot().getScreenCapture(writableImage,
+                                new Rectangle2D(boundsStackPane.getMinX(),
+                                                boundsStackPane.getMinY(),
+                                                screenBounds.getWidth(),
+                                                screenBounds.getHeight()));
 
-        Mat screenShot = ImageUtils.writableImageToMat(writableImage);
+                Mat screenShot = ImageUtils.writableImageToMat(writableImage);
 
-        Mat atom_image = new Mat((int) writableImage.getHeight(), (int) writableImage.getWidth(),
-                CvType.CV_8UC4, new Scalar(255, 255, 255, 0));
+                //log.info(screenShot.type() + " -======================");
 
-        int thickness = 2;
-        int lineType = 8;
-        int shift = 0;
-        Imgproc.ellipse(atom_image,
-                new Point(writableImage.getHeight() / 2, writableImage.getHeight() / 2),
-                new Size(writableImage.getHeight() / 4, writableImage.getHeight() / 16),
-                45,
-                0.0,
-                360.0,
-                new Scalar(255, 0, 0, 255),
-                thickness,
-                lineType,
-                shift);
+                /*
+                 * Mat helpScreenDrawing = new Mat((int) writableImage.getHeight(), (int)
+                 * writableImage.getWidth(),
+                 * CvType.CV_8UC4, new Scalar(0, 0, 0, 0));
+                 * 
+                 * int thickness = 20;
+                 * int lineType = 8;
+                 * int shift = 0;
+                 * Imgproc.ellipse(helpScreenDrawing,
+                 * new Point(writableImage.getHeight() / 2, writableImage.getHeight() / 2),
+                 * new Size(writableImage.getHeight() / 4, writableImage.getHeight() / 16),
+                 * 45,
+                 * 0.0,
+                 * 360.0,
+                 * new Scalar(255, 0, 0, 0),
+                 * thickness,
+                 * lineType,
+                 * shift);
+                 * 
+                 * Mat drawing2gray = new Mat();
+                 * Imgproc.cvtColor(helpScreenDrawing, drawing2gray, Imgproc.COLOR_BGR2GRAY);
+                 * 
+                 * Mat mask = new Mat();
+                 * Imgproc.threshold(drawing2gray, mask, 10, 255, Imgproc.THRESH_BINARY);
+                 * 
+                 * Mat maskInverted = new Mat();
+                 * Core.bitwise_not(mask, maskInverted);
+                 * 
+                 * Mat screenShotBackground = new Mat();
+                 * Core.bitwise_and(screenShot, screenShot, screenShotBackground, maskInverted);
+                 * 
+                 * Mat dstImg = new Mat();
+                 * Core.add(screenShotBackground, helpScreenDrawing, dstImg);
+                 */
 
-        Mat dstImg = new Mat();
+                new ImageProcessing().processView(screenShot);
 
-        // Core.add(screenShot, atom_image,  dstImg);
+                controllerHelpScreen.updateImageView(controllerHelpScreen.getImageView(),
+                                ImageUtils.mat2Image(screenShot));
 
-        controllerHelpScreen.updateImageView(controllerHelpScreen.getImageView(),
-                ImageUtils.mat2Image(screenShot));
-
-        controllerHelpScreen.getStage().show();
-    }
+                controllerHelpScreen.getStage().show();
+        }
 }

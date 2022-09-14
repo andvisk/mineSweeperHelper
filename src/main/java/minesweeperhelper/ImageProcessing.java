@@ -32,17 +32,19 @@ public class ImageProcessing {
 
         int machMethod = Imgproc.TM_CCOEFF_NORMED;
 
-        Mat srcCvt = srcImage.clone();
+        Mat srcForOutput = srcImage.clone();
 
-        Mat outImage = Imgcodecs.imread(System.getProperty("user.dir") + File.separatorChar + "mineSweeper.png");
+        // Mat outImage = Imgcodecs.imread(System.getProperty("user.dir") + File.separatorChar + "mineSweeper.png");
 
         for (int i = 1; i <= 7; i++) {
 
             List<Rect> numbersLocations = new ArrayList<>();
 
             Mat numberImage = Imgcodecs.imread("src/main/resources/" + i + ".png");
+            Imgproc.cvtColor(numberImage, numberImage, Imgproc.COLOR_BGR2BGRA);
+
             Mat outputImage = new Mat();
-            Imgproc.matchTemplate(srcCvt, numberImage, outputImage, machMethod);
+            Imgproc.matchTemplate(srcImage, numberImage, outputImage, machMethod);
             // Imgproc.threshold(outputImage, outputImage, 0.8, 1, Imgproc.THRESH_TOZERO);
 
             Core.MinMaxLocResult mmr = null;
@@ -54,7 +56,7 @@ public class ImageProcessing {
                             new Point(mmr.maxLoc.x + numberImage.cols(), mmr.maxLoc.y + numberImage.rows()));
                     numbersLocations.add(rect);
 
-                    Imgproc.rectangle(outImage, mmr.maxLoc,
+                    Imgproc.rectangle(srcForOutput, mmr.maxLoc,
                             new Point(mmr.maxLoc.x + numberImage.cols(), mmr.maxLoc.y + numberImage.rows()),
                             new Scalar(0, 255, 0));
 
@@ -66,11 +68,11 @@ public class ImageProcessing {
                 }
             }
 
-            Imgcodecs.imwrite(System.getProperty("user.dir") + File.separatorChar + "mineSweeperOut.png", outImage);
-
             map.put(i, numbersLocations);
 
         }
+
+        Imgcodecs.imwrite(System.getProperty("user.dir") + File.separatorChar + "mineSweeperOut.png", srcForOutput);
 
         return map;
     }

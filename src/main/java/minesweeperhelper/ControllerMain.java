@@ -61,7 +61,7 @@ public class ControllerMain {
 
         EventHandler<MouseEvent> showButtonMouseClickHandler = event -> {
             if (MouseButton.PRIMARY.equals(event.getButton())) {
-                HelpScreen.showHelpScreen(controllerHelpScreen);
+                new HelpScreen().showHelpScreen(controllerHelpScreen);
             }
         };
 
