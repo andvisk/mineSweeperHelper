@@ -1,29 +1,25 @@
 package minesweeperhelper;
 
-import org.opencv.core.Mat;
 import org.opencv.core.Rect;
-
-import java.util.List;
-import java.util.Map;
 
 public class GridCell {
 
     private Rect rect;
-    private boolean mine = false;
-    private int number = 0;
-    private boolean empty = false;
+    private CellTypeEnum cellTypeEnum;
+    private int number = -1;
 
-    public GridCell(Mat srcImage, Rect rect, Map<Integer, List<Rect>> numbersLocations) {
+    public GridCell(CellTypeEnum cellTypeEnum, Rect rect, int number) {
+        this.cellTypeEnum = cellTypeEnum;
         this.rect = rect;
-        ImageProcessing.processGridCell(srcImage,this, numbersLocations);
+        this.number = number;
     }
 
-    public boolean isMine() {
-        return mine;
+    public CellTypeEnum getCellTypeEnum(){
+        return cellTypeEnum;
     }
 
-    public void setMine(boolean mine) {
-        this.mine = mine;
+    public void setCellTypeEnum(CellTypeEnum cellTypeEnum){
+        this.cellTypeEnum = cellTypeEnum;
     }
 
     public int getNumber() {
@@ -32,14 +28,6 @@ public class GridCell {
 
     public void setNumber(int number) {
         this.number = number;
-    }
-
-    public boolean isEmpty() {
-        return empty;
-    }
-
-    public void setEmpty(boolean empty) {
-        this.empty = empty;
     }
 
     public Rect getRect() {

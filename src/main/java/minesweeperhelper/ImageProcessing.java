@@ -15,25 +15,15 @@ public class ImageProcessing {
 
     public Grid processView(Mat srcImage) {
 
-        Mat dest = srcImage.clone();
-        Imgproc.cvtColor(srcImage, dest, Imgproc.COLOR_BGR2GRAY);
-        Imgproc.GaussianBlur(dest, dest, new Size(5, 5), 0);
-        Imgproc.adaptiveThreshold(dest, dest, 255, 1, 1, 11, 2);
+        List<GridCell> cells = findCells(srcImage);
 
-        List<MatOfPoint> contours = new ArrayList<>();
-
-        Imgproc.findContours(dest, contours, new Mat(), Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
-
-        return GridUtils.getGrid(srcImage, contours, findNumberLocations(srcImage));
+        return GridUtils.collectGrid(cells);
     }
 
-    private Map<Integer, List<Rect>> findNumberLocations(Mat srcImage) {
-        Map<Integer, List<Rect>> map = new HashMap<>();
+    private List<GridCell> findCells(Mat srcImage) {
+        List<GridCell> list = new ArrayList<>();
 
         int machMethod = Imgproc.TM_CCOEFF_NORMED;
-
-        // Mat inTestImage = Imgcodecs.imread(System.getProperty("user.dir") +
-        // File.separatorChar + "mineSweeper.png");
 
         Mat srcForOutput = srcImage.clone();
 
@@ -65,6 +55,22 @@ public class ImageProcessing {
                     Imgproc.circle(outputImage, new Point(mmr.maxLoc.x, mmr.maxLoc.y),
                             (numberImage.width() + numberImage.height()) / 4,
                             new Scalar(0, 0, 0), -1);
+
+                    CellTypeEnum cellTypeEnum = null;
+
+                    if (i > 0 && i < 9)
+                        cellTypeEnum = CellTypeEnum.NUMBER;
+                    if (i == 0)
+                        cellTypeEnum = CellTypeEnum.EMPTY;
+                    if (i == 9)
+                        cellTypeEnum = CellTypeEnum.FLAG;
+                    if (i == 10)
+                        cellTypeEnum = CellTypeEnum.UNCHECKED;
+
+                    GridCell gridCell = new GridCell(cellTypeEnum, rect, (i > 0 && i < 9) ? i : -1);
+
+                    list.add(gridCell);
+
                 } else {
                     break;
                 }
@@ -72,43 +78,11 @@ public class ImageProcessing {
 
             logger.info(i + " " + numbersLocations.size());
 
-            map.put(i, numbersLocations);
-
         }
 
         Imgcodecs.imwrite(System.getProperty("user.dir") + File.separatorChar + "mineSweeperOut.png", srcForOutput);
 
-        logger.info("finish");
-
-        return map;
-    }
-
-    public static void processGridCell(Mat srcImage, GridCell gridCell, Map<Integer, List<Rect>> numbersLocations) {
-        Mat cellImage = new Mat(srcImage, gridCell.getRect());
-
-        /*
-         * rectImage.copyTo(result.rowRange(i.y, i.y + i.height).colRange(i.x, i.x +
-         * i.width));
-         * Imgproc.rectangle(result, i, new Scalar(0, 255, 0));
-         */
-
-        /*
-         * Mat dest = srcImage.clone();
-         * Imgproc.cvtColor(cellImage, dest, Imgproc.COLOR_BGR2GRAY);
-         * Imgproc.GaussianBlur(dest, dest, new Size(5, 5), 0);
-         * 
-         * MatOfDouble mu = new MatOfDouble();
-         * MatOfDouble sigma = new MatOfDouble();
-         * Core.meanStdDev(dest, mu, sigma);
-         * 
-         * double d = mu.get(0,0)[0];
-         */
-
-        Mat dst = cellImage.clone();
-
-        // Core.inRange(srcImage, new Scalar(65,125,230), new Scalar(120,230,255), dst);
-        Core.inRange(cellImage, new Scalar(175, 175, 175), new Scalar(255, 255, 255), dst);
-
+        return list;
     }
 
 }
