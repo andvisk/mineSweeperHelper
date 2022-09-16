@@ -37,7 +37,7 @@ public class ImageProcessing {
             Mat outputImage = new Mat();
             Imgproc.matchTemplate(srcImage, numberImage, outputImage, machMethod);
 
-            logger.info("match finish for " + i);
+            logger.debug("match finish for " + i);
 
             Core.MinMaxLocResult mmr = null;
 
@@ -76,10 +76,11 @@ public class ImageProcessing {
                 }
             }
 
-            logger.info(i + " " + numbersLocations.size());
+            logger.debug(i + " " + numbersLocations.size());
 
         }
 
+        //todo remove
         Imgcodecs.imwrite(System.getProperty("user.dir") + File.separatorChar + "mineSweeperOut.png", srcForOutput);
 
         return list;

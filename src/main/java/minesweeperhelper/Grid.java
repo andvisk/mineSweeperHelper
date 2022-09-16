@@ -4,7 +4,7 @@ public class Grid {
 
     public static final int MIN_WIDTH = 9;
     public static final int MIN_HEIGHT = 9;
-    public static final int TOLLERANCE_IN_PERCENT = 15;
+    public static final int TOLLERANCE_IN_PERCENT = 20;
 
     private GridCell[][] grid;
 

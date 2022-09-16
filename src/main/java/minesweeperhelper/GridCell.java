@@ -37,4 +37,8 @@ public class GridCell {
     public void setRect(Rect rect) {
         this.rect = rect;
     }
+
+    public String toString(){
+        return cellTypeEnum.name() + " number: " + number + " x: " + rect.x;
+    }
 }
