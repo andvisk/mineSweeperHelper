@@ -32,9 +32,10 @@ public class ImageProcessing {
 
         int machMethod = Imgproc.TM_CCOEFF_NORMED;
 
-        Mat srcForOutput = srcImage.clone();
+        // Mat inTestImage = Imgcodecs.imread(System.getProperty("user.dir") +
+        // File.separatorChar + "mineSweeper.png");
 
-        // Mat outImage = Imgcodecs.imread(System.getProperty("user.dir") + File.separatorChar + "mineSweeper.png");
+        Mat srcForOutput = srcImage.clone();
 
         for (int i = 0; i <= 10; i++) {
 
@@ -45,7 +46,8 @@ public class ImageProcessing {
 
             Mat outputImage = new Mat();
             Imgproc.matchTemplate(srcImage, numberImage, outputImage, machMethod);
-            // Imgproc.threshold(outputImage, outputImage, 0.8, 1, Imgproc.THRESH_TOZERO);
+
+            logger.info("match finish for " + i);
 
             Core.MinMaxLocResult mmr = null;
 
@@ -58,15 +60,17 @@ public class ImageProcessing {
 
                     Imgproc.rectangle(srcForOutput, mmr.maxLoc,
                             new Point(mmr.maxLoc.x + numberImage.cols(), mmr.maxLoc.y + numberImage.rows()),
-                            new Scalar(0, 255, 0));
+                            new Scalar(0, 255, 0, 255));
 
-                    Imgproc.rectangle(outputImage, mmr.maxLoc,
-                            new Point(mmr.maxLoc.x + numberImage.cols(), mmr.maxLoc.y + numberImage.rows()),
-                            new Scalar(0, 255, 0), -1);
+                    Imgproc.circle(outputImage, new Point(mmr.maxLoc.x, mmr.maxLoc.y),
+                            (numberImage.width() + numberImage.height()) / 4,
+                            new Scalar(0, 0, 0), -1);
                 } else {
                     break;
                 }
             }
+
+            logger.info(i + " " + numbersLocations.size());
 
             map.put(i, numbersLocations);
 
@@ -74,12 +78,14 @@ public class ImageProcessing {
 
         Imgcodecs.imwrite(System.getProperty("user.dir") + File.separatorChar + "mineSweeperOut.png", srcForOutput);
 
+        logger.info("finish");
+
         return map;
     }
 
     public static void processGridCell(Mat srcImage, GridCell gridCell, Map<Integer, List<Rect>> numbersLocations) {
         Mat cellImage = new Mat(srcImage, gridCell.getRect());
-        System.out.println("get number if");
+
         /*
          * rectImage.copyTo(result.rowRange(i.y, i.y + i.height).colRange(i.x, i.x +
          * i.width));
