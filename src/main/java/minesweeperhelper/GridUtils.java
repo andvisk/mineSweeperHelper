@@ -90,7 +90,7 @@ public class GridUtils {
                         log.info("unable to get grid");
                         return null;
                     }
-                    grid.setCell(x, y, columnData.stream().filter(p->p.getRect().y == y).findFirst().get());
+                    grid.setCell(column, row, columnData.stream().filter(p->p.getRect().y == y).findFirst().get());
                     prevY = y;
                 }
             }
