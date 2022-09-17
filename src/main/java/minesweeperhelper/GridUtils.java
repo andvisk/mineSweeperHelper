@@ -5,10 +5,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
 
 public class GridUtils {
 
@@ -54,7 +59,7 @@ public class GridUtils {
                     rows = mapByX.get(x).size();
                 } else {
                     if (mapByX.get(x).size() != rows) {
-                        log.info("unable to get grid");
+                        log.info("unable to get grid, r1");
                     }
                 }
             }
@@ -64,42 +69,41 @@ public class GridUtils {
 
             Grid grid = new Grid(xs.size(), mapByX.get(xs.get(0)).size());
 
-            // check x's and y's for sequency
-            Integer prevX = null;
             int column = -1;
             for (Integer x : xs) {
                 ++column;
-                if (prevX != null
-                        && Math.abs(x - (prevX + cellWidth)) > (double) cellWidth / 100 * Grid.TOLLERANCE_IN_PERCENT) {
-                    log.info("unable to get grid");
-                    return null;
-                }
-                prevX = x;
-
-                // checking y's sequency
-                Integer prevY = null;
                 List<GridCell> columnData = mapByX.get(x);
                 List<Integer> ys = columnData.stream().map(p -> p.getRect().y).collect(Collectors.toList());
                 ys.sort((a, b) -> Integer.compare(a, b));
                 int row = -1;
                 for (Integer y : ys) {
                     ++row;
-                    if (prevY != null
-                            && Math.abs(y - (prevY + cellHeight)) > (double) cellHeight / 100
-                                    * Grid.TOLLERANCE_IN_PERCENT) {
-                        log.info("unable to get grid");
-                        return null;
-                    }
-                    grid.setCell(column, row, columnData.stream().filter(p->p.getRect().y == y).findFirst().get());
-                    prevY = y;
+                    grid.setCell(column, row, columnData.stream().filter(p -> p.getRect().y == y).findFirst().get());
                 }
             }
 
             return grid;
         }
 
-        log.info("unable to get grid");
+        log.info("unable to get grid, r4");
         return null;
+    }
+
+    public static Mat printDebugInfo(Mat mat, GridCell gridCell) {
+        Point position = new Point(gridCell.getRect().x,
+                gridCell.getRect().y + (double) gridCell.getRect().height / 100 * 30);
+        Point position2 = new Point(gridCell.getRect().x,
+                gridCell.getRect().y + (double) gridCell.getRect().height / 100 * 80);
+        Scalar color = new Scalar(0, 0, 255);
+        int font = Imgproc.FONT_HERSHEY_PLAIN;
+        double scale = 1;
+        int thickness = 1;
+
+        Imgproc.putText(mat, String.valueOf(gridCell.getNumber()), position, font, scale, color, thickness);
+        Imgproc.putText(mat, gridCell.getCellTypeEnum().name().substring(0, 2), position2, font, scale, color,
+                thickness);
+
+        return mat;
     }
 
 }

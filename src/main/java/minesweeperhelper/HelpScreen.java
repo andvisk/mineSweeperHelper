@@ -47,6 +47,12 @@ public class HelpScreen {
 
                 Grid grid = new ImageProcessing().processView(screenShot);
 
+                for (int i = 0; i < grid.getGrid().length; i++) {
+                        for (int y = 0; y < grid.getGrid()[i].length; y++) {
+                                screenShot = GridUtils.printDebugInfo(screenShot, grid.getGrid()[i][y]);
+                        }
+                }
+
                 controllerHelpScreen.updateImageView(controllerHelpScreen.getImageView(),
                                 ImageUtils.mat2Image(screenShot));
 

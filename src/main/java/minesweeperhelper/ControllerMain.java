@@ -67,7 +67,8 @@ public class ControllerMain {
 
         EventHandler<MouseEvent> showButtonMouseReleaseHandler = event -> {
             if (MouseButton.PRIMARY.equals(event.getButton())) {
-                controllerHelpScreen.getStage().hide();
+                //todo uncomment
+                //controllerHelpScreen.getStage().hide();
             }
         };
 

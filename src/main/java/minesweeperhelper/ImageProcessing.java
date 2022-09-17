@@ -67,7 +67,7 @@ public class ImageProcessing {
                     if (i == 10)
                         cellTypeEnum = CellTypeEnum.UNCHECKED;
 
-                    GridCell gridCell = new GridCell(cellTypeEnum, rect, (i > 0 && i < 9) ? i : -1);
+                    GridCell gridCell = new GridCell(cellTypeEnum, rect, (i >= 0 && i < 9) ? i : -1);
 
                     list.add(gridCell);
 
