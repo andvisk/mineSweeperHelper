@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
@@ -18,12 +16,10 @@ import org.opencv.imgproc.Imgproc;
 public class GridUtils {
 
     private static Logger log = LogManager.getLogger(GridUtils.class);
-
+    
     public static Grid collectGrid(List<GridCell> cells) {
 
         if (cells.size() > 0) {
-            int cellWidth = cells.get(0).getRect().width;
-            int cellHeight = cells.get(0).getRect().height;
 
             Map<Integer, List<GridCell>> mapByX = GroupingBy.approximate(cells, p -> (int) p.getRect().x,
                     p -> (int) p.getRect().width, Grid.TOLLERANCE_IN_PERCENT);
@@ -52,6 +48,7 @@ public class GridUtils {
                 }
             }
 
+            //check all columns have the same rows count
             int rows = -1;
             for (Integer x : mapByX.keySet()) {
                 mapByX.get(x).sort((a, b) -> Integer.compare(a.getRect().y, b.getRect().y));
@@ -69,6 +66,7 @@ public class GridUtils {
 
             Grid grid = new Grid(xs.size(), mapByX.get(xs.get(0)).size());
 
+            //filling grid
             int column = -1;
             for (Integer x : xs) {
                 ++column;
