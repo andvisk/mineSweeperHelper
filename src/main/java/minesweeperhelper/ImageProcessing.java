@@ -89,48 +89,7 @@ public class ImageProcessing {
 
         }
 
-        // todo remove
-        Imgcodecs.imwrite(System.getProperty("user.dir") + File.separatorChar + "mineSweeperOut.png", srcForOutput);
-
         return list;
-    }
-
-    // todo remove
-    public Mat drawEllipse(WritableImage writableImage) {
-        Mat helpScreenDrawing = new Mat((int) writableImage.getHeight(), (int) writableImage.getWidth(),
-                CvType.CV_8UC4, new Scalar(0, 0, 0, 0));
-
-        int thickness = 20;
-        int lineType = 8;
-        int shift = 0;
-        Imgproc.ellipse(helpScreenDrawing,
-                new Point(writableImage.getHeight() / 2, writableImage.getHeight() / 2),
-                new Size(writableImage.getHeight() / 4, writableImage.getHeight() / 16),
-                45,
-                0.0,
-                360.0,
-                new Scalar(255, 0, 0, 0),
-                thickness,
-                lineType,
-                shift);
-
-        Mat drawing2gray = new Mat();
-        Imgproc.cvtColor(helpScreenDrawing, drawing2gray, Imgproc.COLOR_BGR2GRAY);
-
-        Mat mask = new Mat();
-        Imgproc.threshold(drawing2gray, mask, 10, 255, Imgproc.THRESH_BINARY);
-
-        Mat maskInverted = new Mat();
-        Core.bitwise_not(mask, maskInverted);
-
-        /*
-         * Mat screenShotBackground = new Mat();
-         * Core.bitwise_and(screenShot, screenShot, screenShotBackground, maskInverted);
-         * 
-         * Mat dstImg = new Mat();
-         * Core.add(screenShotBackground, helpScreenDrawing, dstImg);
-         */
-        return null;
     }
 
 }

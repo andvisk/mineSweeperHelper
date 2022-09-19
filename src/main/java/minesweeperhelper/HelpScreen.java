@@ -18,16 +18,13 @@ import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
-import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
-
-import java.math.BigDecimal;
 
 public class HelpScreen {
 
         private Logger log = LogManager.getLogger(this.getClass());
 
-        public void showHelpScreen(ControllerHelpScreen controllerHelpScreen) {
+        public void showHelpScreen(ControllerHelpScreen controllerHelpScreen, boolean debug) {
 
                 Rectangle2D screenBounds = Screen.getPrimary().getBounds();
 
@@ -78,11 +75,10 @@ public class HelpScreen {
                                 }
                         }
 
-                        for (int i = 0; i < grid.getGrid().length; i++) {
-                                for (int y = 0; y < grid.getGrid()[i].length; y++) {
-                                        screenShot = GridUtils.printDebugInfo(screenShot, grid.getGrid()[i][y]);
-                                }
-                        }
+                        grid.processGrid();
+
+                        if (debug)
+                                grid.printDebugInfo(screenShot);
 
                         Imgproc.GaussianBlur(screenShotBlured, screenShotBlured, new Size(21, 21), 0);
 

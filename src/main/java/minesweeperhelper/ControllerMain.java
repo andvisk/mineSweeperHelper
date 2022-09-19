@@ -3,38 +3,21 @@ package minesweeperhelper;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.event.EventHandler;
-import javafx.geometry.Point2D;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
-import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import javafx.scene.robot.Robot;
-import javafx.stage.Screen;
 import javafx.stage.Stage;
-
-import java.io.File;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.opencv.core.Mat;
-import org.opencv.imgcodecs.Imgcodecs;
 
 public class ControllerMain {
 
     private Logger log = LogManager.getLogger(this.getClass());
-
-    private StackPane rootElement;
 
     private Stage stage;
 
@@ -46,9 +29,7 @@ public class ControllerMain {
     private Stage helpScreenStage;
 
     protected void init(Stage stage, StackPane rootElement, Stage helpScreenStage,
-            ControllerHelpScreen controllerHelpScreen) {
-
-        this.rootElement = rootElement;
+            ControllerHelpScreen controllerHelpScreen, boolean debug) {
 
         this.stage = stage;
 
@@ -61,7 +42,7 @@ public class ControllerMain {
 
         EventHandler<MouseEvent> showButtonMouseClickHandler = event -> {
             if (MouseButton.PRIMARY.equals(event.getButton())) {
-                new HelpScreen().showHelpScreen(controllerHelpScreen);
+                new HelpScreen().showHelpScreen(controllerHelpScreen, debug);
             }
         };
 

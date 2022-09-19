@@ -10,6 +10,8 @@ public class GridCell {
     private Rect rect;
     private CellTypeEnum cellTypeEnum;
     private int number = -1;
+    private int positionInGridX = -1;
+    private int positionInGridY = -1;
 
     public GridCell(CellTypeEnum cellTypeEnum, Rect rect, int number) {
         this.cellTypeEnum = cellTypeEnum;
@@ -48,5 +50,18 @@ public class GridCell {
 
     public UUID getId(){
         return this.id;
+    }
+
+    public void setPositionInGridX(int pos){
+        this.positionInGridX = pos;
+    }
+    public void setPositionInGridY(int pos){
+        this.positionInGridY = pos;
+    }
+    public int getX(){
+        return positionInGridX;
+    }
+    public int getY(){
+        return positionInGridY;
     }
 }

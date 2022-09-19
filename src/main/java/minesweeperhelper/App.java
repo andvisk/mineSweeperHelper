@@ -3,7 +3,6 @@ package minesweeperhelper;
 import javafx.application.Application;
 import javafx.geometry.Pos;
 import javafx.scene.layout.Background;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -18,6 +17,8 @@ import org.opencv.core.Core;
 public class App extends Application {
 
     private static Logger log = LogManager.getLogger(App.class);
+
+    private final boolean debug = true;
 
     private ControllerMain controller;
     private ControllerHelpScreen controllerHelpScreen;
@@ -56,7 +57,7 @@ public class App extends Application {
         rootElement.setBackground(Background.EMPTY);
 
         controller = new ControllerMain();
-        controller.init(primaryStage, rootElement, helpScreenStage, controllerHelpScreen);
+        controller.init(primaryStage, rootElement, helpScreenStage, controllerHelpScreen, debug);
     }
 
     private Stage initHelpScreenStage(){
