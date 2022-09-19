@@ -48,15 +48,21 @@ public class HelpScreen {
                 Grid grid = new ImageProcessing().processView(screenShot);
 
                 if (grid != null) {
-                        Mat screenShotCopy = new Mat();
-                        screenShot.copyTo(screenShotCopy);
+                        Mat screenShotBlured = new Mat();
+                        screenShot.copyTo(screenShotBlured);
 
                         int minX = -1;
                         int maxX = -1;
                         int minY = -1;
                         int maxY = -1;
+                        int cellHeight = -1;
+                        int cellWidth = -1;
                         for (int i = 0; i < grid.getGrid().length; i++) {
                                 for (int y = 0; y < grid.getGrid()[i].length; y++) {
+                                        if (cellHeight < 0) {
+                                                cellHeight = grid.getGrid()[i][y].getRect().height;
+                                                cellWidth = grid.getGrid()[i][y].getRect().width;
+                                        }
                                         if (minX < 0 || minX > grid.getGrid()[i][y].getRect().x) {
                                                 minX = grid.getGrid()[i][y].getRect().x;
                                         }
@@ -78,16 +84,17 @@ public class HelpScreen {
                                 }
                         }
 
-                        Imgproc.GaussianBlur(screenShotCopy, screenShotCopy, new Size(21, 21), 0);
+                        Imgproc.GaussianBlur(screenShotBlured, screenShotBlured, new Size(21, 21), 0);
 
-                        Mat squareMat = new Mat(screenShotCopy.height(), screenShotCopy.width(),
+                        Mat squareMat = new Mat(screenShotBlured.height(), screenShotBlured.width(),
                                         CvType.CV_8UC4, new Scalar(0, 0, 0, 0));
-                        Imgproc.rectangle(squareMat, new Point(minX, minY), new Point(maxX, maxY),
-                                        new Scalar(255, 0, 0, 0));
-                        
-                                        Mat drawing2gray = new Mat();
+                        Imgproc.rectangle(squareMat, new Point(minX - cellWidth / 2, minY - cellHeight / 2),
+                                        new Point(maxX + cellWidth * 1.5, maxY + cellHeight * 1.5),
+                                        new Scalar(255, 0, 0, 0), -1);
+
+                        Mat drawing2gray = new Mat();
                         Imgproc.cvtColor(squareMat, drawing2gray, Imgproc.COLOR_BGR2GRAY);
-                        
+
                         Mat mask = new Mat();
                         Imgproc.threshold(drawing2gray, mask, 10, 255, Imgproc.THRESH_BINARY);
 
@@ -95,10 +102,13 @@ public class HelpScreen {
                         Core.bitwise_not(mask, maskInverted);
 
                         Mat screenShotBackground = new Mat();
-                        Core.bitwise_and(screenShotCopy, screenShotCopy, screenShotBackground, maskInverted);
-                
+                        Core.bitwise_and(screenShotBlured, screenShotBlured, screenShotBackground, maskInverted);
+
+                        Mat screenShotForeground = new Mat();
+                        Core.bitwise_and(screenShot, screenShot, screenShotForeground, mask);
+
                         Mat dstImg = new Mat();
-                        Core.add(screenShotBackground, helpScreenDrawing, dstImg);
+                        Core.add(screenShotBackground, screenShotForeground, dstImg);
 
                         controllerHelpScreen.updateImageView(controllerHelpScreen.getImageView(),
                                         ImageUtils.mat2Image(dstImg));

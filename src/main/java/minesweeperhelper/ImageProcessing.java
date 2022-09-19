@@ -1,15 +1,22 @@
 package minesweeperhelper;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.opencv.core.*;
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import javafx.scene.image.WritableImage;
-
-import java.io.File;
-import java.util.*;
 
 public class ImageProcessing {
 
@@ -82,12 +89,13 @@ public class ImageProcessing {
 
         }
 
-        //todo remove
+        // todo remove
         Imgcodecs.imwrite(System.getProperty("user.dir") + File.separatorChar + "mineSweeperOut.png", srcForOutput);
 
         return list;
     }
 
+    // todo remove
     public Mat drawEllipse(WritableImage writableImage) {
         Mat helpScreenDrawing = new Mat((int) writableImage.getHeight(), (int) writableImage.getWidth(),
                 CvType.CV_8UC4, new Scalar(0, 0, 0, 0));
@@ -115,11 +123,14 @@ public class ImageProcessing {
         Mat maskInverted = new Mat();
         Core.bitwise_not(mask, maskInverted);
 
-        Mat screenShotBackground = new Mat();
-        Core.bitwise_and(screenShot, screenShot, screenShotBackground, maskInverted);
-
-        Mat dstImg = new Mat();
-        Core.add(screenShotBackground, helpScreenDrawing, dstImg);
+        /*
+         * Mat screenShotBackground = new Mat();
+         * Core.bitwise_and(screenShot, screenShot, screenShotBackground, maskInverted);
+         * 
+         * Mat dstImg = new Mat();
+         * Core.add(screenShotBackground, helpScreenDrawing, dstImg);
+         */
+        return null;
     }
 
 }
