@@ -30,7 +30,7 @@ public class Grid {
         return grid;
     }
 
-    public void processGrid() {
+    public void processGrid(Mat screenShot) {
         // set all flags as unchecked
         for (int i = 0; i < grid.length; i++) {
             for (int y = 0; y < grid[i].length; y++) {
@@ -39,13 +39,30 @@ public class Grid {
             }
         }
         List<GridCell> list = Stream.of(grid).flatMap(p -> Stream.of(p)).collect(Collectors.toList());
-        Set<GridCell> uncheckedSet = new HashSet<GridCell>(list.stream()
+
+        Set<GridCell> uncheckedAndFlagsSet = new HashSet<GridCell>(list.stream()
                 .filter(
                         p -> p.getCellTypeEnum().equals(CellTypeEnum.UNCHECKED) ||
                                 p.getCellTypeEnum().equals(CellTypeEnum.FLAG))
                 .collect(Collectors.toList()));
 
+        Set<GridCell> usersSetFlagsSet = new HashSet<GridCell>(list.stream()
+                .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.FLAG))
+                .collect(Collectors.toList()));
+
         markFlagsAndEmptyCells(list);
+
+        List<GridCell> cellsForHelp = uncheckedAndFlagsSet.stream()
+                .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.NEEDS_TO_BE_CHECKED) ||
+                        p.getCellTypeEnum().equals(CellTypeEnum.FLAG))
+                .collect(Collectors.toList());
+
+                //todo picture on these unsafe flags
+        Set<GridCell> usersSetFalseFlagsSet = new HashSet<GridCell>(usersSetFlagsSet.stream()
+                .filter(p -> !p.getCellTypeEnum().equals(CellTypeEnum.FLAG))
+                .collect(Collectors.toList()));
+
+        cellsForHelp.stream().forEach(p -> GridUtils.printHelpInfo(screenShot, p));
 
     }
 
@@ -70,7 +87,8 @@ public class Grid {
             }
         }
 
-        // check flags for numbers where neighbour unchecked cells equals number - flags
+        // check flags for numbers where neighbour unchecked cells count equals number
+        // minus flags
         // count
         for (GridCell number : numbers) {
             List<GridCell> neighbours = getNeighbourCells(list, number);
@@ -85,10 +103,9 @@ public class Grid {
             }
         }
 
+        // two neighbour numbers and their unchecked cells intersection can have only
+        // one flag
         for (GridCell number : numbers) {
-            if (number.getX() == 8 && number.getY() == 1) {
-                int stop = 0;
-            }
             Set<GridCell> numberFlags = new HashSet<GridCell>(getNeighbourCells(list, number).stream()
                     .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.FLAG)).toList());
             if (number.getNumber() > numberFlags.size()) {
@@ -120,7 +137,8 @@ public class Grid {
                             Set<GridCell> neighboursOnlyUnchecked = new HashSet<GridCell>(neighboursUnchecked);
                             neighboursOnlyUnchecked.removeAll(uncheckedInCommon);
                             if (neighboursOnlyUnchecked.size() > 0) {
-                                neighboursOnlyUnchecked.stream().forEach(p -> p.setCellTypeEnum(CellTypeEnum.NEEDS_TO_BE_CHECKED));
+                                neighboursOnlyUnchecked.stream()
+                                        .forEach(p -> p.setCellTypeEnum(CellTypeEnum.NEEDS_TO_BE_CHECKED));
                                 anyChanges = true;
                             }
 

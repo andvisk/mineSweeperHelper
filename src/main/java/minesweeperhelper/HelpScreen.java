@@ -75,10 +75,7 @@ public class HelpScreen {
                                 }
                         }
 
-                        grid.processGrid();
-
-                        if (debug)
-                                grid.printDebugInfo(screenShot);
+                        grid.processGrid(screenShot);
 
                         Imgproc.GaussianBlur(screenShotBlured, screenShotBlured, new Size(21, 21), 0);
 

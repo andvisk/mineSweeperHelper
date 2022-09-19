@@ -16,7 +16,7 @@ import org.opencv.imgproc.Imgproc;
 public class GridUtils {
 
     private static Logger log = LogManager.getLogger(GridUtils.class);
-    
+
     public static Grid collectGrid(List<GridCell> cells) {
 
         if (cells.size() > 0) {
@@ -48,7 +48,7 @@ public class GridUtils {
                 }
             }
 
-            //check all columns have the same rows count
+            // check all columns have the same rows count
             int rows = -1;
             for (Integer x : mapByX.keySet()) {
                 mapByX.get(x).sort((a, b) -> Integer.compare(a.getRect().y, b.getRect().y));
@@ -66,7 +66,7 @@ public class GridUtils {
 
             Grid grid = new Grid(xs.size(), mapByX.get(xs.get(0)).size());
 
-            //filling grid
+            // filling grid
             int column = -1;
             for (Integer x : xs) {
                 ++column;
@@ -85,6 +85,25 @@ public class GridUtils {
 
         log.info("unable to get grid, r4");
         return null;
+    }
+
+    public static Mat printHelpInfo(Mat mat, GridCell gridCell) {
+        Point position = new Point(
+                gridCell.getRect().x + (double) gridCell.getRect().width / 100 * 20,
+                gridCell.getRect().y + (double) gridCell.getRect().height / 100 * 20);
+        Scalar color = null;
+
+        if (gridCell.getCellTypeEnum().equals(CellTypeEnum.NEEDS_TO_BE_CHECKED)) {
+            color = new Scalar(0, 255, 0);
+        }
+
+        if (gridCell.getCellTypeEnum().equals(CellTypeEnum.FLAG)) {
+            color = new Scalar(0, 0, 255);
+        }
+
+        Imgproc.circle(mat, position, gridCell.getRect().height / 5, color, -1);
+
+        return mat;
     }
 
     public static Mat printDebugInfo(Mat mat, GridCell gridCell) {

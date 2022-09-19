@@ -18,7 +18,7 @@ public class App extends Application {
 
     private static Logger log = LogManager.getLogger(App.class);
 
-    private final boolean debug = true;
+    private final boolean debug = false;
 
     private ControllerMain controller;
     private ControllerHelpScreen controllerHelpScreen;
