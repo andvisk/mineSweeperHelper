@@ -57,6 +57,7 @@ public class GridUtils {
                 } else {
                     if (mapByX.get(x).size() != rows) {
                         log.info("unable to get grid, r1");
+                        return null;
                     }
                 }
             }

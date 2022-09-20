@@ -108,10 +108,10 @@ public class ControllerMain {
                 service.setOnSucceeded(e -> {
                     Mat helpScreenMat = service.getValue();
                     if (helpScreenMat != null) {
-                        progressIndicator.visibleProperty().set(false);
                         HelpScreen.showHelpScreen(helpScreenMat, controllerHelpScreen);
                         closeHelpScreenButton.setDisable(false);
                     }
+                    progressIndicator.visibleProperty().set(false);
                 });
                 service.restart();
             }
