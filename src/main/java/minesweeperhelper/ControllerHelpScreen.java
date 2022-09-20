@@ -1,11 +1,14 @@
 package minesweeperhelper;
 
 import javafx.application.Platform;
+import javafx.event.EventHandler;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
@@ -22,7 +25,7 @@ public class ControllerHelpScreen {
 
     private Stage stage;
 
-    protected void init(Stage stage, StackPane rootElement) {
+    protected void init(Stage stage, StackPane rootElement, Button closeHelpScreenButton) {
 
         this.rootElement = rootElement;
         this.stage = stage;
@@ -33,6 +36,15 @@ public class ControllerHelpScreen {
 
         imageView = new ImageView();
         rootElement.getChildren().add(imageView);
+
+        EventHandler<MouseEvent> showButtonMouseReleaseHandler = event -> {
+            if (MouseButton.PRIMARY.equals(event.getButton())) {
+                stage.hide();
+                closeHelpScreenButton.setDisable(true);
+            }
+        };
+
+        imageView.setOnMousePressed(showButtonMouseReleaseHandler);
 
         stage.setScene(scene);
         stage.sizeToScene();

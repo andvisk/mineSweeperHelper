@@ -24,8 +24,7 @@ public class HelpScreen {
 
         private Logger log = LogManager.getLogger(this.getClass());
 
-        public void showHelpScreen(ControllerHelpScreen controllerHelpScreen, boolean debug) {
-
+        public static Mat getScreenShot(ControllerHelpScreen controllerHelpScreen) {
                 Rectangle2D screenBounds = Screen.getPrimary().getBounds();
 
                 Bounds boundsStackPaneLocal = controllerHelpScreen.getRootElement().getBoundsInLocal();
@@ -40,8 +39,10 @@ public class HelpScreen {
                                                 screenBounds.getWidth(),
                                                 screenBounds.getHeight()));
 
-                Mat screenShot = ImageUtils.writableImageToMat(writableImage);
+                return ImageUtils.writableImageToMat(writableImage);
+        }
 
+        public static Mat process(Mat screenShot) {
                 Grid grid = new ImageProcessing().processView(screenShot);
 
                 if (grid != null) {
@@ -103,10 +104,15 @@ public class HelpScreen {
                         Mat dstImg = new Mat();
                         Core.add(screenShotBackground, screenShotForeground, dstImg);
 
-                        controllerHelpScreen.updateImageView(controllerHelpScreen.getImageView(),
-                                        ImageUtils.mat2Image(dstImg));
-
-                        controllerHelpScreen.getStage().show();
+                        return dstImg;
                 }
+                return null;
         }
+
+        public static void showHelpScreen(Mat dstImg, ControllerHelpScreen controllerHelpScreen) {
+                controllerHelpScreen.updateImageView(controllerHelpScreen.getImageView(),
+                                ImageUtils.mat2Image(dstImg));
+                controllerHelpScreen.getStage().show();
+        }
+
 }

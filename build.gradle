@@ -34,8 +34,6 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:3.7.7'
     testImplementation group: 'org.mockito', name: 'mockito-junit-jupiter', version: '3.7.7'
     
-    //implementation files('/usr/local/share/java/opencv4/opencv-454.jar');
-    //implementation files('C:/opencv/build/java/opencv-454.jar');
 }
 
 tasks.withType(Test) {

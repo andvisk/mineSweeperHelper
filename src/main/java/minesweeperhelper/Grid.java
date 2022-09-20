@@ -57,7 +57,7 @@ public class Grid {
                         p.getCellTypeEnum().equals(CellTypeEnum.FLAG))
                 .collect(Collectors.toList());
 
-                //todo picture on these unsafe flags
+        // todo picture on these unsafe flags
         Set<GridCell> usersSetFalseFlagsSet = new HashSet<GridCell>(usersSetFlagsSet.stream()
                 .filter(p -> !p.getCellTypeEnum().equals(CellTypeEnum.FLAG))
                 .collect(Collectors.toList()));

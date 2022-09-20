@@ -21,7 +21,6 @@ public class App extends Application {
     private final boolean debug = false;
 
     private ControllerMain controller;
-    private ControllerHelpScreen controllerHelpScreen;
 
     public static void main(String[] args) {
 
@@ -37,16 +36,14 @@ public class App extends Application {
     public void start(Stage primaryStage) {
         try {
 
-            Stage helpScreenStage = initHelpScreenStage();
-
-            initPrimaryStage(primaryStage, helpScreenStage, controllerHelpScreen);
+            initPrimaryStage(primaryStage);
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void initPrimaryStage(Stage primaryStage, Stage helpScreenStage, ControllerHelpScreen controllerHelpScreen){
+    private void initPrimaryStage(Stage primaryStage){
         primaryStage.initStyle(StageStyle.TRANSPARENT);
         primaryStage.setAlwaysOnTop(true);
         primaryStage.setX(0);
@@ -57,23 +54,7 @@ public class App extends Application {
         rootElement.setBackground(Background.EMPTY);
 
         controller = new ControllerMain();
-        controller.init(primaryStage, rootElement, helpScreenStage, controllerHelpScreen, debug);
-    }
-
-    private Stage initHelpScreenStage(){
-        Stage helpScreenStage = new Stage();
-        helpScreenStage.initStyle(StageStyle.TRANSPARENT);
-
-        helpScreenStage.setMaximized(true);
-
-        StackPane rootElementHelpScreen = new StackPane();
-        rootElementHelpScreen.setAlignment(Pos.TOP_LEFT);
-        rootElementHelpScreen.setBackground(Background.EMPTY);
-
-        controllerHelpScreen = new ControllerHelpScreen();
-        controllerHelpScreen.init(helpScreenStage, rootElementHelpScreen);
-
-        return helpScreenStage;
+        controller.init(primaryStage, rootElement);
     }
 
 }
