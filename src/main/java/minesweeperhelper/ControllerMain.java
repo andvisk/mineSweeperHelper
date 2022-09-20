@@ -21,7 +21,12 @@ import javafx.stage.StageStyle;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.Scalar;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 
 public class ControllerMain {
 
@@ -102,6 +107,8 @@ public class ControllerMain {
             if (MouseButton.PRIMARY.equals(event.getButton())) {
 
                 Mat screenShot = HelpScreen.getScreenShot(controllerHelpScreen);
+
+                aa
 
                 ProcessingService service = new ProcessingService(screenShot);
                 service.setOnScheduled(e -> progressIndicator.visibleProperty().set(true));
