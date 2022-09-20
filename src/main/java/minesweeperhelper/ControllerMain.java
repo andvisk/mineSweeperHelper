@@ -108,8 +108,6 @@ public class ControllerMain {
 
                 Mat screenShot = HelpScreen.getScreenShot(controllerHelpScreen);
 
-                aa
-
                 ProcessingService service = new ProcessingService(screenShot);
                 service.setOnScheduled(e -> progressIndicator.visibleProperty().set(true));
                 service.setOnSucceeded(e -> {

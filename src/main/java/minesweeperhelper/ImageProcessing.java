@@ -82,24 +82,9 @@ public class ImageProcessing {
             }
 
             logger.debug(i + " " + numbersLocations.size());
-
+            
         }
-
+        
         return list;
     }
-
-    private void detectBlue(Mat screenShot) {aa
-        Scalar lowerBlue = new Scalar(100, 150, 0);
-        Scalar upperBlue = new Scalar(140, 255, 255);
-
-        Mat hsv = new Mat();
-        Imgproc.cvtColor(screenShot, hsv, Imgproc.COLOR_BGR2HSV);
-        Mat mask = new Mat();
-        Core.inRange(hsv, lowerBlue, upperBlue, mask);
-        Mat dest = new Mat();
-        Core.bitwise_and(screenShot, screenShot, dest, mask);
-
-        Imgcodecs.imwrite("c:/andrius/test.jpg", dest);
-    }
-
 }
