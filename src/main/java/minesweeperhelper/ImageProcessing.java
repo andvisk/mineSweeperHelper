@@ -109,73 +109,36 @@ public class ImageProcessing {
 
         int start = LocalTime.now().getSecond();
 
-        // map by width
-        Map<Integer, List<MatOfPoint>> mapByWidth = GroupingBy.approximate(contours,
-                p -> {
-                    Rect rect = Imgproc.boundingRect(p);
-                    return rect.width;
-                },
-                Grid.TOLLERANCE_IN_PERCENT);
+        Map<Integer, Map<Integer, List<GridCell>>> mapByWidthAndHeight = GridUtils.groupByWidthThenByHeight(contours,
+                Grid.MIN_WIDTH, Grid.MIN_HEIGHT, Grid.TOLLERANCE_IN_PERCENT);
 
-        for (List<MatOfPoint> listByWidth : mapByWidth.values()) {
-            // map by height
-            Map<Integer, List<MatOfPoint>> mapByHeight = GroupingBy.approximate(contours,
-                    p -> {
-                        Rect rect = Imgproc.boundingRect(p);
-                        return rect.height;
-                    },
-                    Grid.TOLLERANCE_IN_PERCENT);
-                    
-        }
+        for (Map.Entry<Integer, Map<Integer, List<GridCell>>> entry : mapByWidthAndHeight.entrySet()) {
+            Integer width = entry.getKey();
+            Map<Integer, List<GridCell>> mapByHeight = entry.getValue();
+            for (Map.Entry<Integer, List<GridCell>> entryByHeight : mapByHeight.entrySet()) {
+                Integer height = entryByHeight.getKey();
+                List<GridCell> points = entryByHeight.getValue();
 
-        // same maps entries list
-        List<Map.Entry<Integer, List<MatOfPoint>>> list = mapByArea.entrySet().stream()
-                .filter(p -> p.getValue().size() >= Grid.MIN_HEIGHT * Grid.MIN_WIDTH).collect(Collectors.toList());
+                Map<Integer, List<GridCell>> mapByX = GroupingBy.approximateInArea(points,
+                        p -> p.getRect().x,
+                        p -> p.getRect().width, Grid.TOLLERANCE_IN_PERCENT);
 
-        // cycle by area
-        for (int i = 0; i < list.size(); i++) {
-            List<MatOfPoint> listSameArea = list.get(i).getValue();
+                Map<Integer, List<GridCell>> mapByY = GroupingBy.approximateInArea(points,
+                        p -> p.getRect().y,
+                        p -> p.getRect().height, Grid.TOLLERANCE_IN_PERCENT);
 
-            // same area, maped by x
-            Map<Integer, List<MatOfPoint>> mapByX = GroupingBy.approximateInArea(listSameArea,
-                    p -> {
-                        Rect rect = Imgproc.boundingRect(p);
-                        return (int) rect.x;
-                    },
-                    p -> {
-                        Rect rect = Imgproc.boundingRect(p);
-                        return (int) rect.width;
-                    }, Grid.TOLLERANCE_IN_PERCENT);
+                mapByY = mapByY.entrySet().stream().filter(p -> p.getValue().size() >= Grid.MIN_HEIGHT)
+                        .collect(Collectors.toMap(k -> k.getKey(), v -> v.getValue()));
 
-            // remove colums with less than minimum size
-            List<Map.Entry<Integer, List<MatOfPoint>>> filteredMapByX = mapByX.entrySet().stream()
-                    .filter(p -> p.getValue().size() >= Grid.MIN_HEIGHT).collect(Collectors.toList());
+                List<Map<Integer, List<GridCell>>> listOfxyMaps = GridUtils
+                        .removePointsToConformMinWidthAndHeight(mapByX, mapByY);
 
-            // filtered area, maped by y
-            listSameArea = filteredMapByX.stream().flatMap(p -> p.getValue().stream()).collect(Collectors.toList());
-            Map<Integer, List<MatOfPoint>> mapByY = GroupingBy.approximateInArea(listSameArea,
-                    p -> {
-                        Rect rect = Imgproc.boundingRect(p);
-                        return (int) rect.y;
-                    },
-                    p -> {
-                        Rect rect = Imgproc.boundingRect(p);
-                        return (int) rect.height;
-                    }, Grid.TOLLERANCE_IN_PERCENT);
+                mapByX = listOfxyMaps.get(0);
+                mapByY = listOfxyMaps.get(1);
 
-            // remove rows with less than minimum size
-            List<Map.Entry<Integer, List<MatOfPoint>>> filteredMapByY = mapByY.entrySet().stream()
-                    .filter(p -> p.getValue().size() >= Grid.MIN_WIDTH).collect(Collectors.toList());
+                test
 
-            // remove entries from maped by x
-            Iterator<Map.Entry<Integer, List<MatOfPoint>>> iterator = filteredMapByX.iterator();
-            while (iterator.hasNext()) {
-                Map.Entry<Integer, List<MatOfPoint>> entry = iterator.next();
-                if (!filteredMapByY.contains(entry)) {
-                    iterator.remove();
-                }
             }
-
         }
 
         int stop = LocalTime.now().getSecond();

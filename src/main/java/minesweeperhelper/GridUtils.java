@@ -1,15 +1,23 @@
 package minesweeperhelper;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
@@ -123,5 +131,102 @@ public class GridUtils {
 
         return mat;
     }
+
+    public static Map<Integer, Map<Integer, List<GridCell>>> groupByWidthThenByHeight(List<MatOfPoint> contours,
+            int minimumHorizontalCount, int minimumVerticalCout, int tolleranceInPercent) {
+        Map<Integer, Map<Integer, List<GridCell>>> map = new HashMap<>();
+        // map by width
+        Map<Integer, List<GridCell>> mapByWidth = convertToGridCells(GroupingBy.approximate(contours,
+                p -> {
+                    Rect rect = Imgproc.boundingRect(p);
+                    return rect.width;
+                },
+                tolleranceInPercent));
+
+        List<Map.Entry<Integer, List<GridCell>>> filteredByWidth = mapByWidth.entrySet().stream()
+                .filter(p -> p.getValue().size() >= minimumHorizontalCount * minimumVerticalCout)
+                .collect(Collectors.toList());
+
+        for (Map.Entry<Integer, List<GridCell>> listByWidth : filteredByWidth) {
+            // map by height
+            Map<Integer, List<GridCell>> mapByHeight = GroupingBy.approximate(listByWidth.getValue(),
+                    p -> p.getRect().height,
+                    tolleranceInPercent);
+            Map<Integer, List<GridCell>> filteredByHeight = mapByHeight.entrySet().stream()
+                    .filter(p -> p.getValue().size() >= minimumHorizontalCount * minimumVerticalCout)
+                    .collect(Collectors.toMap(p -> p.getKey(), v -> v.getValue()));
+
+            map.put(listByWidth.getKey(), filteredByHeight);
+        }
+        return map;
+    }
+
+    private static Map<Integer, List<GridCell>> convertToGridCells(Map<Integer, List<MatOfPoint>> map) {
+        Map<Integer, List<GridCell>> mapR = map.entrySet().stream()
+                .collect(Collectors.toMap(k -> k.getKey(),
+                        v -> {
+                            List<GridCell> list = v.getValue().stream().map(p -> {
+                                Rect rect = Imgproc.boundingRect(p);
+                                return new GridCell(rect);
+                            }).collect(Collectors.toList());
+                            return list;
+                        }));
+        return mapR;
+    }
+
+    public static List<Map<Integer, List<GridCell>>> removePointsToConformMinWidthAndHeight(
+            Map<Integer, List<GridCell>> mapByX, Map<Integer, List<GridCell>> mapByY) {
+
+        long beforeByXCount = mapByX.entrySet().stream().flatMap(p -> p.getValue().stream()).count();
+
+        // romeve if absent in mapByY
+        Set<UUID> mapByYIDs = mapByY.entrySet().stream().flatMap(p -> p.getValue().stream()).map(p -> p.getId())
+                .collect(Collectors.toSet());
+
+        mapByX = mapByX.entrySet().stream().collect(Collectors.toMap(k -> k.getKey(), v -> {
+            List<GridCell> list = v.getValue().stream().filter(i -> mapByYIDs.contains(i.getId()))
+                    .collect(Collectors.toList());
+            return list;
+        }));
+
+        mapByX = mapByX.entrySet().stream().filter(p -> p.getValue().size() >= Grid.MIN_WIDTH)
+                .collect(Collectors.toMap(k -> k.getKey(), v -> v.getValue()));
+
+        long afterByXCount = mapByX.entrySet().stream().flatMap(p -> p.getValue().stream()).count();
+
+        long beforeByYCount = mapByY.entrySet().stream().flatMap(p -> p.getValue().stream()).count();
+
+        // romeve if absent in mapByY
+        Set<UUID> mapByXIDs = mapByX.entrySet().stream().flatMap(p -> p.getValue().stream()).map(p -> p.getId())
+                .collect(Collectors.toSet());
+
+        mapByY = mapByY.entrySet().stream().collect(Collectors.toMap(k -> k.getKey(), v -> {
+            List<GridCell> list = v.getValue().stream().filter(i -> mapByXIDs.contains(i.getId()))
+                    .collect(Collectors.toList());
+            return list;
+        }));
+
+        mapByY = mapByY.entrySet().stream().filter(p -> p.getValue().size() >= Grid.MIN_HEIGHT)
+                .collect(Collectors.toMap(k -> k.getKey(), v -> v.getValue()));
+
+        long afterByYCount = mapByY.entrySet().stream().flatMap(p -> p.getValue().stream()).count();
+
+        if (mapByX.size() > 0 && mapByY.size() > 0
+                && (beforeByXCount != afterByXCount || beforeByYCount != afterByYCount)) {
+            return removePointsToConformMinWidthAndHeight(mapByX, mapByY);
+        }
+
+        if (mapByX.size() > 0 && mapByY.size() > 0)
+            return Arrays.asList(mapByX, mapByY);
+        else
+            return Arrays.asList(new HashMap<>(), new HashMap<>());
+    }
+
+    /*
+     * public <T,N,K,L> Map<T,List<N>> removeByCondition(Map<T,List<N>> list,
+     * Function<K, L> conditionToRemove){
+     * 
+     * }
+     */
 
 }

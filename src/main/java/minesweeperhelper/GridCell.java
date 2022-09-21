@@ -8,32 +8,12 @@ public class GridCell {
 
     private UUID id;
     private Rect rect;
-    private CellTypeEnum cellTypeEnum;
-    private int number = -1;
     private int positionInGridX = -1;
     private int positionInGridY = -1;
 
-    public GridCell(CellTypeEnum cellTypeEnum, Rect rect, int number) {
-        this.cellTypeEnum = cellTypeEnum;
+    public GridCell(Rect rect) {
         this.rect = rect;
-        this.number = number;
         this.id = UUID.randomUUID();
-    }
-
-    public CellTypeEnum getCellTypeEnum() {
-        return cellTypeEnum;
-    }
-
-    public void setCellTypeEnum(CellTypeEnum cellTypeEnum) {
-        this.cellTypeEnum = cellTypeEnum;
-    }
-
-    public int getNumber() {
-        return number;
-    }
-
-    public void setNumber(int number) {
-        this.number = number;
     }
 
     public Rect getRect() {
@@ -42,10 +22,6 @@ public class GridCell {
 
     public void setRect(Rect rect) {
         this.rect = rect;
-    }
-
-    public String toString() {
-        return /* cellTypeEnum.name() + " number: " +  */number + " x: " + rect.x + " y: " + rect.y + " id: " + id.toString();
     }
 
     public UUID getId(){
@@ -58,6 +34,7 @@ public class GridCell {
     public void setPositionInGridY(int pos){
         this.positionInGridY = pos;
     }
+
     public int getX(){
         return positionInGridX;
     }
