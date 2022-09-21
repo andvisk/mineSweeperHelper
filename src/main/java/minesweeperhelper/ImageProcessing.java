@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
@@ -82,9 +83,24 @@ public class ImageProcessing {
             }
 
             logger.debug(i + " " + numbersLocations.size());
-            
+
         }
-        
+
         return list;
+    }
+
+    public static double calibrateScreenShot(Mat screenShot) {
+        Mat grayMat = new Mat();
+        Imgproc.cvtColor(screenShot, grayMat, Imgproc.COLOR_BGR2GRAY);
+
+        Mat thresholdMat = new Mat();
+        Imgproc.threshold(grayMat, thresholdMat, 127, 255, Imgproc.THRESH_BINARY);
+
+        Mat hierarchy = new Mat();
+        List<MatOfPoint> contours = new ArrayList();
+        Imgproc.findContours(thresholdMat, contours, hierarchy, 1, 2);
+
+        Imgcodecs.imwrite("/Users/agnegv/Desktop/andrius/test.jpg", hierarchy);
+        return 1;
     }
 }

@@ -11,5 +11,3 @@ gradlew run
 
 Tested with java 17, Windows 10
 
-In case help sceen fails to open, increase or decrease zoom in minesweeper app
-
