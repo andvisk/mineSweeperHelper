@@ -136,7 +136,11 @@ public class ImageProcessing {
                 mapByX = listOfxyMaps.get(0);
                 mapByY = listOfxyMaps.get(1);
 
-                test
+                test here
+
+                padaryti testus metodams
+
+                pasukus 30% atpazinti kaip? -> Rect is contours
 
             }
         }
