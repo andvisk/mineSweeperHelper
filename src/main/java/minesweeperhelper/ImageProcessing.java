@@ -1,14 +1,19 @@
 package minesweeperhelper;
 
 import java.io.File;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfRect;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
@@ -90,6 +95,7 @@ public class ImageProcessing {
     }
 
     public static double calibrateScreenShot(Mat screenShot) {
+
         Mat grayMat = new Mat();
         Imgproc.cvtColor(screenShot, grayMat, Imgproc.COLOR_BGR2GRAY);
 
@@ -97,10 +103,29 @@ public class ImageProcessing {
         Imgproc.threshold(grayMat, thresholdMat, 127, 255, Imgproc.THRESH_BINARY);
 
         Mat hierarchy = new Mat();
-        List<MatOfPoint> contours = new ArrayList();
-        Imgproc.findContours(thresholdMat, contours, hierarchy, 1, 2);
+        List<MatOfPoint> contours = new ArrayList<>();
+        Imgproc.findContours(thresholdMat, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
 
-        Imgcodecs.imwrite("/Users/agnegv/Desktop/andrius/test.jpg", hierarchy);
+        int start = LocalTime.now().getSecond();
+
+        Map<Integer, List<MatOfPoint>> mapByArea = GroupingBy.approximate(contours, p -> Imgproc.contourArea(p), Grid.TOLLERANCE_IN_PERCENT);
+
+        int stop = LocalTime.now().getSecond();
+
+        logger.info("laikas " + (stop - start));
+
+        Mat drawing = new Mat();
+        screenShot.copyTo(drawing);
+        for (int i = 0; i < contours.size(); i++) {
+            Scalar color = new Scalar(0, 255, 0);
+            Imgproc.drawContours(drawing, contours, i, color, 2, Imgproc.LINE_8, hierarchy, 0, new Point());
+        }
+
+        
+
+        //Imgcodecs.imwrite("/Users/agnegv/Desktop/andrius/test.jpg", hierarchy);
+        Imgcodecs.imwrite("c:/andrius/test.jpg", drawing);
+        
         return 1;
     }
 }
