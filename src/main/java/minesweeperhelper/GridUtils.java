@@ -21,7 +21,7 @@ public class GridUtils {
 
         if (cells.size() > 0) {
 
-            Map<Integer, List<GridCell>> mapByX = GroupingBy.approximate(cells, p -> (int) p.getRect().x,
+            Map<Integer, List<GridCell>> mapByX = GroupingBy.approximateInArea(cells, p -> (int) p.getRect().x,
                     p -> (int) p.getRect().width, Grid.TOLLERANCE_IN_PERCENT);
 
             // remove dublicates if any

@@ -8,7 +8,7 @@ import java.util.function.Function;
 
 public class GroupingBy {
 
-    public static <T> Map<Integer, List<T>> approximate(List<T> list, Function<T, Integer> functionPosition,
+    public static <T> Map<Integer, List<T>> approximateInArea(List<T> list, Function<T, Integer> functionPosition,
             Function<T, Integer> functionWidthOrHeight, int tolleranceInPercents) {
 
         Map<Integer, List<T>> map = new HashMap<>();

@@ -4,6 +4,7 @@ import java.io.File;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -108,7 +109,61 @@ public class ImageProcessing {
 
         int start = LocalTime.now().getSecond();
 
-        Map<Integer, List<MatOfPoint>> mapByArea = GroupingBy.approximate(contours, p -> Imgproc.contourArea(p), Grid.TOLLERANCE_IN_PERCENT);
+        // map by area
+        Map<Integer, List<MatOfPoint>> mapByArea = GroupingBy.approximate(contours, p -> Imgproc.contourArea(p),
+                Grid.TOLLERANCE_IN_PERCENT);
+
+        // same maps entries list
+        List<Map.Entry<Integer, List<MatOfPoint>>> list = mapByArea.entrySet().stream()
+                .filter(p -> p.getValue().size() >= Grid.MIN_HEIGHT * Grid.MIN_WIDTH).collect(Collectors.toList());
+
+        // cycle by area
+        for (int i = 0; i < list.size(); i++) {
+            List<MatOfPoint> listSameArea = list.get(i).getValue();
+
+            // same area, maped by x
+            Map<Integer, List<MatOfPoint>> mapByX = GroupingBy.approximateInArea(listSameArea,
+                    p -> {
+                        Rect rect = Imgproc.boundingRect(p);
+                        return (int) rect.x;
+                    },
+                    p -> {
+                        Rect rect = Imgproc.boundingRect(p);
+                        return (int) rect.width;
+                    }, Grid.TOLLERANCE_IN_PERCENT);
+
+            // remove colums with less than minimum size
+            List<Map.Entry<Integer, List<MatOfPoint>>> filteredMapByX = mapByX.entrySet().stream()
+                    .filter(p -> p.getValue().size() >= Grid.MIN_HEIGHT).collect(Collectors.toList());
+
+            // filtered area, maped by y
+            listSameArea = filteredMapByX.stream().flatMap(p -> p.getValue().stream()).collect(Collectors.toList());
+            Map<Integer, List<MatOfPoint>> mapByY = GroupingBy.approximateInArea(listSameArea,
+                    p -> {
+                        Rect rect = Imgproc.boundingRect(p);
+                        return (int) rect.y;
+                    },
+                    p -> {
+                        Rect rect = Imgproc.boundingRect(p);
+                        return (int) rect.height;
+                    }, Grid.TOLLERANCE_IN_PERCENT);
+
+            // remove rows with less than minimum size
+            List<Map.Entry<Integer, List<MatOfPoint>>> filteredMapByY = mapByY.entrySet().stream()
+                    .filter(p -> p.getValue().size() >= Grid.MIN_WIDTH).collect(Collectors.toList());
+
+            // remove entries from maped by x
+            Iterator<Map.Entry<Integer, List<MatOfPoint>>> iterator = filteredMapByX.iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<Integer, List<MatOfPoint>> entry = iterator.next();
+                if (!filteredMapByY.contains(entry)) {
+                    iterator.remove();
+                }
+            }
+
+            aaa
+
+        }
 
         int stop = LocalTime.now().getSecond();
 
@@ -116,16 +171,20 @@ public class ImageProcessing {
 
         Mat drawing = new Mat();
         screenShot.copyTo(drawing);
-        for (int i = 0; i < contours.size(); i++) {
-            Scalar color = new Scalar(0, 255, 0);
-            Imgproc.drawContours(drawing, contours, i, color, 2, Imgproc.LINE_8, hierarchy, 0, new Point());
-        }
 
-        
+        for (int op = 0; op < list.size(); op++)
+            for (int i = 0; i < list.get(op).getValue().size(); i++) {
+                for (MatOfPoint matOfPoint : list.get(op).getValue()) {
+                    Scalar color = new Scalar(0, 255, 0);
+                    Rect rect = Imgproc.boundingRect(matOfPoint);
+                    Imgproc.rectangle(drawing, new Point(rect.x, rect.y),
+                            new Point(rect.x + rect.width, rect.y + rect.height), color, 5);
+                }
+            }
 
-        //Imgcodecs.imwrite("/Users/agnegv/Desktop/andrius/test.jpg", hierarchy);
+        // Imgcodecs.imwrite("/Users/agnegv/Desktop/andrius/test.jpg", hierarchy);
         Imgcodecs.imwrite("c:/andrius/test.jpg", drawing);
-        
+
         return 1;
     }
 }
