@@ -109,9 +109,24 @@ public class ImageProcessing {
 
         int start = LocalTime.now().getSecond();
 
-        // map by area
-        Map<Integer, List<MatOfPoint>> mapByArea = GroupingBy.approximate(contours, p -> Imgproc.contourArea(p),
+        // map by width
+        Map<Integer, List<MatOfPoint>> mapByWidth = GroupingBy.approximate(contours,
+                p -> {
+                    Rect rect = Imgproc.boundingRect(p);
+                    return rect.width;
+                },
                 Grid.TOLLERANCE_IN_PERCENT);
+
+        for (List<MatOfPoint> listByWidth : mapByWidth.values()) {
+            // map by height
+            Map<Integer, List<MatOfPoint>> mapByHeight = GroupingBy.approximate(contours,
+                    p -> {
+                        Rect rect = Imgproc.boundingRect(p);
+                        return rect.height;
+                    },
+                    Grid.TOLLERANCE_IN_PERCENT);
+                    
+        }
 
         // same maps entries list
         List<Map.Entry<Integer, List<MatOfPoint>>> list = mapByArea.entrySet().stream()
@@ -160,8 +175,6 @@ public class ImageProcessing {
                     iterator.remove();
                 }
             }
-
-            
 
         }
 
