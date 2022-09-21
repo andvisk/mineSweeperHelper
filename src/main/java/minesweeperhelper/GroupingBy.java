@@ -1,6 +1,7 @@
 package minesweeperhelper;
 
 import org.opencv.core.Rect;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.*;
@@ -35,7 +36,7 @@ public class GroupingBy {
         return map;
     }
 
-    public static <T> Map<Integer, List<T>> approximate(List<T> list, Function<T, Double> functionSize,
+    public static <T> Map<Integer, List<T>> approximate(List<T> list, Function<T, Double> functionLength,
             int tolleranceInPercents) {
 
         Map<Integer, List<T>> map = new HashMap<>();
@@ -47,16 +48,44 @@ public class GroupingBy {
             Integer closestValue = map.entrySet().stream()
                     .map(p -> p.getKey())
                     .min(Comparator
-                            .comparingInt(p -> Math.abs(p - (int) Math.round(functionSize.apply(list.get(finalI))))))
+                            .comparingInt(p -> Math.abs(p - (int) Math.round(functionLength.apply(list.get(finalI))))))
                     .orElse(-1);
 
-            if (closestValue > 0 && (double) Math.round(functionSize.apply(list.get(finalI))) / 100
-                    * tolleranceInPercents >= Math.abs(closestValue - functionSize.apply(list.get(i)))) {
+            if (closestValue > 0 && (double) Math.round(functionLength.apply(list.get(finalI))) / 100
+                    * tolleranceInPercents >= Math.abs(closestValue - functionLength.apply(list.get(i)))) {
                 map.get(closestValue).add(list.get(i));
             } else {
                 List<T> mapValueList = new ArrayList<>();
                 mapValueList.add(list.get(i));
-                map.put((int) Math.round(functionSize.apply(list.get(finalI))), mapValueList);
+                map.put((int) Math.round(functionLength.apply(list.get(finalI))), mapValueList);
+            }
+
+        }
+        return map;
+    }
+
+    public static <T> Map<Integer, List<T>> approximate(List<T> list, Function<T, Double> functionWidth, Function<T, Double> functionHeight,
+            int tolleranceInPercents) {
+
+        Map<Size, List<T>> map = new HashMap<>();
+
+        for (int i = 0; i < list.size(); i++) {
+
+            final int finalI = i;
+
+            Integer closestValue = map.entrySet().stream()
+                    .map(p -> p.getKey())
+                    .min(Comparator
+                            .comparingInt(p -> Math.abs(p - (int) Math.round(functionLength.apply(list.get(finalI))))))
+                    .orElse(-1);
+
+            if (closestValue > 0 && (double) Math.round(functionLength.apply(list.get(finalI))) / 100
+                    * tolleranceInPercents >= Math.abs(closestValue - functionLength.apply(list.get(i)))) {
+                map.get(closestValue).add(list.get(i));
+            } else {
+                List<T> mapValueList = new ArrayList<>();
+                mapValueList.add(list.get(i));
+                map.put((int) Math.round(functionLength.apply(list.get(finalI))), mapValueList);
             }
 
         }
