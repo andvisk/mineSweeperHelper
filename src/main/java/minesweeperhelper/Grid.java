@@ -14,19 +14,19 @@ public class Grid {
     public static final int MIN_HEIGHT = 9;
     public static final int TOLLERANCE_IN_PERCENT = 50; // 25% to one direction
 
-    private GridCell[][] grid;
+    private MineSweeperGridCell[][] grid;
 
     public Grid(int width, int height) {
-        grid = new GridCell[width][height];
+        grid = new MineSweeperGridCell[width][height];
     }
 
-    public void setCell(int x, int y, GridCell gridCell) {
+    public void setCell(int x, int y, MineSweeperGridCell gridCell) {
         grid[x][y] = gridCell;
         gridCell.setPositionInGridX(x);
         gridCell.setPositionInGridY(y);
     }
 
-    public GridCell[][] getGrid() {
+    public MineSweeperGridCell[][] getGrid() {
         return grid;
     }
 
@@ -38,27 +38,27 @@ public class Grid {
                     grid[i][y].setCellTypeEnum(CellTypeEnum.UNCHECKED);
             }
         }
-        List<GridCell> list = Stream.of(grid).flatMap(p -> Stream.of(p)).collect(Collectors.toList());
+        List<MineSweeperGridCell> list = Stream.of(grid).flatMap(p -> Stream.of(p)).collect(Collectors.toList());
 
-        Set<GridCell> uncheckedAndFlagsSet = new HashSet<GridCell>(list.stream()
+        Set<MineSweeperGridCell> uncheckedAndFlagsSet = new HashSet<MineSweeperGridCell>(list.stream()
                 .filter(
                         p -> p.getCellTypeEnum().equals(CellTypeEnum.UNCHECKED) ||
                                 p.getCellTypeEnum().equals(CellTypeEnum.FLAG))
                 .collect(Collectors.toList()));
 
-        Set<GridCell> usersSetFlagsSet = new HashSet<GridCell>(list.stream()
+        Set<MineSweeperGridCell> usersSetFlagsSet = new HashSet<MineSweeperGridCell>(list.stream()
                 .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.FLAG))
                 .collect(Collectors.toList()));
 
         markFlagsAndEmptyCells(list);
 
-        List<GridCell> cellsForHelp = uncheckedAndFlagsSet.stream()
+        List<MineSweeperGridCell> cellsForHelp = uncheckedAndFlagsSet.stream()
                 .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.NEEDS_TO_BE_CHECKED) ||
                         p.getCellTypeEnum().equals(CellTypeEnum.FLAG))
                 .collect(Collectors.toList());
 
         // todo picture on these unsafe flags
-        Set<GridCell> usersSetFalseFlagsSet = new HashSet<GridCell>(usersSetFlagsSet.stream()
+        Set<MineSweeperGridCell> usersSetFalseFlagsSet = new HashSet<MineSweeperGridCell>(usersSetFlagsSet.stream()
                 .filter(p -> !p.getCellTypeEnum().equals(CellTypeEnum.FLAG))
                 .collect(Collectors.toList()));
 
@@ -66,17 +66,17 @@ public class Grid {
 
     }
 
-    private void markFlagsAndEmptyCells(List<GridCell> list) {
+    private void markFlagsAndEmptyCells(List<MineSweeperGridCell> list) {
         boolean anyChanges = false;
-        List<GridCell> numbers = list.stream().filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.NUMBER))
+        List<MineSweeperGridCell> numbers = list.stream().filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.NUMBER))
                 .collect(Collectors.toList());
 
         // check empty slots
-        for (GridCell number : numbers) {
-            List<GridCell> neighbours = getNeighbourCells(list, number);
-            List<GridCell> neighboursUnchecked = neighbours.stream()
+        for (MineSweeperGridCell number : numbers) {
+            List<MineSweeperGridCell> neighbours = getNeighbourCells(list, number);
+            List<MineSweeperGridCell> neighboursUnchecked = neighbours.stream()
                     .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.UNCHECKED)).toList();
-            List<GridCell> neighboursFlags = neighbours.stream()
+            List<MineSweeperGridCell> neighboursFlags = neighbours.stream()
                     .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.FLAG)).toList();
             if (neighboursFlags.size() == number.getNumber() && neighboursUnchecked.size() > 0) {
                 neighboursUnchecked.stream().forEach(p -> {
@@ -90,11 +90,11 @@ public class Grid {
         // check flags for numbers where neighbour unchecked cells count equals number
         // minus flags
         // count
-        for (GridCell number : numbers) {
-            List<GridCell> neighbours = getNeighbourCells(list, number);
-            List<GridCell> neighboursUnchecked = neighbours.stream()
+        for (MineSweeperGridCell number : numbers) {
+            List<MineSweeperGridCell> neighbours = getNeighbourCells(list, number);
+            List<MineSweeperGridCell> neighboursUnchecked = neighbours.stream()
                     .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.UNCHECKED)).toList();
-            List<GridCell> neighboursFlags = neighbours.stream()
+            List<MineSweeperGridCell> neighboursFlags = neighbours.stream()
                     .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.FLAG)).toList();
             if (neighboursUnchecked.size() > 0
                     && neighboursUnchecked.size() + neighboursFlags.size() == number.getNumber()) {
@@ -105,36 +105,36 @@ public class Grid {
 
         // two neighbour numbers and their unchecked cells intersection can have only
         // one flag
-        for (GridCell number : numbers) {
-            Set<GridCell> numberFlags = new HashSet<GridCell>(getNeighbourCells(list, number).stream()
+        for (MineSweeperGridCell number : numbers) {
+            Set<MineSweeperGridCell> numberFlags = new HashSet<MineSweeperGridCell>(getNeighbourCells(list, number).stream()
                     .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.FLAG)).toList());
             if (number.getNumber() > numberFlags.size()) {
-                List<GridCell> neighbours = getNeighbourCells(list, number);
-                List<GridCell> neighboursNumbers = neighbours.stream()
+                List<MineSweeperGridCell> neighbours = getNeighbourCells(list, number);
+                List<MineSweeperGridCell> neighboursNumbers = neighbours.stream()
                         .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.NUMBER)).toList();
 
-                Set<GridCell> numberUnchecked = new HashSet<GridCell>(getNeighbourCells(list, number).stream()
+                Set<MineSweeperGridCell> numberUnchecked = new HashSet<MineSweeperGridCell>(getNeighbourCells(list, number).stream()
                         .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.UNCHECKED)).toList());
 
-                for (GridCell neighbourNumber : neighboursNumbers) {
-                    Set<GridCell> neighboursFlags = new HashSet<GridCell>(
+                for (MineSweeperGridCell neighbourNumber : neighboursNumbers) {
+                    Set<MineSweeperGridCell> neighboursFlags = new HashSet<MineSweeperGridCell>(
                             getNeighbourCells(list, neighbourNumber).stream()
                                     .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.FLAG)).toList());
-                    Set<GridCell> neighboursUnchecked = new HashSet<GridCell>(
+                    Set<MineSweeperGridCell> neighboursUnchecked = new HashSet<MineSweeperGridCell>(
                             getNeighbourCells(list, neighbourNumber).stream()
                                     .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.UNCHECKED)).toList());
                     if (neighbourNumber.getNumber() - neighboursFlags.size() == 1) {
-                        Set<GridCell> uncheckedInCommon = new HashSet<GridCell>(numberUnchecked);
+                        Set<MineSweeperGridCell> uncheckedInCommon = new HashSet<MineSweeperGridCell>(numberUnchecked);
                         uncheckedInCommon.retainAll(neighboursUnchecked);
                         if (numberUnchecked.size() - uncheckedInCommon.size() == number.getNumber() - numberFlags.size()
                                 - 1) {
-                            Set<GridCell> numberCellsToFlag = new HashSet<>(numberUnchecked);
+                            Set<MineSweeperGridCell> numberCellsToFlag = new HashSet<>(numberUnchecked);
                             numberCellsToFlag.removeAll(uncheckedInCommon);
                             if (numberCellsToFlag.size() > 0) {
                                 numberCellsToFlag.stream().forEach(p -> p.setCellTypeEnum(CellTypeEnum.FLAG));
                                 anyChanges = true;
                             }
-                            Set<GridCell> neighboursOnlyUnchecked = new HashSet<GridCell>(neighboursUnchecked);
+                            Set<MineSweeperGridCell> neighboursOnlyUnchecked = new HashSet<MineSweeperGridCell>(neighboursUnchecked);
                             neighboursOnlyUnchecked.removeAll(uncheckedInCommon);
                             if (neighboursOnlyUnchecked.size() > 0) {
                                 neighboursOnlyUnchecked.stream()
@@ -153,7 +153,7 @@ public class Grid {
             markFlagsAndEmptyCells(list);
     }
 
-    private List<GridCell> getNeighbourCells(List<GridCell> list, GridCell cell) {
+    private List<MineSweeperGridCell> getNeighbourCells(List<MineSweeperGridCell> list, MineSweeperGridCell cell) {
         return list.stream().filter(
                 p -> (p.getX() - 1 == cell.getX() && p.getY() - 1 == cell.getY()) ||
                         (p.getX() == cell.getX() && p.getY() - 1 == cell.getY()) ||

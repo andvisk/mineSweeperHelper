@@ -27,13 +27,13 @@ public class ImageProcessing {
 
     public Grid processView(Mat srcImage) {
 
-        List<GridCell> cells = findCells(srcImage);
+        List<MineSweeperGridCell> cells = findCells(srcImage);
 
         return GridUtils.collectGrid(cells);
     }
 
-    private List<GridCell> findCells(Mat srcImage) {
-        List<GridCell> list = new ArrayList<>();
+    private List<MineSweeperGridCell> findCells(Mat srcImage) {
+        List<MineSweeperGridCell> list = new ArrayList<>();
 
         int machMethod = Imgproc.TM_CCOEFF_NORMED;
 
@@ -79,7 +79,8 @@ public class ImageProcessing {
                     if (i == 10)
                         cellTypeEnum = CellTypeEnum.UNCHECKED;
 
-                    GridCell gridCell = new GridCell(cellTypeEnum, rect, (i >= 0 && i < 9) ? i : -1);
+                    MineSweeperGridCell gridCell = new MineSweeperGridCell(cellTypeEnum, rect,
+                            (i >= 0 && i < 9) ? i : -1);
 
                     list.add(gridCell);
 
@@ -131,16 +132,13 @@ public class ImageProcessing {
                         .collect(Collectors.toMap(k -> k.getKey(), v -> v.getValue()));
 
                 List<Map<Integer, List<GridCell>>> listOfxyMaps = GridUtils
-                        .removePointsToConformMinWidthAndHeight(mapByX, mapByY);
+                        .removePointsToConformMinWidthAndHeight(mapByX, mapByY, Grid.MIN_WIDTH, Grid.MIN_HEIGHT);
 
                 mapByX = listOfxyMaps.get(0);
                 mapByY = listOfxyMaps.get(1);
 
-                test here
-
-                padaryti testus metodams
-
-                pasukus 30% atpazinti kaip? -> Rect is contours
+                // todo
+                // pasukus 30% atpazinti kaip? -> Rect is contours
 
             }
         }
@@ -152,7 +150,7 @@ public class ImageProcessing {
         Mat drawing = new Mat();
         screenShot.copyTo(drawing);
 
-        for (int op = 0; op < list.size(); op++)
+        /* for (int op = 0; op < list.size(); op++)
             for (int i = 0; i < list.get(op).getValue().size(); i++) {
                 for (MatOfPoint matOfPoint : list.get(op).getValue()) {
                     Scalar color = new Scalar(0, 255, 0);
@@ -160,7 +158,7 @@ public class ImageProcessing {
                     Imgproc.rectangle(drawing, new Point(rect.x, rect.y),
                             new Point(rect.x + rect.width, rect.y + rect.height), color, 5);
                 }
-            }
+            } */
 
         // Imgcodecs.imwrite("/Users/agnegv/Desktop/andrius/test.jpg", hierarchy);
         Imgcodecs.imwrite("c:/andrius/test.jpg", drawing);

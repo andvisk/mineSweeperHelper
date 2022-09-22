@@ -25,20 +25,20 @@ public class GridUtils {
 
     private static Logger log = LogManager.getLogger(GridUtils.class);
 
-    public static Grid collectGrid(List<GridCell> cells) {
+    public static Grid collectGrid(List<MineSweeperGridCell> cells) {
 
         if (cells.size() > 0) {
 
-            Map<Integer, List<GridCell>> mapByX = GroupingBy.approximateInArea(cells, p -> (int) p.getRect().x,
+            Map<Integer, List<MineSweeperGridCell>> mapByX = GroupingBy.approximateInArea(cells, p -> (int) p.getRect().x,
                     p -> (int) p.getRect().width, Grid.TOLLERANCE_IN_PERCENT);
 
             // remove dublicates if any
             for (Integer x : mapByX.keySet()) {
-                List<GridCell> list = mapByX.get(x);
+                List<MineSweeperGridCell> list = mapByX.get(x);
                 for (int i = 0; i < list.size() - 1; i++) {
-                    GridCell gridCell = list.get(i);
-                    Iterator<GridCell> iterator = list.iterator();
-                    GridCell gridCellIter = null;
+                    MineSweeperGridCell gridCell = list.get(i);
+                    Iterator<MineSweeperGridCell> iterator = list.iterator();
+                    MineSweeperGridCell gridCellIter = null;
                     for (int j = 0; j < i; j++) {
                         if (iterator.hasNext())
                             iterator.next();
@@ -79,7 +79,7 @@ public class GridUtils {
             int column = -1;
             for (Integer x : xs) {
                 ++column;
-                List<GridCell> columnData = mapByX.get(x);
+                List<MineSweeperGridCell> columnData = mapByX.get(x);
                 List<Integer> ys = columnData.stream().map(p -> p.getRect().y).collect(Collectors.toList());
                 ys.sort((a, b) -> Integer.compare(a, b));
                 int row = -1;
@@ -96,7 +96,7 @@ public class GridUtils {
         return null;
     }
 
-    public static Mat printHelpInfo(Mat mat, GridCell gridCell) {
+    public static Mat printHelpInfo(Mat mat, MineSweeperGridCell gridCell) {
         Point position = new Point(
                 gridCell.getRect().x + (double) gridCell.getRect().width / 100 * 20,
                 gridCell.getRect().y + (double) gridCell.getRect().height / 100 * 20);
@@ -115,7 +115,7 @@ public class GridUtils {
         return mat;
     }
 
-    public static Mat printDebugInfo(Mat mat, GridCell gridCell) {
+    public static Mat printDebugInfo(Mat mat, MineSweeperGridCell gridCell) {
         Point position = new Point(gridCell.getRect().x,
                 gridCell.getRect().y + (double) gridCell.getRect().height / 100 * 30);
         Point position2 = new Point(gridCell.getRect().x,
@@ -174,8 +174,12 @@ public class GridUtils {
         return mapR;
     }
 
+    /* index 
+    0 - mapByX 
+    1 - mapByY
+    */
     public static List<Map<Integer, List<GridCell>>> removePointsToConformMinWidthAndHeight(
-            Map<Integer, List<GridCell>> mapByX, Map<Integer, List<GridCell>> mapByY) {
+            Map<Integer, List<GridCell>> mapByX, Map<Integer, List<GridCell>> mapByY, int minWidth, int minHeight) {
 
         long beforeByXCount = mapByX.entrySet().stream().flatMap(p -> p.getValue().stream()).count();
 
@@ -189,7 +193,7 @@ public class GridUtils {
             return list;
         }));
 
-        mapByX = mapByX.entrySet().stream().filter(p -> p.getValue().size() >= Grid.MIN_WIDTH)
+        mapByX = mapByX.entrySet().stream().filter(p -> p.getValue().size() >= minWidth)
                 .collect(Collectors.toMap(k -> k.getKey(), v -> v.getValue()));
 
         long afterByXCount = mapByX.entrySet().stream().flatMap(p -> p.getValue().stream()).count();
@@ -206,14 +210,14 @@ public class GridUtils {
             return list;
         }));
 
-        mapByY = mapByY.entrySet().stream().filter(p -> p.getValue().size() >= Grid.MIN_HEIGHT)
+        mapByY = mapByY.entrySet().stream().filter(p -> p.getValue().size() >= minHeight)
                 .collect(Collectors.toMap(k -> k.getKey(), v -> v.getValue()));
 
         long afterByYCount = mapByY.entrySet().stream().flatMap(p -> p.getValue().stream()).count();
 
         if (mapByX.size() > 0 && mapByY.size() > 0
                 && (beforeByXCount != afterByXCount || beforeByYCount != afterByYCount)) {
-            return removePointsToConformMinWidthAndHeight(mapByX, mapByY);
+            return removePointsToConformMinWidthAndHeight(mapByX, mapByY, minWidth, minHeight);
         }
 
         if (mapByX.size() > 0 && mapByY.size() > 0)
