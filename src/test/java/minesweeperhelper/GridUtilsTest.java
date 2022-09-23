@@ -25,6 +25,16 @@ public class GridUtilsTest {
     private int tolleranceInPercent = 25;
 
     @Test
+    void getIntervals() {
+        int width = 20;
+        int tolleranceInPercent = 40;
+        List<Integer> list = createFourIntervals(width, tolleranceInPercent);
+        List<List<Integer>> intervals = GridUtils.getIntervals(list, width, tolleranceInPercent);
+        assertEquals(intervals.get(0).size(), 4);
+        assertEquals(intervals.get(1).size(), 4);
+    }
+
+    @Test
     void removeCellsToConformSequency() {
 
         List listTest = getThreeSequancesWithinList(Grid.TOLLERANCE_IN_PERCENT);
@@ -83,6 +93,23 @@ public class GridUtilsTest {
         intersectionY.retainAll(allCellsToBeRemoved);
         assertEquals(intersectionY.size(), 0);
 
+    }
+
+    /*
+     * index 0 - List<GridCell> list with 3 intervals
+     */
+    private List<Integer> createFourIntervals(int width, int tolleranceInPercent) {
+        List<Integer> list = new ArrayList();
+        int x = 10;
+        for (int i = 1; i <= 20; i++) {
+            x += width + (double) width / 100 * (double) tolleranceInPercent / 2 - (double) width / 100 * 10;
+            list.add(x);
+            if(i == 3 || i == 10 || i == 12){
+                x += width + (double) width / 100 * (double) tolleranceInPercent * 2;
+                list.add(x);
+            }
+        }
+        return list;
     }
 
     /*

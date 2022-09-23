@@ -71,7 +71,7 @@ public class GridUtils {
                 mapByX = listOfxyMaps.get(0);
                 mapByY = listOfxyMaps.get(1);
 
-                List<Grid> gridList = collectGridsFromCells(mapByX, mapByY, Grid.TOLLERANCE_IN_PERCENT);
+                List<Grid> gridList = collectGridsFromCells(mapByX, mapByY, width, height, Grid.TOLLERANCE_IN_PERCENT);
 
                 Map<Integer, List<Grid>> returnMapByHeight = mapGridsByWidthAndHeight.get(width);
                 if (returnMapByHeight == null)
@@ -112,11 +112,40 @@ public class GridUtils {
         return mapGridsByWidthAndHeight;
     }
 
-    public static List<Grid> collectGridsFromCells(Map<Integer, List<GridCell>> mapByX, Map<Integer, List<GridCell>> mapByY,
-    int tolleranceInPercent) {
+    public static List<Grid> collectGridsFromCells(Map<Integer, List<GridCell>> mapByX,
+            Map<Integer, List<GridCell>> mapByY, int width, int height,
+            int tolleranceInPercent) {
         List<Grid> gridList = new ArrayList();
-ss
+        List<Integer> xs = mapByX.keySet().stream().sorted().collect(Collectors.toList());
+        List<Integer> ys = mapByX.keySet().stream().sorted().collect(Collectors.toList());
+
+        List<List<Integer>> xsIntervals = getIntervals(xs, width, tolleranceInPercent);
+        List<List<Integer>> ysIntervals = getIntervals(ys, height, tolleranceInPercent);
+
+        ddd
+
         return gridList;
+    }
+
+    public static List<List<Integer>> getIntervals(List<Integer> list, int widthOrHeight, int tolleranceInPercent) {
+        List<Integer> startPos = new ArrayList<>();
+        List<Integer> endPos = new ArrayList<>();
+        List<List<Integer>> retList = Arrays.asList(startPos, endPos);
+
+        if (list.size() > 0) {
+            int startingPos = 0;
+            for (int i = 1; i < list.size(); i++) {
+                if (Math.abs(list.get(i - 1) + widthOrHeight - list.get(i)) > (double) widthOrHeight / 100
+                        * tolleranceInPercent) {
+                    startPos.add(startingPos);
+                    endPos.add(i - 1);
+                    startingPos = i;
+                }
+            }
+            startPos.add(startingPos);
+            endPos.add(list.size() - 1);
+        }
+        return retList;
     }
 
     @Deprecated
