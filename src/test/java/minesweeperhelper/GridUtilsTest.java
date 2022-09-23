@@ -1,6 +1,7 @@
 package minesweeperhelper;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -30,8 +31,9 @@ public class GridUtilsTest {
         List<UUID> listIdsToRemove = (List<UUID>)listX.get(1);
 
         List listY = getMappedByY(mapByX, listIdsToRemove);
-        Map<Integer, List<GridCell>> mapByY = (Map<Integer, List<GridCell>>)listY.get(0);
-        listIdsToRemove = (List<UUID>)listY.get(1);
+        mapByX = (Map<Integer, List<GridCell>>)listY.get(0);
+        Map<Integer, List<GridCell>> mapByY = (Map<Integer, List<GridCell>>)listY.get(1);
+        listIdsToRemove = (List<UUID>)listY.get(2);
 
         //seting min width and height higher than input data size
         List<Map<Integer, List<GridCell>>> value = GridUtils.removePointsToConformMinWidthAndHeight(mapByX,
@@ -69,9 +71,7 @@ public class GridUtilsTest {
         Map<Integer, List<GridCell>> map = new HashMap<>();
         List<UUID> listId = new ArrayList();
 
-        List listRet = new ArrayList();
-        listRet.add(map);
-        listRet.add(listId);
+        List listRet = Arrays.asList(map, listId);
 
         int x = 20;
         for (int i = 1; i <= 10; i++) {
@@ -97,8 +97,9 @@ public class GridUtilsTest {
     }
 
     /*
-     * index 0 - Map<Integer, List<GridCell>> list with 10 non removing members
-     * index 1 - List<UUID> GridCells ids to be removed
+     * index 0 - Map<Integer, List<GridCell>> xs list with 10 non removing members
+     * index 1 - Map<Integer, List<GridCell>> ys list with 10 non removing members
+     * index 2 - List<UUID> GridCells ids to be removed
      */
     private List getMappedByY(Map<Integer, List<GridCell>> mapByX, List<UUID> listUUIDtoRemove) {
 
@@ -115,17 +116,17 @@ public class GridUtilsTest {
 
                 List<GridCell> listByY = map.get(ys.get(i - 1));
                 Integer maxX = listByY.stream().map(p->p.getRect().x).max((p,l) -> Integer.compare(p, l)).get();
-                Rect rect = new Rect(new Point(maxX + width + gap, ys.get(i - 1)), new Size(width, height));
+                Integer y = ys.get(i - 1);
+                Integer x = maxX + width + gap;
+                Rect rect = new Rect(new Point(x, y), new Size(width, height));
                 GridCell gridCell = new GridCell(rect);
                 listByY.add(gridCell);
                 listUUIDtoRemove.add(gridCell.getId());
+
+                mapByX.put(x, Arrays.asList(gridCell));
             }
         }
 
-        List listRet = new ArrayList();
-        listRet.add(map);
-        listRet.add(listUUIDtoRemove);
-
-        return listRet;
+        return Arrays.asList(mapByX, map, listUUIDtoRemove);
     }
 }

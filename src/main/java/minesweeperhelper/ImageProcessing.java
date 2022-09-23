@@ -114,10 +114,10 @@ public class ImageProcessing {
                 Grid.MIN_WIDTH, Grid.MIN_HEIGHT, Grid.TOLLERANCE_IN_PERCENT);
 
         for (Map.Entry<Integer, Map<Integer, List<GridCell>>> entry : mapByWidthAndHeight.entrySet()) {
-            Integer width = entry.getKey();
+            Integer width = entry.getKey(); // cell width
             Map<Integer, List<GridCell>> mapByHeight = entry.getValue();
             for (Map.Entry<Integer, List<GridCell>> entryByHeight : mapByHeight.entrySet()) {
-                Integer height = entryByHeight.getKey();
+                Integer height = entryByHeight.getKey(); // cell height
                 List<GridCell> points = entryByHeight.getValue();
 
                 Map<Integer, List<GridCell>> mapByX = GroupingBy.approximateInArea(points,
