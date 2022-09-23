@@ -1,5 +1,6 @@
 package minesweeperhelper;
 
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -19,17 +20,94 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 public class GridUtils {
 
     private static Logger log = LogManager.getLogger(GridUtils.class);
 
-    public static Grid collectGrid(List<MineSweeperGridCell> cells) {
+    public static Map<Integer, Map<Integer, List<Grid>>> collectGrids(Mat screenShot) {
+
+        Map<Integer, Map<Integer, List<Grid>>> mapGridsByWidthAndHeight = new HashMap();
+
+        Mat grayMat = new Mat();
+        Imgproc.cvtColor(screenShot, grayMat, Imgproc.COLOR_BGR2GRAY);
+
+        Mat thresholdMat = new Mat();
+        Imgproc.threshold(grayMat, thresholdMat, 127, 255, Imgproc.THRESH_BINARY);
+
+        Mat hierarchy = new Mat();
+        List<MatOfPoint> contours = new ArrayList<>();
+        Imgproc.findContours(thresholdMat, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        int start = LocalTime.now().getSecond();
+
+        Map<Integer, Map<Integer, List<GridCell>>> mapByWidthAndHeight = GridUtils.groupByWidthThenByHeight(contours,
+                Grid.MIN_WIDTH, Grid.MIN_HEIGHT, Grid.TOLLERANCE_IN_PERCENT);
+
+        for (Map.Entry<Integer, Map<Integer, List<GridCell>>> entry : mapByWidthAndHeight.entrySet()) {
+            Integer width = entry.getKey(); // cell width
+            Map<Integer, List<GridCell>> mapByHeight = entry.getValue();
+            for (Map.Entry<Integer, List<GridCell>> entryByHeight : mapByHeight.entrySet()) {
+                Integer height = entryByHeight.getKey(); // cell height
+                List<GridCell> points = entryByHeight.getValue();
+
+                Map<Integer, List<GridCell>> mapByX = GroupingBy.approximateInArea(points,
+                        p -> p.getRect().x,
+                        p -> p.getRect().width, Grid.TOLLERANCE_IN_PERCENT);
+
+                Map<Integer, List<GridCell>> mapByY = GroupingBy.approximateInArea(points,
+                        p -> p.getRect().y,
+                        p -> p.getRect().height, Grid.TOLLERANCE_IN_PERCENT);
+
+                mapByY = mapByY.entrySet().stream().filter(p -> p.getValue().size() >= Grid.MIN_HEIGHT)
+                        .collect(Collectors.toMap(k -> k.getKey(), v -> v.getValue()));
+
+                List<Map<Integer, List<GridCell>>> listOfxyMaps = GridUtils
+                        .removeSquaresToConformMinWidthAndHeight(mapByX, mapByY, Grid.MIN_WIDTH, Grid.MIN_HEIGHT);
+
+                mapByX = listOfxyMaps.get(0);
+                mapByY = listOfxyMaps.get(1);
+
+                // todo
+                // pasukus 30% atpazinti kaip? -> Rect is contours
+
+            }
+        }
+
+        int stop = LocalTime.now().getSecond();
+
+        log.info("laikas " + (stop - start));
+
+        Mat drawing = new Mat();
+        screenShot.copyTo(drawing);
+
+        /*
+         * for (int op = 0; op < list.size(); op++)
+         * for (int i = 0; i < list.get(op).getValue().size(); i++) {
+         * for (MatOfPoint matOfPoint : list.get(op).getValue()) {
+         * Scalar color = new Scalar(0, 255, 0);
+         * Rect rect = Imgproc.boundingRect(matOfPoint);
+         * Imgproc.rectangle(drawing, new Point(rect.x, rect.y),
+         * new Point(rect.x + rect.width, rect.y + rect.height), color, 5);
+         * }
+         * }
+         */
+
+        // Imgcodecs.imwrite("/Users/agnegv/Desktop/andrius/test.jpg", hierarchy);
+        Imgcodecs.imwrite("c:/andrius/test.jpg", drawing);
+
+        return mapGridsByWidthAndHeight;
+    }
+
+    @Deprecated
+    public static Board collectGrid(List<MineSweeperGridCell> cells) {
 
         if (cells.size() > 0) {
 
-            Map<Integer, List<MineSweeperGridCell>> mapByX = GroupingBy.approximateInArea(cells, p -> (int) p.getRect().x,
+            Map<Integer, List<MineSweeperGridCell>> mapByX = GroupingBy.approximateInArea(cells,
+                    p -> (int) p.getRect().x,
                     p -> (int) p.getRect().width, Grid.TOLLERANCE_IN_PERCENT);
 
             // remove dublicates if any
@@ -73,7 +151,7 @@ public class GridUtils {
             List<Integer> xs = new ArrayList<>(mapByX.keySet());
             xs.sort((a, b) -> Integer.compare(a, b));
 
-            Grid grid = new Grid(xs.size(), mapByX.get(xs.get(0)).size());
+            Board grid = new Board(xs.size(), mapByX.get(xs.get(0)).size());
 
             // filling grid
             int column = -1;
@@ -172,13 +250,15 @@ public class GridUtils {
                             return list;
                         }));
         return mapR;
+
     }
 
-    /* index 
-    0 - mapByX 
-    1 - mapByY
-    */
-    public static List<Map<Integer, List<GridCell>>> removePointsToConformMinWidthAndHeight(
+    /*
+     * index
+     * 0 - mapByX
+     * 1 - mapByY
+     */
+    public static List<Map<Integer, List<GridCell>>> removeSquaresToConformMinWidthAndHeight(
             Map<Integer, List<GridCell>> mapByX, Map<Integer, List<GridCell>> mapByY, int minWidth, int minHeight) {
 
         long beforeByXCount = mapByX.entrySet().stream().flatMap(p -> p.getValue().stream()).count();
@@ -217,13 +297,73 @@ public class GridUtils {
 
         if (mapByX.size() > 0 && mapByY.size() > 0
                 && (beforeByXCount != afterByXCount || beforeByYCount != afterByYCount)) {
-            return removePointsToConformMinWidthAndHeight(mapByX, mapByY, minWidth, minHeight);
+            return removeSquaresToConformMinWidthAndHeight(mapByX, mapByY, minWidth, minHeight);
         }
 
         if (mapByX.size() > 0 && mapByY.size() > 0)
             return Arrays.asList(mapByX, mapByY);
         else
             return Arrays.asList(new HashMap<>(), new HashMap<>());
+    }
+
+    private static List<GridCell> removeCellsToConformSequency(List<GridCell> list,
+            Function<GridCell, Integer> functionPosition, Function<GridCell, Integer> functionWidthOrHeight,
+            int minWidthOrHeightCount, int tolleranceInPercent) {
+
+        if (list.size() > minWidthOrHeightCount) {
+
+            List<GridCell> listToRemove = new ArrayList<>();
+
+            list = list.stream().sorted((a, b) -> Integer.compare(functionPosition.apply(a), functionPosition.apply(b)))
+                    .collect(Collectors.toList());
+
+            int startingPosition = -1;
+            int counter = 0;
+
+            for (int i = 1; i < list.size(); i++) {
+                final int finalI = i;
+
+                if (startingPosition < 0)
+                    startingPosition = i;
+
+                int prevPos = functionPosition.apply(list.get(i - 1));
+                int thisPos = functionPosition.apply(list.get(i));
+                int prevWidthOrHeight = functionWidthOrHeight.apply(list.get(i - 1));
+                if ((double) prevWidthOrHeight / 100 * tolleranceInPercent <= Math
+                        .abs(prevPos + prevWidthOrHeight - thisPos)) {
+                    ++counter;
+                } else {
+                    if (counter < minWidthOrHeightCount)
+                        for (int j = startingPosition; j <= i - 1; j++) {
+                            listToRemove.add(list.get(j));
+                        }
+
+                    counter = 1;
+                    startingPosition = i;
+                }
+            }
+            if (list.size() - listToRemove.size() >= minWidthOrHeightCount) {
+                list.removeAll(listToRemove);
+                return list;
+            } else {
+                return new ArrayList<>();
+            }
+        } else {
+            return new ArrayList<>();
+        }
+    }
+
+    private List<GridCell> getNeighbourCells(List<GridCell> list, GridCell cell) {
+        return list.stream().filter(
+                p -> (p.getX() - 1 == cell.getX() && p.getY() - 1 == cell.getY()) ||
+                        (p.getX() == cell.getX() && p.getY() - 1 == cell.getY()) ||
+                        (p.getX() + 1 == cell.getX() && p.getY() - 1 == cell.getY()) ||
+                        (p.getX() + 1 == cell.getX() && p.getY() == cell.getY()) ||
+                        (p.getX() + 1 == cell.getX() && p.getY() + 1 == cell.getY()) ||
+                        (p.getX() == cell.getX() && p.getY() + 1 == cell.getY()) ||
+                        (p.getX() - 1 == cell.getX() && p.getY() + 1 == cell.getY()) ||
+                        (p.getX() - 1 == cell.getX() && p.getY() == cell.getY()))
+                .collect(Collectors.toList());
     }
 
     /*

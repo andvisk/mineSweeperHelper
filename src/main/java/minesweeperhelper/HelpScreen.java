@@ -43,7 +43,7 @@ public class HelpScreen {
         }
 
         public static Mat process(Mat screenShot) {
-                Grid grid = new ImageProcessing().processView(screenShot);
+                Board grid = new ImageProcessing().processView(screenShot);
 
                 if (grid != null) {
                         Mat screenShotBlured = new Mat();

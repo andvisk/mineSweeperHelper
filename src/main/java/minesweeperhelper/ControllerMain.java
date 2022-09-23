@@ -19,6 +19,9 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
+import java.util.List;
+import java.util.Map;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencv.core.Core;
@@ -108,7 +111,9 @@ public class ControllerMain {
 
                 Mat screenShot = HelpScreen.getScreenShot(controllerHelpScreen);
 
-                ImageProcessing.calibrateScreenShot(screenShot);
+                Map<Integer,Map<Integer, List<Grid>>> mapGridsByWidthAndHeight = GridUtils.collectGrids(screenShot);
+
+                //todo check all grids
 
                 ProcessingService service = new ProcessingService(screenShot);
                 service.setOnScheduled(e -> progressIndicator.visibleProperty().set(true));

@@ -25,7 +25,7 @@ public class ImageProcessing {
 
     private static final Logger logger = LogManager.getLogger(ImageProcessing.class);
 
-    public Grid processView(Mat srcImage) {
+    public Board processView(Mat srcImage) {
 
         List<MineSweeperGridCell> cells = findCells(srcImage);
 
@@ -96,73 +96,4 @@ public class ImageProcessing {
         return list;
     }
 
-    public static double calibrateScreenShot(Mat screenShot) {
-
-        Mat grayMat = new Mat();
-        Imgproc.cvtColor(screenShot, grayMat, Imgproc.COLOR_BGR2GRAY);
-
-        Mat thresholdMat = new Mat();
-        Imgproc.threshold(grayMat, thresholdMat, 127, 255, Imgproc.THRESH_BINARY);
-
-        Mat hierarchy = new Mat();
-        List<MatOfPoint> contours = new ArrayList<>();
-        Imgproc.findContours(thresholdMat, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
-
-        int start = LocalTime.now().getSecond();
-
-        Map<Integer, Map<Integer, List<GridCell>>> mapByWidthAndHeight = GridUtils.groupByWidthThenByHeight(contours,
-                Grid.MIN_WIDTH, Grid.MIN_HEIGHT, Grid.TOLLERANCE_IN_PERCENT);
-
-        for (Map.Entry<Integer, Map<Integer, List<GridCell>>> entry : mapByWidthAndHeight.entrySet()) {
-            Integer width = entry.getKey(); // cell width
-            Map<Integer, List<GridCell>> mapByHeight = entry.getValue();
-            for (Map.Entry<Integer, List<GridCell>> entryByHeight : mapByHeight.entrySet()) {
-                Integer height = entryByHeight.getKey(); // cell height
-                List<GridCell> points = entryByHeight.getValue();
-
-                Map<Integer, List<GridCell>> mapByX = GroupingBy.approximateInArea(points,
-                        p -> p.getRect().x,
-                        p -> p.getRect().width, Grid.TOLLERANCE_IN_PERCENT);
-
-                Map<Integer, List<GridCell>> mapByY = GroupingBy.approximateInArea(points,
-                        p -> p.getRect().y,
-                        p -> p.getRect().height, Grid.TOLLERANCE_IN_PERCENT);
-
-                mapByY = mapByY.entrySet().stream().filter(p -> p.getValue().size() >= Grid.MIN_HEIGHT)
-                        .collect(Collectors.toMap(k -> k.getKey(), v -> v.getValue()));
-
-                List<Map<Integer, List<GridCell>>> listOfxyMaps = GridUtils
-                        .removePointsToConformMinWidthAndHeight(mapByX, mapByY, Grid.MIN_WIDTH, Grid.MIN_HEIGHT);
-
-                mapByX = listOfxyMaps.get(0);
-                mapByY = listOfxyMaps.get(1);
-
-                // todo
-                // pasukus 30% atpazinti kaip? -> Rect is contours
-
-            }
-        }
-
-        int stop = LocalTime.now().getSecond();
-
-        logger.info("laikas " + (stop - start));
-
-        Mat drawing = new Mat();
-        screenShot.copyTo(drawing);
-
-        /* for (int op = 0; op < list.size(); op++)
-            for (int i = 0; i < list.get(op).getValue().size(); i++) {
-                for (MatOfPoint matOfPoint : list.get(op).getValue()) {
-                    Scalar color = new Scalar(0, 255, 0);
-                    Rect rect = Imgproc.boundingRect(matOfPoint);
-                    Imgproc.rectangle(drawing, new Point(rect.x, rect.y),
-                            new Point(rect.x + rect.width, rect.y + rect.height), color, 5);
-                }
-            } */
-
-        // Imgcodecs.imwrite("/Users/agnegv/Desktop/andrius/test.jpg", hierarchy);
-        Imgcodecs.imwrite("c:/andrius/test.jpg", drawing);
-
-        return 1;
-    }
 }
