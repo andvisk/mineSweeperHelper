@@ -71,8 +71,7 @@ public class GridUtils {
                 mapByX = listOfxyMaps.get(0);
                 mapByY = listOfxyMaps.get(1);
 
-                List<Grid> gridList = collectGridsFromCells(mapByX, mapByY, Grid.MIN_WIDTH, Grid.MIN_HEIGHT,
-                        Grid.TOLLERANCE_IN_PERCENT);
+                List<Grid> gridList = collectGridsFromCells(mapByX, mapByY, Grid.TOLLERANCE_IN_PERCENT);
 
                 Map<Integer, List<Grid>> returnMapByHeight = mapGridsByWidthAndHeight.get(width);
                 if (returnMapByHeight == null)
@@ -113,7 +112,7 @@ public class GridUtils {
         return mapGridsByWidthAndHeight;
     }
 
-    public static List<Grid> collectGridsFromCells(Map<Integer, List<GridCell>> mapByX, Map<Integer, List<GridCell>> mapByY, int minWidth, int minHeight,
+    public static List<Grid> collectGridsFromCells(Map<Integer, List<GridCell>> mapByX, Map<Integer, List<GridCell>> mapByY,
     int tolleranceInPercent) {
         List<Grid> gridList = new ArrayList();
 ss
