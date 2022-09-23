@@ -32,6 +32,22 @@ public class GridUtilsTest {
         List<List<Integer>> intervals = GridUtils.getIntervals(list, width, tolleranceInPercent);
         assertEquals(intervals.get(0).size(), 4);
         assertEquals(intervals.get(1).size(), 4);
+
+        list = createOneIntervals(width, tolleranceInPercent);
+        intervals = GridUtils.getIntervals(list, width, tolleranceInPercent);
+        assertEquals(intervals.get(0).size(), 1);
+        assertEquals(intervals.get(1).size(), 1);
+
+        list = Arrays.asList(5);
+        intervals = GridUtils.getIntervals(list, width, tolleranceInPercent);
+        assertEquals(intervals.get(0).size(), 1);
+        assertEquals(intervals.get(1).size(), 1);
+
+        list = Arrays.asList(5, 5 + width);
+        intervals = GridUtils.getIntervals(list, width, tolleranceInPercent);
+        assertEquals(intervals.get(0).size(), 1);
+        assertEquals(intervals.get(1).size(), 1);
+
     }
 
     @Test
@@ -96,7 +112,7 @@ public class GridUtilsTest {
     }
 
     /*
-     * index 0 - List<GridCell> list with 3 intervals
+     * index 0 - List<GridCell> list with 4 intervals
      */
     private List<Integer> createFourIntervals(int width, int tolleranceInPercent) {
         List<Integer> list = new ArrayList();
@@ -104,10 +120,23 @@ public class GridUtilsTest {
         for (int i = 1; i <= 20; i++) {
             x += width + (double) width / 100 * (double) tolleranceInPercent / 2 - (double) width / 100 * 10;
             list.add(x);
-            if(i == 3 || i == 10 || i == 12){
+            if (i == 3 || i == 10 || i == 12) {
                 x += width + (double) width / 100 * (double) tolleranceInPercent * 2;
                 list.add(x);
             }
+        }
+        return list;
+    }
+
+    /*
+     * index 0 - List<GridCell> list with 1 interval
+     */
+    private List<Integer> createOneIntervals(int width, int tolleranceInPercent) {
+        List<Integer> list = new ArrayList();
+        int x = 10;
+        for (int i = 1; i <= 20; i++) {
+            x += width + (double) width / 100 * (double) tolleranceInPercent / 2 - (double) width / 100 * 10;
+            list.add(x);
         }
         return list;
     }
