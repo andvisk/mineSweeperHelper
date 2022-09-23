@@ -65,10 +65,22 @@ public class GridUtils {
                         .collect(Collectors.toMap(k -> k.getKey(), v -> v.getValue()));
 
                 List<Map<Integer, List<GridCell>>> listOfxyMaps = GridUtils
-                        .removeSquaresToConformMinWidthAndHeight(mapByX, mapByY, Grid.MIN_WIDTH, Grid.MIN_HEIGHT);
+                        .removeSquaresToConformMinWidthAndHeight(mapByX, mapByY, Grid.MIN_WIDTH, Grid.MIN_HEIGHT,
+                                Grid.TOLLERANCE_IN_PERCENT);
 
                 mapByX = listOfxyMaps.get(0);
                 mapByY = listOfxyMaps.get(1);
+
+                List<Grid> gridList = collectGridsFromCells(mapByX, mapByY, Grid.MIN_WIDTH, Grid.MIN_HEIGHT,
+                        Grid.TOLLERANCE_IN_PERCENT);
+
+                Map<Integer, List<Grid>> returnMapByHeight = mapGridsByWidthAndHeight.get(width);
+                if (returnMapByHeight == null)
+                    returnMapByHeight = new HashMap<>();
+
+                returnMapByHeight.put(height, gridList);
+
+                mapGridsByWidthAndHeight.put(width, returnMapByHeight);
 
                 // todo
                 // pasukus 30% atpazinti kaip? -> Rect is contours
@@ -99,6 +111,13 @@ public class GridUtils {
         Imgcodecs.imwrite("c:/andrius/test.jpg", drawing);
 
         return mapGridsByWidthAndHeight;
+    }
+
+    public static List<Grid> collectGridsFromCells(Map<Integer, List<GridCell>> mapByX, Map<Integer, List<GridCell>> mapByY, int minWidth, int minHeight,
+    int tolleranceInPercent) {
+        List<Grid> gridList = new ArrayList();
+ss
+        return gridList;
     }
 
     @Deprecated
@@ -259,7 +278,8 @@ public class GridUtils {
      * 1 - mapByY
      */
     public static List<Map<Integer, List<GridCell>>> removeSquaresToConformMinWidthAndHeight(
-            Map<Integer, List<GridCell>> mapByX, Map<Integer, List<GridCell>> mapByY, int minWidth, int minHeight) {
+            Map<Integer, List<GridCell>> mapByX, Map<Integer, List<GridCell>> mapByY, int minWidth, int minHeight,
+            int tolleranceInPercent) {
 
         long beforeByXCount = mapByX.entrySet().stream().flatMap(p -> p.getValue().stream()).count();
 
@@ -270,6 +290,8 @@ public class GridUtils {
         mapByX = mapByX.entrySet().stream().collect(Collectors.toMap(k -> k.getKey(), v -> {
             List<GridCell> list = v.getValue().stream().filter(i -> mapByYIDs.contains(i.getId()))
                     .collect(Collectors.toList());
+            list = removeCellsToConformSequency(list, p -> p.getRect().x, p -> p.getRect().width, minWidth,
+                    tolleranceInPercent);
             return list;
         }));
 
@@ -287,6 +309,8 @@ public class GridUtils {
         mapByY = mapByY.entrySet().stream().collect(Collectors.toMap(k -> k.getKey(), v -> {
             List<GridCell> list = v.getValue().stream().filter(i -> mapByXIDs.contains(i.getId()))
                     .collect(Collectors.toList());
+            list = removeCellsToConformSequency(list, p -> p.getRect().y, p -> p.getRect().height, minHeight,
+                    tolleranceInPercent);
             return list;
         }));
 
@@ -297,7 +321,7 @@ public class GridUtils {
 
         if (mapByX.size() > 0 && mapByY.size() > 0
                 && (beforeByXCount != afterByXCount || beforeByYCount != afterByYCount)) {
-            return removeSquaresToConformMinWidthAndHeight(mapByX, mapByY, minWidth, minHeight);
+            return removeSquaresToConformMinWidthAndHeight(mapByX, mapByY, minWidth, minHeight, tolleranceInPercent);
         }
 
         if (mapByX.size() > 0 && mapByY.size() > 0)
@@ -306,7 +330,7 @@ public class GridUtils {
             return Arrays.asList(new HashMap<>(), new HashMap<>());
     }
 
-    private static List<GridCell> removeCellsToConformSequency(List<GridCell> list,
+    public static List<GridCell> removeCellsToConformSequency(List<GridCell> list,
             Function<GridCell, Integer> functionPosition, Function<GridCell, Integer> functionWidthOrHeight,
             int minWidthOrHeightCount, int tolleranceInPercent) {
 
@@ -321,7 +345,6 @@ public class GridUtils {
             int counter = 0;
 
             for (int i = 1; i < list.size(); i++) {
-                final int finalI = i;
 
                 if (startingPosition < 0)
                     startingPosition = i;

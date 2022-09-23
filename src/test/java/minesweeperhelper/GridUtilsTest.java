@@ -26,12 +26,22 @@ public class GridUtilsTest {
 
     @Test
     void removeCellsToConformSequency() {
-        
+
         List listTest = getThreeSequancesWithinList(Grid.TOLLERANCE_IN_PERCENT);
         List<GridCell> listByX = (List<GridCell>) listTest.get(0);
         List<UUID> listIdsToRemove = (List<UUID>) listTest.get(1);
 
-        List<GridCell> list = GridUtils.removeCellsToConformSequency(listByX, p->p.getX(), p->p.getRect().width, Grid.TOLLERANCE_IN_PERCENT);
+        List<GridCell> list = GridUtils.removeCellsToConformSequency(listByX, p -> p.getRect().x,
+                p -> p.getRect().width, Grid.MIN_WIDTH, Grid.TOLLERANCE_IN_PERCENT);
+
+        Set<UUID> allCellsByX = list.stream().map(p -> p.getId())
+                .collect(Collectors.toSet());
+
+        Set<UUID> allCellsToBeRemoved = listIdsToRemove.stream().collect(Collectors.toSet());
+
+        Set<UUID> intersectionX = new HashSet<>(allCellsByX);
+        intersectionX.retainAll(allCellsToBeRemoved);
+        assertEquals(intersectionX.size(), 0);
     }
 
     @Test
@@ -47,14 +57,14 @@ public class GridUtilsTest {
 
         // seting min width and height higher than input data size
         List<Map<Integer, List<GridCell>>> value = GridUtils.removeSquaresToConformMinWidthAndHeight(mapByX,
-                mapByY, 11, 11);
+                mapByY, 11, 11, Grid.TOLLERANCE_IN_PERCENT);
 
         assertEquals(value.get(0).size(), 0);
         assertEquals(value.get(1).size(), 0);
 
         // expecting grid size 10x10
         value = GridUtils.removeSquaresToConformMinWidthAndHeight(mapByX,
-                mapByY, 5, 5);
+                mapByY, 5, 5, Grid.TOLLERANCE_IN_PERCENT);
 
         assertEquals(value.get(0).size(), 10);
         assertEquals(value.get(1).size(), 10);
@@ -77,7 +87,7 @@ public class GridUtilsTest {
 
     /*
      * index 0 - List<GridCell> list with 50 non removing members
-     * index 1 - List<UUID> 10 GridCells ids to be removed
+     * index 1 - List<UUID> 21 GridCells ids to be removed
      */
     private List<GridCell> getThreeSequancesWithinList(int tolleranceInPercent) {
         List<GridCell> listCreate = new ArrayList<>();
