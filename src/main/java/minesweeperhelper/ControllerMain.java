@@ -117,7 +117,7 @@ public class ControllerMain {
                         .flatMap(p -> p.getValue().stream()).forEach(p -> GridUtils.drawLocations(screenShot, p));
                 // todo check all grids
 
-                Imgcodecs.imwrite("/Users/agnegv/Desktop/andrius/test.jpg", screenShot);
+                //Imgcodecs.imwrite("/Users/agnegv/Desktop/andrius/test.jpg", screenShot);
 
                 ProcessingService service = new ProcessingService(screenShot);
                 service.setOnScheduled(e -> progressIndicator.visibleProperty().set(true));
