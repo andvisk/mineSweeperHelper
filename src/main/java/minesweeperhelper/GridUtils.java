@@ -4,6 +4,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -115,18 +116,88 @@ public class GridUtils {
     public static List<Grid> collectGridsFromCells(Map<Integer, List<GridCell>> mapByX,
             Map<Integer, List<GridCell>> mapByY, int width, int height,
             int tolleranceInPercent) {
-        List<Grid> gridList = new ArrayList();
+        List<Grid> gridList = new ArrayList<>();
         List<Integer> xs = mapByX.keySet().stream().sorted().collect(Collectors.toList());
         List<Integer> ys = mapByX.keySet().stream().sorted().collect(Collectors.toList());
 
         List<List<Integer>> xsIntervals = getIntervals(xs, width, tolleranceInPercent);
-        List<List<Integer>> ysIntervals = getIntervals(ys, height, tolleranceInPercent);
+        List<Integer> xsStartPos = xsIntervals.get(0);
+        List<Integer> xsEndPos = xsIntervals.get(1);
 
-        ddd
+        List<List<Integer>> ysIntervals = getIntervals(ys, height, tolleranceInPercent);
+        List<Integer> ysStartPos = ysIntervals.get(0);
+        List<Integer> ysEndPos = ysIntervals.get(1);
+
+        for (int i = 0; i < xsStartPos.size(); i++) {
+            int xStart = xsStartPos.get(i);
+            int xEnd = xsEndPos.get(i);
+            Set<GridCell> xsSet = mapByX.entrySet().stream().filter(p -> p.getKey() >= xStart && p.getKey() <= xEnd)
+                    .flatMap(p -> p.getValue().stream()).collect(Collectors.toSet());
+            for (int j = 0; j < ysStartPos.size(); j++) {
+                int yStart = ysStartPos.get(i);
+                int yEnd = ysEndPos.get(i);
+                Set<GridCell> ysSet = mapByY.entrySet().stream().filter(p -> p.getKey() >= yStart && p.getKey() <= yEnd)
+                        .flatMap(p -> p.getValue().stream()).collect(Collectors.toSet());
+
+                Set<GridCell> xGridSet = new HashSet<GridCell>(xsSet);
+                xGridSet.retainAll(ysSet);
+
+                Set<GridCell> yGridSet = new HashSet<GridCell>(ysSet);
+                yGridSet.retainAll(xsSet);
+
+                Map<Integer, List<GridCell>> mapByXGrid = GroupingBy.approximateInArea(
+                        xGridSet.stream().collect(Collectors.toList()),
+                        p -> p.getRect().x,
+                        p -> p.getRect().width, tolleranceInPercent);
+
+                Map<Integer, List<GridCell>> mapByYGrid = GroupingBy.approximateInArea(
+                        yGridSet.stream().collect(Collectors.toList()),
+                        p -> p.getRect().y,
+                        p -> p.getRect().height, tolleranceInPercent);
+
+                int counter = -1;
+                int lastIndexX = -1;
+                for (Integer xValue : mapByXGrid.keySet().stream().sorted().collect(Collectors.toList())) {
+                    ++counter;
+                    for (GridCell gridCell : mapByXGrid.get(xValue)) {
+                        gridCell.setPositionInGridX(counter);
+                    }
+                }
+                lastIndexX = counter;
+
+                counter = -1;
+                int lastIndexY = -1;
+                for (Integer yValue : mapByYGrid.keySet().stream().sorted().collect(Collectors.toList())) {
+                    ++counter;
+                    for (GridCell gridCell : mapByYGrid.get(yValue)) {
+                        gridCell.setPositionInGridY(counter);
+                    }
+                }
+                lastIndexY = counter;
+
+                Grid grid = new Grid(lastIndexX + 1, lastIndexY + 1);
+
+                for (Integer xValue : mapByXGrid.keySet()) {
+                    for (GridCell gridCell : mapByXGrid.get(xValue)) {
+                        grid.setCell(gridCell.getX(), gridCell.getY(), gridCell);
+                    }
+                }
+
+                if (grid.getGrid().length > 0) {
+                    int stop = 0;
+                }
+
+            }
+        }
 
         return gridList;
     }
 
+    /*
+     * index
+     * 0 - start positions
+     * 1 - end positions
+     */
     public static List<List<Integer>> getIntervals(List<Integer> list, int widthOrHeight, int tolleranceInPercent) {
         List<Integer> startPos = new ArrayList<>();
         List<Integer> endPos = new ArrayList<>();
