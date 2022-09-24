@@ -112,15 +112,7 @@ public class ControllerMain {
 
                 Mat screenShot = HelpScreen.getScreenShot(controllerHelpScreen);
 
-                Map<Integer, Map<Integer, List<Grid>>> mapGridsByWidthAndHeight = GridUtils.collectGrids(screenShot,
-                        MIN_WIDTH, MIN_HEIGHT, TOLLERANCE_IN_PERCENT);
-
-                /* mapGridsByWidthAndHeight.entrySet().stream().flatMap(p -> p.getValue().entrySet().stream())
-                        .flatMap(p -> p.getValue().stream()).forEach(p -> GridUtils.drawLocations(screenShot, p));
-
-                Imgcodecs.imwrite("C:/andrius/test.jpg", screenShot); */
-
-                ProcessingService service = new ProcessingService(screenShot, TOLLERANCE_IN_PERCENT);
+                ProcessingService service = new ProcessingService(screenShot, MIN_WIDTH, MIN_HEIGHT, TOLLERANCE_IN_PERCENT);
                 service.setOnScheduled(e -> progressIndicator.visibleProperty().set(true));
                 service.setOnSucceeded(e -> {
                     Mat helpScreenMat = service.getValue();

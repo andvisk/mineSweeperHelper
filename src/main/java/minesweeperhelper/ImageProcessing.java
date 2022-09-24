@@ -1,20 +1,13 @@
 package minesweeperhelper;
 
-import java.io.File;
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.MatOfRect;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
@@ -25,14 +18,14 @@ public class ImageProcessing {
 
     private static final Logger logger = LogManager.getLogger(ImageProcessing.class);
 
-    public Board processView(Mat srcImage, int tolleranceInPercent) {
+    public Board processView(Mat srcImage, Map<Integer, Map<Integer, List<Grid>>> mapGridsByWidthAndHeight, int tolleranceInPercent) {
 
-        List<MineSweeperGridCell> cells = findCells(srcImage);
+        List<MineSweeperGridCell> cells = findCells(srcImage, mapGridsByWidthAndHeight);
 
         return GridUtils.collectGrid(cells, tolleranceInPercent);
     }
 
-    private List<MineSweeperGridCell> findCells(Mat srcImage) {
+    private List<MineSweeperGridCell> findCells(Mat srcImage, Map<Integer, Map<Integer, List<Grid>>> mapGridsByWidthAndHeight) {
         List<MineSweeperGridCell> list = new ArrayList<>();
 
         int machMethod = Imgproc.TM_CCOEFF_NORMED;
@@ -44,6 +37,9 @@ public class ImageProcessing {
             List<Rect> numbersLocations = new ArrayList<>();
 
             Mat numberImage = Imgcodecs.imread("src/main/resources/" + i + ".png");
+
+asdf
+
             Imgproc.cvtColor(numberImage, numberImage, Imgproc.COLOR_BGR2BGRA);
 
             Mat outputImage = new Mat();

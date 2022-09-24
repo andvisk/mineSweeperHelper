@@ -9,6 +9,8 @@ import javafx.scene.robot.Robot;
 import javafx.stage.Screen;
 
 import java.awt.image.BufferedImage;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,8 +44,8 @@ public class HelpScreen {
                 return ImageUtils.writableImageToMat(writableImage);
         }
 
-        public static Mat process(Mat screenShot, int tolleranceInPercent) {
-                Board grid = new ImageProcessing().processView(screenShot, tolleranceInPercent);
+        public static Mat process(Mat screenShot, Map<Integer, Map<Integer, List<Grid>>> mapGridsByWidthAndHeight, int tolleranceInPercent) {
+                Board grid = new ImageProcessing().processView(screenShot, mapGridsByWidthAndHeight, tolleranceInPercent);
 
                 if (grid != null) {
                         Mat screenShotBlured = new Mat();
