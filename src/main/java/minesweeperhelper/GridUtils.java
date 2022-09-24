@@ -42,6 +42,14 @@ public class GridUtils {
         List<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(thresholdMat, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
 
+        /* for (int i = 0; i < contours.size(); i++) {
+            Rect rect = Imgproc.boundingRect(contours.get(i));
+            Imgproc.rectangle(screenShot, new Point(rect.x, rect.y),
+                    new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(0, 255, 0), 2);
+        } */
+
+        //Imgcodecs.imwrite("/Users/agnegv/Desktop/andrius/test2.jpg", screenShot);
+
         int start = LocalTime.now().getSecond();
 
         Map<Integer, Map<Integer, List<GridCell>>> mapByWidthAndHeight = GridUtils.groupByWidthThenByHeight(contours,
@@ -74,14 +82,15 @@ public class GridUtils {
 
                 List<Grid> gridList = collectGridsFromCells(mapByX, mapByY, width, height, Grid.TOLLERANCE_IN_PERCENT);
 
-                Map<Integer, List<Grid>> returnMapByHeight = mapGridsByWidthAndHeight.get(width);
-                if (returnMapByHeight == null)
-                    returnMapByHeight = new HashMap<>();
+                if (gridList.size() > 0) {
+                    Map<Integer, List<Grid>> returnMapByHeight = mapGridsByWidthAndHeight.get(width);
+                    if (returnMapByHeight == null)
+                        returnMapByHeight = new HashMap<>();
 
-                returnMapByHeight.put(height, gridList);
+                    returnMapByHeight.put(height, gridList);
 
-                mapGridsByWidthAndHeight.put(width, returnMapByHeight);
-
+                    mapGridsByWidthAndHeight.put(width, returnMapByHeight);
+                }
                 // todo
                 // pasukus 30% atpazinti kaip? -> Rect is contours
 
@@ -108,7 +117,7 @@ public class GridUtils {
          */
 
         // Imgcodecs.imwrite("/Users/agnegv/Desktop/andrius/test.jpg", hierarchy);
-        Imgcodecs.imwrite("c:/andrius/test.jpg", drawing);
+        // Imgcodecs.imwrite("c:/andrius/test.jpg", drawing);
 
         return mapGridsByWidthAndHeight;
     }
@@ -118,7 +127,7 @@ public class GridUtils {
             int tolleranceInPercent) {
         List<Grid> gridList = new ArrayList<>();
         List<Integer> xs = mapByX.keySet().stream().sorted().collect(Collectors.toList());
-        List<Integer> ys = mapByX.keySet().stream().sorted().collect(Collectors.toList());
+        List<Integer> ys = mapByY.keySet().stream().sorted().collect(Collectors.toList());
 
         List<List<Integer>> xsIntervals = getIntervals(xs, width, tolleranceInPercent);
         List<Integer> xsStartPos = xsIntervals.get(0);
@@ -131,12 +140,14 @@ public class GridUtils {
         for (int i = 0; i < xsStartPos.size(); i++) {
             int xStart = xsStartPos.get(i);
             int xEnd = xsEndPos.get(i);
-            Set<GridCell> xsSet = mapByX.entrySet().stream().filter(p -> p.getKey() >= xStart && p.getKey() <= xEnd)
+            Set<GridCell> xsSet = mapByX.entrySet().stream()
+                    .filter(p -> p.getKey() >= xs.get(xStart) && p.getKey() <= xs.get(xEnd))
                     .flatMap(p -> p.getValue().stream()).collect(Collectors.toSet());
             for (int j = 0; j < ysStartPos.size(); j++) {
-                int yStart = ysStartPos.get(i);
-                int yEnd = ysEndPos.get(i);
-                Set<GridCell> ysSet = mapByY.entrySet().stream().filter(p -> p.getKey() >= yStart && p.getKey() <= yEnd)
+                int yStart = ysStartPos.get(j);
+                int yEnd = ysEndPos.get(j);
+                Set<GridCell> ysSet = mapByY.entrySet().stream()
+                        .filter(p -> p.getKey() >= ys.get(yStart) && p.getKey() <= ys.get(yEnd))
                         .flatMap(p -> p.getValue().stream()).collect(Collectors.toSet());
 
                 Set<GridCell> xGridSet = new HashSet<GridCell>(xsSet);
@@ -183,10 +194,7 @@ public class GridUtils {
                     }
                 }
 
-                if (grid.getGrid().length > 0) {
-                    int stop = 0;
-                }
-
+                gridList.add(grid);
             }
         }
 
@@ -326,6 +334,28 @@ public class GridUtils {
                 thickness);
 
         return mat;
+    }
+
+    public static Mat drawLocations(Mat mat, Grid grid) {
+
+        for (int i = 0; i < grid.getGrid().length; i++) {
+            for (int j = 0; j < grid.getGrid()[i].length; j++) {
+                mat = drawLocation(mat, grid.getGrid()[i][j]);
+            }
+        }
+        return mat;
+    }
+
+    public static Mat drawLocation(Mat mat, GridCell gridCell) {
+
+        if (gridCell != null) {
+            Scalar color = new Scalar(0, 255, 0);
+            Rect rect = gridCell.getRect();
+            Imgproc.rectangle(mat, new Point(rect.x, rect.y),
+                    new Point(rect.x + rect.width, rect.y + rect.height), color, 1);
+        }
+        return mat;
+
     }
 
     public static Map<Integer, Map<Integer, List<GridCell>>> groupByWidthThenByHeight(List<MatOfPoint> contours,

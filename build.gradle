@@ -106,3 +106,5 @@ run {
         systemProperties['java.library.path'] = '/usr/local/share/java/opencv4'
     }    
 }
+
+logging.captureStandardOutput LogLevel.INFO
