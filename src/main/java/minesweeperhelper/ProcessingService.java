@@ -8,8 +8,9 @@ import javafx.concurrent.Task;
 public class ProcessingService extends Service<Mat> {
 
     private Mat screenShot;
+    private int tolleranceInPercent;
 
-    public ProcessingService(Mat screenShot){
+    public ProcessingService(Mat screenShot, int tolleranceInPercent){
         this.screenShot = screenShot;
     }
 
@@ -19,7 +20,7 @@ public class ProcessingService extends Service<Mat> {
             @Override
             protected Mat call() throws Exception {
                 
-                return HelpScreen.process(screenShot);
+                return HelpScreen.process(screenShot, tolleranceInPercent);
             }
 
         };

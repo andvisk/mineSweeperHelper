@@ -22,7 +22,9 @@ public class GridUtilsTest {
     private int width = 20;
     private int height = 20;
     private int gap = 2;
-    private int tolleranceInPercent = 25;
+    private int minGridMembersHor = 9;
+    private int minGridMembersVer = 9;
+    private int tolleranceInPercent = 30;
 
     @Test
     void getIntervals() {
@@ -53,12 +55,12 @@ public class GridUtilsTest {
     @Test
     void removeCellsToConformSequency() {
 
-        List listTest = getThreeSequancesWithinList(Grid.TOLLERANCE_IN_PERCENT);
+        List listTest = getThreeSequancesWithinList(tolleranceInPercent);
         List<GridCell> listByX = (List<GridCell>) listTest.get(0);
         List<UUID> listIdsToRemove = (List<UUID>) listTest.get(1);
 
         List<GridCell> list = GridUtils.removeCellsToConformSequency(listByX, p -> p.getRect().x,
-                p -> p.getRect().width, Grid.MIN_WIDTH, Grid.TOLLERANCE_IN_PERCENT);
+                p -> p.getRect().width, minGridMembersHor, tolleranceInPercent);
 
         Set<UUID> allCellsByX = list.stream().map(p -> p.getId())
                 .collect(Collectors.toSet());
@@ -83,14 +85,14 @@ public class GridUtilsTest {
 
         // seting min width and height higher than input data size
         List<Map<Integer, List<GridCell>>> value = GridUtils.removeSquaresToConformMinWidthAndHeight(mapByX,
-                mapByY, 11, 11, Grid.TOLLERANCE_IN_PERCENT);
+                mapByY, 11, 11, tolleranceInPercent);
 
         assertEquals(value.get(0).size(), 0);
         assertEquals(value.get(1).size(), 0);
 
         // expecting grid size 10x10
         value = GridUtils.removeSquaresToConformMinWidthAndHeight(mapByX,
-                mapByY, 5, 5, Grid.TOLLERANCE_IN_PERCENT);
+                mapByY, 5, 5, tolleranceInPercent);
 
         assertEquals(value.get(0).size(), 10);
         assertEquals(value.get(1).size(), 10);

@@ -24,16 +24,17 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.opencv.core.Core;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.Scalar;
 import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.imgproc.Imgproc;
 
 public class ControllerMain {
 
     private Logger log = LogManager.getLogger(this.getClass());
+
+    // GRID
+    public static final int MIN_WIDTH = 9;
+    public static final int MIN_HEIGHT = 9;
+    public static final int TOLLERANCE_IN_PERCENT = 35; // x/2 to one direction
 
     private Stage stage;
 
@@ -111,15 +112,15 @@ public class ControllerMain {
 
                 Mat screenShot = HelpScreen.getScreenShot(controllerHelpScreen);
 
-                Map<Integer, Map<Integer, List<Grid>>> mapGridsByWidthAndHeight = GridUtils.collectGrids(screenShot);
+                Map<Integer, Map<Integer, List<Grid>>> mapGridsByWidthAndHeight = GridUtils.collectGrids(screenShot,
+                        MIN_WIDTH, MIN_HEIGHT, TOLLERANCE_IN_PERCENT);
 
-                mapGridsByWidthAndHeight.entrySet().stream().flatMap(p -> p.getValue().entrySet().stream())
+                /* mapGridsByWidthAndHeight.entrySet().stream().flatMap(p -> p.getValue().entrySet().stream())
                         .flatMap(p -> p.getValue().stream()).forEach(p -> GridUtils.drawLocations(screenShot, p));
-                // todo check all grids
 
-                //Imgcodecs.imwrite("/Users/agnegv/Desktop/andrius/test.jpg", screenShot);
+                Imgcodecs.imwrite("C:/andrius/test.jpg", screenShot); */
 
-                ProcessingService service = new ProcessingService(screenShot);
+                ProcessingService service = new ProcessingService(screenShot, TOLLERANCE_IN_PERCENT);
                 service.setOnScheduled(e -> progressIndicator.visibleProperty().set(true));
                 service.setOnSucceeded(e -> {
                     Mat helpScreenMat = service.getValue();

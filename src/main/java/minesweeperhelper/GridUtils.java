@@ -1,6 +1,5 @@
 package minesweeperhelper;
 
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -11,7 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
@@ -21,16 +19,16 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
-import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 public class GridUtils {
 
     private static Logger log = LogManager.getLogger(GridUtils.class);
 
-    public static Map<Integer, Map<Integer, List<Grid>>> collectGrids(Mat screenShot) {
+    public static Map<Integer, Map<Integer, List<Grid>>> collectGrids(Mat screenShot, int minGridHorizontalMembers,
+            int minGridVerticalMembers, int gridPositionAndSizeTolleranceInPercent) {
 
-        Map<Integer, Map<Integer, List<Grid>>> mapGridsByWidthAndHeight = new HashMap();
+        Map<Integer, Map<Integer, List<Grid>>> mapGridsByWidthAndHeight = new HashMap<>();
 
         Mat grayMat = new Mat();
         Imgproc.cvtColor(screenShot, grayMat, Imgproc.COLOR_BGR2GRAY);
@@ -42,18 +40,8 @@ public class GridUtils {
         List<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(thresholdMat, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
 
-        /* for (int i = 0; i < contours.size(); i++) {
-            Rect rect = Imgproc.boundingRect(contours.get(i));
-            Imgproc.rectangle(screenShot, new Point(rect.x, rect.y),
-                    new Point(rect.x + rect.width, rect.y + rect.height), new Scalar(0, 255, 0), 2);
-        } */
-
-        //Imgcodecs.imwrite("/Users/agnegv/Desktop/andrius/test2.jpg", screenShot);
-
-        int start = LocalTime.now().getSecond();
-
         Map<Integer, Map<Integer, List<GridCell>>> mapByWidthAndHeight = GridUtils.groupByWidthThenByHeight(contours,
-                Grid.MIN_WIDTH, Grid.MIN_HEIGHT, Grid.TOLLERANCE_IN_PERCENT);
+                minGridHorizontalMembers, minGridVerticalMembers, gridPositionAndSizeTolleranceInPercent);
 
         for (Map.Entry<Integer, Map<Integer, List<GridCell>>> entry : mapByWidthAndHeight.entrySet()) {
             Integer width = entry.getKey(); // cell width
@@ -64,23 +52,23 @@ public class GridUtils {
 
                 Map<Integer, List<GridCell>> mapByX = GroupingBy.approximateInArea(points,
                         p -> p.getRect().x,
-                        p -> p.getRect().width, Grid.TOLLERANCE_IN_PERCENT);
+                        p -> p.getRect().width, gridPositionAndSizeTolleranceInPercent);
 
                 Map<Integer, List<GridCell>> mapByY = GroupingBy.approximateInArea(points,
                         p -> p.getRect().y,
-                        p -> p.getRect().height, Grid.TOLLERANCE_IN_PERCENT);
+                        p -> p.getRect().height, gridPositionAndSizeTolleranceInPercent);
 
-                mapByY = mapByY.entrySet().stream().filter(p -> p.getValue().size() >= Grid.MIN_HEIGHT)
+                mapByY = mapByY.entrySet().stream().filter(p -> p.getValue().size() >= minGridVerticalMembers)
                         .collect(Collectors.toMap(k -> k.getKey(), v -> v.getValue()));
 
                 List<Map<Integer, List<GridCell>>> listOfxyMaps = GridUtils
-                        .removeSquaresToConformMinWidthAndHeight(mapByX, mapByY, Grid.MIN_WIDTH, Grid.MIN_HEIGHT,
-                                Grid.TOLLERANCE_IN_PERCENT);
+                        .removeSquaresToConformMinWidthAndHeight(mapByX, mapByY, minGridHorizontalMembers, minGridVerticalMembers,
+                        gridPositionAndSizeTolleranceInPercent);
 
                 mapByX = listOfxyMaps.get(0);
                 mapByY = listOfxyMaps.get(1);
 
-                List<Grid> gridList = collectGridsFromCells(mapByX, mapByY, width, height, Grid.TOLLERANCE_IN_PERCENT);
+                List<Grid> gridList = collectGridsFromCells(mapByX, mapByY, width, height, gridPositionAndSizeTolleranceInPercent);
 
                 if (gridList.size() > 0) {
                     Map<Integer, List<Grid>> returnMapByHeight = mapGridsByWidthAndHeight.get(width);
@@ -91,33 +79,8 @@ public class GridUtils {
 
                     mapGridsByWidthAndHeight.put(width, returnMapByHeight);
                 }
-                // todo
-                // pasukus 30% atpazinti kaip? -> Rect is contours
-
             }
         }
-
-        int stop = LocalTime.now().getSecond();
-
-        log.info("laikas " + (stop - start));
-
-        Mat drawing = new Mat();
-        screenShot.copyTo(drawing);
-
-        /*
-         * for (int op = 0; op < list.size(); op++)
-         * for (int i = 0; i < list.get(op).getValue().size(); i++) {
-         * for (MatOfPoint matOfPoint : list.get(op).getValue()) {
-         * Scalar color = new Scalar(0, 255, 0);
-         * Rect rect = Imgproc.boundingRect(matOfPoint);
-         * Imgproc.rectangle(drawing, new Point(rect.x, rect.y),
-         * new Point(rect.x + rect.width, rect.y + rect.height), color, 5);
-         * }
-         * }
-         */
-
-        // Imgcodecs.imwrite("/Users/agnegv/Desktop/andrius/test.jpg", hierarchy);
-        // Imgcodecs.imwrite("c:/andrius/test.jpg", drawing);
 
         return mapGridsByWidthAndHeight;
     }
@@ -228,13 +191,13 @@ public class GridUtils {
     }
 
     @Deprecated
-    public static Board collectGrid(List<MineSweeperGridCell> cells) {
+    public static Board collectGrid(List<MineSweeperGridCell> cells, int tolleranceInPercent) {
 
         if (cells.size() > 0) {
 
             Map<Integer, List<MineSweeperGridCell>> mapByX = GroupingBy.approximateInArea(cells,
                     p -> (int) p.getRect().x,
-                    p -> (int) p.getRect().width, Grid.TOLLERANCE_IN_PERCENT);
+                    p -> (int) p.getRect().width, tolleranceInPercent);
 
             // remove dublicates if any
             for (Integer x : mapByX.keySet()) {
@@ -253,7 +216,7 @@ public class GridUtils {
                         if (gridCellIter != null && gridCell.getId().compareTo(gridCellIter.getId()) != 0 &&
                                 Math.abs(gridCell.getRect().y
                                         - gridCellIter.getRect().y) <= (double) gridCellIter.getRect().height / 100
-                                                * Grid.TOLLERANCE_IN_PERCENT) {
+                                                * tolleranceInPercent) {
                             iterator.remove();
                         }
                     }

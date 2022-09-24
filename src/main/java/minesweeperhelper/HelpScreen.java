@@ -42,8 +42,8 @@ public class HelpScreen {
                 return ImageUtils.writableImageToMat(writableImage);
         }
 
-        public static Mat process(Mat screenShot) {
-                Board grid = new ImageProcessing().processView(screenShot);
+        public static Mat process(Mat screenShot, int tolleranceInPercent) {
+                Board grid = new ImageProcessing().processView(screenShot, tolleranceInPercent);
 
                 if (grid != null) {
                         Mat screenShotBlured = new Mat();

@@ -25,11 +25,11 @@ public class ImageProcessing {
 
     private static final Logger logger = LogManager.getLogger(ImageProcessing.class);
 
-    public Board processView(Mat srcImage) {
+    public Board processView(Mat srcImage, int tolleranceInPercent) {
 
         List<MineSweeperGridCell> cells = findCells(srcImage);
 
-        return GridUtils.collectGrid(cells);
+        return GridUtils.collectGrid(cells, tolleranceInPercent);
     }
 
     private List<MineSweeperGridCell> findCells(Mat srcImage) {
