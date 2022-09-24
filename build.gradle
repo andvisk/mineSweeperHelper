@@ -108,3 +108,4 @@ run {
 }
 
 logging.captureStandardOutput LogLevel.INFO
+logging.captureStandardError LogLevel.INFO
