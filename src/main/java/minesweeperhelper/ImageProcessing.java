@@ -18,14 +18,95 @@ public class ImageProcessing {
 
     private static final Logger logger = LogManager.getLogger(ImageProcessing.class);
 
+    @Deprecated
     public Board processView(Mat srcImage, Map<Integer, Map<Integer, List<Grid>>> mapGridsByWidthAndHeight, int tolleranceInPercent) {
 
-        List<MineSweeperGridCell> cells = findCells(srcImage, mapGridsByWidthAndHeight);
+        List<MineSweeperGridCell> cells = findCells(srcImage);
 
         return GridUtils.collectGrid(cells, tolleranceInPercent);
     }
 
-    private List<MineSweeperGridCell> findCells(Mat srcImage, Map<Integer, Map<Integer, List<Grid>>> mapGridsByWidthAndHeight) {
+    public Board collectBoard(Mat srcImage, Map<Integer, Map<Integer, List<Grid>>> mapGridsByWidthAndHeight, int tolleranceInPercent) {
+        
+        Mat patternImage = Imgcodecs.imread("src/main/resources/" + 0 + ".png");
+        int patternImageWidth = patternImage.cols();
+        int patternImageHeight = patternImage.rows();
+        double patternImageSizeRatio = (double) patternImageWidth / (double) patternImageHeight;
+
+        double closesRatio = -1;
+        int closesWidth = -1;
+        int closesHeight = -1;
+        for(Integer width: mapGridsByWidthAndHeight.keySet()){
+            for(Integer height: mapGridsByWidthAndHeight.get(width).keySet()){
+                double imageSizeRatio = (double) width / (double) height;
+                if(closesRatio < 0 || Math.abs(imageSizeRatio - patternImageSizeRatio) < closesRatio ){
+aaa
+                }
+            }
+        }
+
+        int machMethod = Imgproc.TM_CCOEFF_NORMED;
+
+        Mat srcForOutput = srcImage.clone();
+        
+        for (int i = 10; i >= 0; i--) {
+
+            List<Rect> numbersLocations = new ArrayList<>();
+
+            Mat numberImage = Imgcodecs.imread("src/main/resources/" + i + ".png");
+
+            Imgproc.cvtColor(numberImage, numberImage, Imgproc.COLOR_BGR2BGRA);
+
+            Mat outputImage = new Mat();
+            Imgproc.matchTemplate(srcImage, numberImage, outputImage, machMethod);
+
+            logger.debug("match finish for " + i);
+
+            Core.MinMaxLocResult mmr = null;
+
+            while (true) {
+                mmr = Core.minMaxLoc(outputImage);
+                if (mmr.maxVal >= 0.8) {
+                    Rect rect = new Rect(mmr.maxLoc,
+                            new Point(mmr.maxLoc.x + numberImage.cols(), mmr.maxLoc.y + numberImage.rows()));
+                    numbersLocations.add(rect);
+
+                    Imgproc.rectangle(srcForOutput, mmr.maxLoc,
+                            new Point(mmr.maxLoc.x + numberImage.cols(), mmr.maxLoc.y + numberImage.rows()),
+                            new Scalar(0, 255, 0, 255));
+
+                    Imgproc.circle(outputImage, new Point(mmr.maxLoc.x, mmr.maxLoc.y),
+                            (numberImage.width() + numberImage.height()) / 4,
+                            new Scalar(0, 0, 0), -1);
+
+                    CellTypeEnum cellTypeEnum = null;
+
+                    if (i > 0 && i < 9)
+                        cellTypeEnum = CellTypeEnum.NUMBER;
+                    if (i == 0)
+                        cellTypeEnum = CellTypeEnum.EMPTY;
+                    if (i == 9)
+                        cellTypeEnum = CellTypeEnum.FLAG;
+                    if (i == 10)
+                        cellTypeEnum = CellTypeEnum.UNCHECKED;
+
+                    MineSweeperGridCell gridCell = new MineSweeperGridCell(cellTypeEnum, rect,
+                            (i >= 0 && i < 9) ? i : -1);
+
+                } else {
+                    break;
+                }
+            }
+
+            logger.debug(i + " " + numbersLocations.size());
+
+        }
+
+        Board board = new Board(1,1);
+        return board;
+    }
+
+    private List<MineSweeperGridCell> findCells(Mat srcImage) {
         List<MineSweeperGridCell> list = new ArrayList<>();
 
         int machMethod = Imgproc.TM_CCOEFF_NORMED;
@@ -38,7 +119,7 @@ public class ImageProcessing {
 
             Mat numberImage = Imgcodecs.imread("src/main/resources/" + i + ".png");
 
-asdf
+
 
             Imgproc.cvtColor(numberImage, numberImage, Imgproc.COLOR_BGR2BGRA);
 

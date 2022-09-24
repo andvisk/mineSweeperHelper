@@ -45,7 +45,7 @@ public class HelpScreen {
         }
 
         public static Mat process(Mat screenShot, Map<Integer, Map<Integer, List<Grid>>> mapGridsByWidthAndHeight, int tolleranceInPercent) {
-                Board grid = new ImageProcessing().processView(screenShot, mapGridsByWidthAndHeight, tolleranceInPercent);
+                Board grid = new ImageProcessing().collectBoard(screenShot, mapGridsByWidthAndHeight, tolleranceInPercent);
 
                 if (grid != null) {
                         Mat screenShotBlured = new Mat();

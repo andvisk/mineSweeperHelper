@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.opencv.core.Mat;
+import org.opencv.imgcodecs.Imgcodecs;
 
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
@@ -30,16 +31,14 @@ public class ProcessingService extends Service<Mat> {
             protected Mat call() throws Exception {
 
                 Map<Integer, Map<Integer, List<Grid>>> mapGridsByWidthAndHeight = GridUtils.collectGrids(screenShot,
-                minGridHorizontalMembers, minGridVerticalMembers, gridPositionAndSizeTolleranceInPercent);
+                        minGridHorizontalMembers, minGridVerticalMembers, gridPositionAndSizeTolleranceInPercent);
 
-                /*
-                 * mapGridsByWidthAndHeight.entrySet().stream().flatMap(p ->
-                 * p.getValue().entrySet().stream())
-                 * .flatMap(p -> p.getValue().stream()).forEach(p ->
-                 * GridUtils.drawLocations(screenShot, p));
-                 * 
-                 * Imgcodecs.imwrite("C:/andrius/test.jpg", screenShot);
-                 */
+                if (App.debug) {
+                    mapGridsByWidthAndHeight.entrySet().stream().flatMap(p -> p.getValue().entrySet().stream())
+                            .flatMap(p -> p.getValue().stream()).forEach(p -> GridUtils.drawLocations(screenShot, p));
+
+                    Imgcodecs.imwrite("all_grids.jpg", screenShot);
+                }
 
                 return HelpScreen.process(screenShot, mapGridsByWidthAndHeight, gridPositionAndSizeTolleranceInPercent);
             }
