@@ -1,5 +1,8 @@
 package minesweeperhelper;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -25,6 +28,24 @@ public class GridUtilsTest {
     private int minGridMembersHor = 9;
     private int minGridMembersVer = 9;
     private int tolleranceInPercent = 30;
+
+    @Test
+    void sgetIntervals() {
+
+        final DecimalFormat df = new DecimalFormat("0.00");
+        
+        int gap = 2;
+        int x = 11; int width = 17;
+        int y = 12; int height = 20;
+
+        int x2 = 14; 
+        int y2 = 12; 
+
+
+        BigDecimal position = new BigDecimal(Math.abs( + width + gap - x2)).setScale(2, RoundingMode.HALF_EVEN); //df.format((double)Math.abs(x + width + gap - x2));
+
+        int stop = 0;
+    }
 
     @Test
     void getIntervals() {

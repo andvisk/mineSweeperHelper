@@ -4,51 +4,65 @@ import org.opencv.core.Rect;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.function.Function;
 
 public class GroupingBy {
 
-    public static <T> Map<Integer, List<T>> approximateInArea(List<T> list, Function<T, Integer> functionPosition,
+    public static <T> Map<BigDecimal, List<T>> approximateInArea(List<T> list, Function<T, Integer> functionPosition,
             Function<T, Integer> functionWidthOrHeight, int tolleranceInPercents) {
+        BigDecimal tolleranceInPercentsBD = BigDecimal.valueOf(tolleranceInPercents);
 
-        Map<Integer, List<T>> map = new HashMap<>();
+        Map<BigDecimal, List<T>> map = new HashMap<>();
 
         for (int i = 0; i < list.size(); i++) {
 
             final int finalI = i;
 
-            Integer closestValue = map.entrySet().stream()
+            BigDecimal closestValue = map.entrySet().stream()
                     .map(p -> p.getKey())
-                    .min(Comparator.comparingInt(p -> Math.abs(p - functionPosition.apply(list.get(finalI)))))
-                    .orElse(-1);
+                    .min((a, b) -> {
+                        return a.compareTo(
+                                a.subtract(BigDecimal.valueOf(functionPosition.apply(list.get(finalI)))).abs());
+                    })
+                    .orElse(BigDecimal.valueOf(-1));
 
-            if (closestValue > 0 && (double) functionWidthOrHeight.apply(list.get(i)) / 100
-                    * tolleranceInPercents >= Math.abs(closestValue - functionPosition.apply(list.get(i)))) {
+            if (closestValue.compareTo(BigDecimal.ZERO) == 1 &&
+                    BigDecimal.valueOf(functionWidthOrHeight.apply(list.get(i))).setScale(2, RoundingMode.HALF_EVEN)
+                            .divide(BigDecimal.valueOf(100).setScale(2, RoundingMode.HALF_EVEN))
+                            .multiply(tolleranceInPercentsBD)
+                            .compareTo(
+                                    closestValue.subtract(
+                                            BigDecimal.valueOf(functionPosition.apply(list.get(i))).setScale(2,
+                                                    RoundingMode.HALF_EVEN))
+                                            .abs()) >= 0) {
                 map.get(closestValue).add(list.get(i));
             } else {
                 List<T> mapValueList = new ArrayList<>();
                 mapValueList.add(list.get(i));
-                map.put(functionPosition.apply(list.get(i)), mapValueList);
+                map.put(BigDecimal.valueOf(functionPosition.apply(list.get(i)).setScale(2, RoundingMode.HALF_EVEN), mapValueList);
             }
 
         }
         return map;
     }
 
-    public static <T> Map<Integer, List<T>> approximate(List<T> list, Function<T, Integer> functionLength,
+    public static <T> Map<BigDecimal, List<T>> approximate(List<T> list, Function<T, Integer> functionLength,
             int tolleranceInPercents) {
 
-        Map<Integer, List<T>> map = new HashMap<>();
+        Map<BigDecimal, List<T>> map = new HashMap<>();
 
         for (int i = 0; i < list.size(); i++) {
 
             final int finalI = i;
 
-            Integer closestValue = map.entrySet().stream()
+            BigDecimal closestValue = map.entrySet().stream()
                     .map(p -> p.getKey())
                     .min(Comparator
-                            .comparingInt(p -> Math.abs(p - (int) Math.round(functionLength.apply(list.get(finalI))))))
+                            .comparingDouble(p -> Math.abs(p - functionLength.apply(list.get(finalI)))))
                     .orElse(-1);
 
             if (closestValue > 0 && (double) Math.round(functionLength.apply(list.get(finalI))) / 100

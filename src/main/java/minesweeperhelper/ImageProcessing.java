@@ -34,23 +34,24 @@ public class ImageProcessing {
         Mat patternImage = Imgcodecs.imread("src/main/resources/" + 0 + ".png");
         int patternImageWidth = patternImage.cols();
 
+        Imgcodecs.imwrite("src/test/resources/" + "srcImage" + ".png", srcImage);
+
         for (Integer width : mapGridsByWidthAndHeight.keySet()) {
             for (Integer height : mapGridsByWidthAndHeight.get(width).keySet()) {
-                int percent = (int) Math.round((double) patternImageWidth * 100 / width);
-                Size size = new Size((double) width / 100 * percent, (double) height / 100 * percent);
 
                 int machMethod = Imgproc.TM_CCOEFF_NORMED;
 
                 Mat srcForOutput = srcImage.clone();
 
                 for (int i = 10; i >= 0; i--) {
-asd
+
                     List<Rect> numbersLocations = new ArrayList<>();
 
-                    Mat numberImg = Imgcodecs.imread("src/main/resources/" + i + ".png");
+                    Mat numberImgInit = Imgcodecs.imread("src/main/resources/" + i + ".png");
 
                     Mat resizedPatternImage = new Mat();
-                    Imgproc.resize(numberImg, resizedPatternImage, size);
+                    double scaleWidthFasctor = (double) width / patternImageWidth;
+                    Imgproc.resize(numberImgInit, resizedPatternImage, new Size(), scaleWidthFasctor, scaleWidthFasctor, Imgproc.INTER_AREA);
 
                     Imgproc.cvtColor(resizedPatternImage, resizedPatternImage, Imgproc.COLOR_BGR2BGRA);
 

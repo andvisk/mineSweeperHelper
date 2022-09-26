@@ -108,5 +108,3 @@ run {
     }    
 }
 
-logging.captureStandardOutput LogLevel.DEBUG
-logging.captureStandardError LogLevel.DEBUG
