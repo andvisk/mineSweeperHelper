@@ -12,81 +12,94 @@ import java.util.function.Function;
 
 public class GroupingBy {
 
-    public static <T> Map<BigDecimal, List<T>> approximateInArea(List<T> list, Function<T, Integer> functionPosition,
-            Function<T, Integer> functionWidthOrHeight, int tolleranceInPercents) {
-        BigDecimal tolleranceInPercentsBD = BigDecimal.valueOf(tolleranceInPercents);
+        public static <T> Map<BigDecimal, List<T>> approximateInArea(List<T> list,
+                        Function<T, Integer> functionPosition,
+                        Function<T, Integer> functionWidthOrHeight, BigDecimal tolleranceInPercentsBD) {
 
-        Map<BigDecimal, List<T>> map = new HashMap<>();
+                Map<BigDecimal, List<T>> map = new HashMap<>();
 
-        for (int i = 0; i < list.size(); i++) {
+                for (int i = 0; i < list.size(); i++) {
 
-            final int finalI = i;
+                        final int finalI = i;
 
-            BigDecimal closestValue = map.entrySet().stream()
-                    .map(p -> p.getKey())
-                    .min((a, b) -> {
-                        return a.compareTo(
-                                a.subtract(BigDecimal.valueOf(functionPosition.apply(list.get(finalI)))).abs());
-                    })
-                    .orElse(BigDecimal.valueOf(-1));
+                        BigDecimal closestValue = map.entrySet().stream()
+                                        .map(p -> p.getKey())
+                                        .min((a, b) -> {
+                                                return a.compareTo(
+                                                                a.subtract(BigDecimal.valueOf(functionPosition
+                                                                                .apply(list.get(finalI)))).abs());
+                                        })
+                                        .orElse(BigDecimal.valueOf(-1));
 
-            if (closestValue.compareTo(BigDecimal.ZERO) > 0 &&
-                    BigDecimal.valueOf(functionWidthOrHeight.apply(list.get(i))).setScale(2, RoundingMode.HALF_EVEN)
-                            .divide(BigDecimal.valueOf(100).setScale(2, RoundingMode.HALF_EVEN))
-                            .multiply(tolleranceInPercentsBD)
-                            .compareTo(
-                                    closestValue.subtract(
-                                            BigDecimal.valueOf(functionPosition.apply(list.get(i))).setScale(2,
-                                                    RoundingMode.HALF_EVEN))
-                                            .abs()) >= 0) {
-                map.get(closestValue).add(list.get(i));
-            } else {
-                List<T> mapValueList = new ArrayList<>();
-                mapValueList.add(list.get(i));
-                map.put(BigDecimal.valueOf(functionPosition.apply(list.get(i))).setScale(2, RoundingMode.HALF_EVEN), mapValueList);
-            }
+                        if (closestValue.compareTo(BigDecimal.ZERO) > 0 &&
+                                        BigDecimal.valueOf(functionWidthOrHeight.apply(list.get(i)))
+                                                        .setScale(2, RoundingMode.HALF_EVEN)
+                                                        .divide(BigDecimal.valueOf(100).setScale(2,
+                                                                        RoundingMode.HALF_EVEN))
+                                                        .multiply(tolleranceInPercentsBD)
+                                                        .compareTo(
+                                                                        closestValue.subtract(
+                                                                                        BigDecimal.valueOf(
+                                                                                                        functionPosition.apply(
+                                                                                                                        list.get(i)))
+                                                                                                        .setScale(2,
+                                                                                                                        RoundingMode.HALF_EVEN))
+                                                                                        .abs()) >= 0) {
+                                map.get(closestValue).add(list.get(i));
+                        } else {
+                                List<T> mapValueList = new ArrayList<>();
+                                mapValueList.add(list.get(i));
+                                map.put(BigDecimal.valueOf(functionPosition.apply(list.get(i))).setScale(2,
+                                                RoundingMode.HALF_EVEN), mapValueList);
+                        }
 
+                }
+                return map;
         }
-        return map;
-    }
 
-    public static <T> Map<BigDecimal, List<T>> approximate(List<T> list, Function<T, Integer> functionLength,
-            int tolleranceInPercents) {
+        public static <T> Map<BigDecimal, List<T>> approximate(List<T> list, Function<T, Integer> functionLength,
+                        BigDecimal tolleranceInPercentsBD) {
 
-        BigDecimal tolleranceInPercentsBD = BigDecimal.valueOf(tolleranceInPercents);
+                Map<BigDecimal, List<T>> map = new HashMap<>();
 
-        Map<BigDecimal, List<T>> map = new HashMap<>();
+                for (int i = 0; i < list.size(); i++) {
 
-        for (int i = 0; i < list.size(); i++) {
+                        final int finalI = i;
 
-            final int finalI = i;
+                        BigDecimal closestValue = map.entrySet().stream()
+                                        .map(p -> p.getKey())
+                                        .min((a, b) -> {
+                                                return a.compareTo(
+                                                                a.subtract(BigDecimal.valueOf(
+                                                                                functionLength.apply(list.get(finalI))))
+                                                                                .abs());
+                                        })
+                                        .orElse(BigDecimal.valueOf(-1));
 
-            BigDecimal closestValue = map.entrySet().stream()
-                    .map(p -> p.getKey())
-                    .min((a, b) -> {
-                        return a.compareTo(
-                                a.subtract(BigDecimal.valueOf(functionLength.apply(list.get(finalI)))).abs());
-                    })
-                    .orElse(BigDecimal.valueOf(-1));
+                        if (closestValue.compareTo(BigDecimal.ZERO) > 0 &&
 
-            if (closestValue.compareTo(BigDecimal.ZERO) > 0 &&
+                                        BigDecimal.valueOf(functionLength.apply(list.get(i)))
+                                                        .setScale(2, RoundingMode.HALF_EVEN)
+                                                        .divide(BigDecimal.valueOf(100).setScale(2,
+                                                                        RoundingMode.HALF_EVEN))
+                                                        .multiply(tolleranceInPercentsBD)
+                                                        .compareTo(
+                                                                        closestValue.subtract(
+                                                                                        BigDecimal.valueOf(
+                                                                                                        functionLength.apply(
+                                                                                                                        list.get(i)))
+                                                                                                        .setScale(2,
+                                                                                                                        RoundingMode.HALF_EVEN))
+                                                                                        .abs()) >= 0) {
+                                map.get(closestValue).add(list.get(i));
+                        } else {
+                                List<T> mapValueList = new ArrayList<>();
+                                mapValueList.add(list.get(i));
+                                map.put(BigDecimal.valueOf(functionLength.apply(list.get(i))).setScale(2,
+                                                RoundingMode.HALF_EVEN), mapValueList);
+                        }
 
-                    BigDecimal.valueOf(functionLength.apply(list.get(i))).setScale(2, RoundingMode.HALF_EVEN)
-                            .divide(BigDecimal.valueOf(100).setScale(2, RoundingMode.HALF_EVEN))
-                            .multiply(tolleranceInPercentsBD)
-                            .compareTo(
-                                    closestValue.subtract(
-                                            BigDecimal.valueOf(functionLength.apply(list.get(i))).setScale(2,
-                                                    RoundingMode.HALF_EVEN))
-                                            .abs()) >= 0) {
-                map.get(closestValue).add(list.get(i));
-            } else {
-                List<T> mapValueList = new ArrayList<>();
-                mapValueList.add(list.get(i));
-                map.put((int) Math.round(functionLength.apply(list.get(finalI))), mapValueList);
-            }
-
+                }
+                return map;
         }
-        return map;
-    }
 }

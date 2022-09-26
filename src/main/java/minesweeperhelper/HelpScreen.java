@@ -9,6 +9,7 @@ import javafx.scene.robot.Robot;
 import javafx.stage.Screen;
 
 import java.awt.image.BufferedImage;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -44,7 +45,7 @@ public class HelpScreen {
                 return ImageUtils.writableImageToMat(writableImage);
         }
 
-        public static Mat process(Mat screenShot, Map<Integer, Map<Integer, List<Grid>>> mapGridsByWidthAndHeight, int tolleranceInPercent) {
+        public static Mat process(Mat screenShot, Map<BigDecimal, Map<BigDecimal, List<Grid>>> mapGridsByWidthAndHeight, BigDecimal tolleranceInPercent) {
                 Board grid = new ImageProcessing().collectBoard(screenShot, mapGridsByWidthAndHeight, tolleranceInPercent);
 
                 if (grid != null) {

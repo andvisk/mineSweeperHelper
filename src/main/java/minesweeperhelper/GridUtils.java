@@ -1,5 +1,7 @@
 package minesweeperhelper;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -25,10 +27,11 @@ public class GridUtils {
 
     private static Logger log = LogManager.getLogger(GridUtils.class);
 
-    public static Map<Integer, Map<Integer, List<Grid>>> collectGrids(Mat screenShot, int minGridHorizontalMembers,
-            int minGridVerticalMembers, int gridPositionAndSizeTolleranceInPercent) {
+    public static Map<BigDecimal, Map<BigDecimal, List<Grid>>> collectGrids(Mat screenShot,
+            int minGridHorizontalMembers,
+            int minGridVerticalMembers, BigDecimal gridPositionAndSizeTolleranceInPercent) {
 
-        Map<Integer, Map<Integer, List<Grid>>> mapGridsByWidthAndHeight = new HashMap<>();
+        Map<BigDecimal, Map<BigDecimal, List<Grid>>> mapGridsByWidthAndHeight = new HashMap<>();
 
         Mat grayMat = new Mat();
         Imgproc.cvtColor(screenShot, grayMat, Imgproc.COLOR_BGR2GRAY);
@@ -40,38 +43,41 @@ public class GridUtils {
         List<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(thresholdMat, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
 
-        Map<Integer, Map<Integer, List<GridCell>>> mapByWidthAndHeight = GridUtils.groupByWidthThenByHeight(contours,
+        Map<BigDecimal, Map<BigDecimal, List<GridCell>>> mapByWidthAndHeight = GridUtils.groupByWidthThenByHeight(
+                contours,
                 minGridHorizontalMembers, minGridVerticalMembers, gridPositionAndSizeTolleranceInPercent);
 
-        for (Map.Entry<Integer, Map<Integer, List<GridCell>>> entry : mapByWidthAndHeight.entrySet()) {
-            Integer width = entry.getKey(); // cell width
-            Map<Integer, List<GridCell>> mapByHeight = entry.getValue();
-            for (Map.Entry<Integer, List<GridCell>> entryByHeight : mapByHeight.entrySet()) {
-                Integer height = entryByHeight.getKey(); // cell height
+        for (Map.Entry<BigDecimal, Map<BigDecimal, List<GridCell>>> entry : mapByWidthAndHeight.entrySet()) {
+            BigDecimal width = entry.getKey(); // cell width
+            Map<BigDecimal, List<GridCell>> mapByHeight = entry.getValue();
+            for (Map.Entry<BigDecimal, List<GridCell>> entryByHeight : mapByHeight.entrySet()) {
+                BigDecimal height = entryByHeight.getKey(); // cell height
                 List<GridCell> points = entryByHeight.getValue();
 
-                Map<Integer, List<GridCell>> mapByX = GroupingBy.approximateInArea(points,
+                Map<BigDecimal, List<GridCell>> mapByX = GroupingBy.approximateInArea(points,
                         p -> p.getRect().x,
                         p -> p.getRect().width, gridPositionAndSizeTolleranceInPercent);
 
-                Map<Integer, List<GridCell>> mapByY = GroupingBy.approximateInArea(points,
+                Map<BigDecimal, List<GridCell>> mapByY = GroupingBy.approximateInArea(points,
                         p -> p.getRect().y,
                         p -> p.getRect().height, gridPositionAndSizeTolleranceInPercent);
 
                 mapByY = mapByY.entrySet().stream().filter(p -> p.getValue().size() >= minGridVerticalMembers)
                         .collect(Collectors.toMap(k -> k.getKey(), v -> v.getValue()));
 
-                List<Map<Integer, List<GridCell>>> listOfxyMaps = GridUtils
-                        .removeSquaresToConformMinWidthAndHeight(mapByX, mapByY, minGridHorizontalMembers, minGridVerticalMembers,
-                        gridPositionAndSizeTolleranceInPercent);
+                List<Map<BigDecimal, List<GridCell>>> listOfxyMaps = GridUtils
+                        .removeSquaresToConformMinWidthAndHeight(mapByX, mapByY, minGridHorizontalMembers,
+                                minGridVerticalMembers,
+                                gridPositionAndSizeTolleranceInPercent);
 
                 mapByX = listOfxyMaps.get(0);
                 mapByY = listOfxyMaps.get(1);
 
-                List<Grid> gridList = collectGridsFromCells(mapByX, mapByY, width, height, gridPositionAndSizeTolleranceInPercent);
+                List<Grid> gridList = collectGridsFromCells(mapByX, mapByY, width, height,
+                        gridPositionAndSizeTolleranceInPercent);
 
                 if (gridList.size() > 0) {
-                    Map<Integer, List<Grid>> returnMapByHeight = mapGridsByWidthAndHeight.get(width);
+                    Map<BigDecimal, List<Grid>> returnMapByHeight = mapGridsByWidthAndHeight.get(width);
                     if (returnMapByHeight == null)
                         returnMapByHeight = new HashMap<>();
 
@@ -85,12 +91,12 @@ public class GridUtils {
         return mapGridsByWidthAndHeight;
     }
 
-    public static List<Grid> collectGridsFromCells(Map<Integer, List<GridCell>> mapByX,
-            Map<Integer, List<GridCell>> mapByY, int width, int height,
-            int tolleranceInPercent) {
+    public static List<Grid> collectGridsFromCells(Map<BigDecimal, List<GridCell>> mapByX,
+            Map<BigDecimal, List<GridCell>> mapByY, BigDecimal width, BigDecimal height,
+            BigDecimal tolleranceInPercent) {
         List<Grid> gridList = new ArrayList<>();
-        List<Integer> xs = mapByX.keySet().stream().sorted().collect(Collectors.toList());
-        List<Integer> ys = mapByY.keySet().stream().sorted().collect(Collectors.toList());
+        List<BigDecimal> xs = mapByX.keySet().stream().sorted().collect(Collectors.toList());
+        List<BigDecimal> ys = mapByY.keySet().stream().sorted().collect(Collectors.toList());
 
         List<List<Integer>> xsIntervals = getIntervals(xs, width, tolleranceInPercent);
         List<Integer> xsStartPos = xsIntervals.get(0);
@@ -104,13 +110,14 @@ public class GridUtils {
             int xStart = xsStartPos.get(i);
             int xEnd = xsEndPos.get(i);
             Set<GridCell> xsSet = mapByX.entrySet().stream()
-                    .filter(p -> p.getKey() >= xs.get(xStart) && p.getKey() <= xs.get(xEnd))
+                    .filter(p -> p.getKey().compareTo(xs.get(xStart)) >= 0 && p.getKey().compareTo(xs.get(xEnd)) <= 0)
                     .flatMap(p -> p.getValue().stream()).collect(Collectors.toSet());
             for (int j = 0; j < ysStartPos.size(); j++) {
                 int yStart = ysStartPos.get(j);
                 int yEnd = ysEndPos.get(j);
                 Set<GridCell> ysSet = mapByY.entrySet().stream()
-                        .filter(p -> p.getKey() >= ys.get(yStart) && p.getKey() <= ys.get(yEnd))
+                        .filter(p -> p.getKey().compareTo(ys.get(yStart)) >= 0
+                                && p.getKey().compareTo(ys.get(yEnd)) <= 0)
                         .flatMap(p -> p.getValue().stream()).collect(Collectors.toSet());
 
                 Set<GridCell> xGridSet = new HashSet<GridCell>(xsSet);
@@ -119,19 +126,19 @@ public class GridUtils {
                 Set<GridCell> yGridSet = new HashSet<GridCell>(ysSet);
                 yGridSet.retainAll(xsSet);
 
-                Map<Integer, List<GridCell>> mapByXGrid = GroupingBy.approximateInArea(
+                Map<BigDecimal, List<GridCell>> mapByXGrid = GroupingBy.approximateInArea(
                         xGridSet.stream().collect(Collectors.toList()),
                         p -> p.getRect().x,
                         p -> p.getRect().width, tolleranceInPercent);
 
-                Map<Integer, List<GridCell>> mapByYGrid = GroupingBy.approximateInArea(
+                Map<BigDecimal, List<GridCell>> mapByYGrid = GroupingBy.approximateInArea(
                         yGridSet.stream().collect(Collectors.toList()),
                         p -> p.getRect().y,
                         p -> p.getRect().height, tolleranceInPercent);
 
                 int counter = -1;
                 int lastIndexX = -1;
-                for (Integer xValue : mapByXGrid.keySet().stream().sorted().collect(Collectors.toList())) {
+                for (BigDecimal xValue : mapByXGrid.keySet().stream().sorted().collect(Collectors.toList())) {
                     ++counter;
                     for (GridCell gridCell : mapByXGrid.get(xValue)) {
                         gridCell.setPositionInGridX(counter);
@@ -141,7 +148,7 @@ public class GridUtils {
 
                 counter = -1;
                 int lastIndexY = -1;
-                for (Integer yValue : mapByYGrid.keySet().stream().sorted().collect(Collectors.toList())) {
+                for (BigDecimal yValue : mapByYGrid.keySet().stream().sorted().collect(Collectors.toList())) {
                     ++counter;
                     for (GridCell gridCell : mapByYGrid.get(yValue)) {
                         gridCell.setPositionInGridY(counter);
@@ -151,7 +158,7 @@ public class GridUtils {
 
                 Grid grid = new Grid(lastIndexX + 1, lastIndexY + 1);
 
-                for (Integer xValue : mapByXGrid.keySet()) {
+                for (BigDecimal xValue : mapByXGrid.keySet()) {
                     for (GridCell gridCell : mapByXGrid.get(xValue)) {
                         grid.setCell(gridCell.getX(), gridCell.getY(), gridCell);
                     }
@@ -169,7 +176,8 @@ public class GridUtils {
      * 0 - start positions
      * 1 - end positions
      */
-    public static List<List<Integer>> getIntervals(List<Integer> list, int widthOrHeight, int tolleranceInPercent) {
+    public static List<List<Integer>> getIntervals(List<BigDecimal> list, BigDecimal widthOrHeight,
+            BigDecimal tolleranceInPercent) {
         List<Integer> startPos = new ArrayList<>();
         List<Integer> endPos = new ArrayList<>();
         List<List<Integer>> retList = Arrays.asList(startPos, endPos);
@@ -177,8 +185,8 @@ public class GridUtils {
         if (list.size() > 0) {
             int startingPos = 0;
             for (int i = 1; i < list.size(); i++) {
-                if (Math.abs(list.get(i - 1) + widthOrHeight - list.get(i)) > (double) widthOrHeight / 100
-                        * tolleranceInPercent) {
+                if (list.get(i - 1).add(widthOrHeight).subtract(list.get(i)).abs().compareTo(
+                        widthOrHeight.divide(BigDecimal.valueOf(100).multiply(tolleranceInPercent))) > 0) {
                     startPos.add(startingPos);
                     endPos.add(i - 1);
                     startingPos = i;
@@ -191,16 +199,16 @@ public class GridUtils {
     }
 
     @Deprecated
-    public static Board collectGrid(List<MineSweeperGridCell> cells, int tolleranceInPercent) {
+    public static Board collectGrid(List<MineSweeperGridCell> cells, BigDecimal tolleranceInPercent) {
 
         if (cells.size() > 0) {
 
-            Map<Integer, List<MineSweeperGridCell>> mapByX = GroupingBy.approximateInArea(cells,
+            Map<BigDecimal, List<MineSweeperGridCell>> mapByX = GroupingBy.approximateInArea(cells,
                     p -> (int) p.getRect().x,
                     p -> (int) p.getRect().width, tolleranceInPercent);
 
             // remove dublicates if any
-            for (Integer x : mapByX.keySet()) {
+            for (BigDecimal x : mapByX.keySet()) {
                 List<MineSweeperGridCell> list = mapByX.get(x);
                 for (int i = 0; i < list.size() - 1; i++) {
                     MineSweeperGridCell gridCell = list.get(i);
@@ -214,9 +222,19 @@ public class GridUtils {
                         gridCellIter = iterator.next();
 
                         if (gridCellIter != null && gridCell.getId().compareTo(gridCellIter.getId()) != 0 &&
-                                Math.abs(gridCell.getRect().y
-                                        - gridCellIter.getRect().y) <= (double) gridCellIter.getRect().height / 100
-                                                * tolleranceInPercent) {
+
+                                BigDecimal.valueOf(gridCell.getRect().y).setScale(2, RoundingMode.HALF_EVEN)
+                                        .subtract(BigDecimal.valueOf(gridCellIter.getRect().y).setScale(2,
+                                                RoundingMode.HALF_EVEN))
+                                        .abs()
+                                        .compareTo(
+                                                BigDecimal.valueOf(gridCellIter.getRect().height)
+                                                        .setScale(2, RoundingMode.HALF_EVEN)
+                                                        .divide(BigDecimal.valueOf(100)).multiply(tolleranceInPercent)
+
+                                        ) <= 0
+
+                        ) {
                             iterator.remove();
                         }
                     }
@@ -225,7 +243,7 @@ public class GridUtils {
 
             // check all columns have the same rows count
             int rows = -1;
-            for (Integer x : mapByX.keySet()) {
+            for (BigDecimal x : mapByX.keySet()) {
                 mapByX.get(x).sort((a, b) -> Integer.compare(a.getRect().y, b.getRect().y));
                 if (rows < 0) {
                     rows = mapByX.get(x).size();
@@ -237,22 +255,27 @@ public class GridUtils {
                 }
             }
 
-            List<Integer> xs = new ArrayList<>(mapByX.keySet());
-            xs.sort((a, b) -> Integer.compare(a, b));
+            List<BigDecimal> xs = new ArrayList<>(mapByX.keySet());
+            xs.sort((a, b) -> a.compareTo(b));
 
             Board grid = new Board(xs.size(), mapByX.get(xs.get(0)).size());
 
             // filling grid
             int column = -1;
-            for (Integer x : xs) {
+            for (BigDecimal x : xs) {
                 ++column;
                 List<MineSweeperGridCell> columnData = mapByX.get(x);
-                List<Integer> ys = columnData.stream().map(p -> p.getRect().y).collect(Collectors.toList());
-                ys.sort((a, b) -> Integer.compare(a, b));
+                List<BigDecimal> ys = columnData.stream()
+                        .map(p -> BigDecimal.valueOf(p.getRect().y).setScale(2, RoundingMode.HALF_EVEN))
+                        .collect(Collectors.toList());
+                ys.sort((a, b) -> a.compareTo(b));
                 int row = -1;
-                for (Integer y : ys) {
+                for (BigDecimal y : ys) {
                     ++row;
-                    grid.setCell(column, row, columnData.stream().filter(p -> p.getRect().y == y).findFirst().get());
+                    grid.setCell(column, row, columnData.stream().filter(
+                            p -> BigDecimal.valueOf(p.getRect().y).setScale(2, RoundingMode.HALF_EVEN)
+                                    .compareTo(y) == 0)
+                            .findFirst().get());
                 }
             }
 
@@ -321,27 +344,27 @@ public class GridUtils {
 
     }
 
-    public static Map<Integer, Map<Integer, List<GridCell>>> groupByWidthThenByHeight(List<MatOfPoint> contours,
-            int minimumHorizontalCount, int minimumVerticalCout, int tolleranceInPercent) {
-        Map<Integer, Map<Integer, List<GridCell>>> map = new HashMap<>();
+    public static Map<BigDecimal, Map<BigDecimal, List<GridCell>>> groupByWidthThenByHeight(List<MatOfPoint> contours,
+            int minimumHorizontalCount, int minimumVerticalCout, BigDecimal tolleranceInPercent) {
+        Map<BigDecimal, Map<BigDecimal, List<GridCell>>> map = new HashMap<>();
         // map by width
-        Map<Integer, List<GridCell>> mapByWidth = convertToGridCells(GroupingBy.approximate(contours,
+        Map<BigDecimal, List<GridCell>> mapByWidth = convertToGridCells(GroupingBy.approximate(contours,
                 p -> {
                     Rect rect = Imgproc.boundingRect(p);
                     return rect.width;
                 },
                 tolleranceInPercent));
 
-        List<Map.Entry<Integer, List<GridCell>>> filteredByWidth = mapByWidth.entrySet().stream()
+        List<Map.Entry<BigDecimal, List<GridCell>>> filteredByWidth = mapByWidth.entrySet().stream()
                 .filter(p -> p.getValue().size() >= minimumHorizontalCount * minimumVerticalCout)
                 .collect(Collectors.toList());
 
-        for (Map.Entry<Integer, List<GridCell>> listByWidth : filteredByWidth) {
+        for (Map.Entry<BigDecimal, List<GridCell>> listByWidth : filteredByWidth) {
             // map by height
-            Map<Integer, List<GridCell>> mapByHeight = GroupingBy.approximate(listByWidth.getValue(),
+            Map<BigDecimal, List<GridCell>> mapByHeight = GroupingBy.approximate(listByWidth.getValue(),
                     p -> p.getRect().height,
                     tolleranceInPercent);
-            Map<Integer, List<GridCell>> filteredByHeight = mapByHeight.entrySet().stream()
+            Map<BigDecimal, List<GridCell>> filteredByHeight = mapByHeight.entrySet().stream()
                     .filter(p -> p.getValue().size() >= minimumHorizontalCount * minimumVerticalCout)
                     .collect(Collectors.toMap(p -> p.getKey(), v -> v.getValue()));
 
@@ -350,8 +373,8 @@ public class GridUtils {
         return map;
     }
 
-    private static Map<Integer, List<GridCell>> convertToGridCells(Map<Integer, List<MatOfPoint>> map) {
-        Map<Integer, List<GridCell>> mapR = map.entrySet().stream()
+    private static Map<BigDecimal, List<GridCell>> convertToGridCells(Map<BigDecimal, List<MatOfPoint>> map) {
+        Map<BigDecimal, List<GridCell>> mapR = map.entrySet().stream()
                 .collect(Collectors.toMap(k -> k.getKey(),
                         v -> {
                             List<GridCell> list = v.getValue().stream().map(p -> {
@@ -369,9 +392,9 @@ public class GridUtils {
      * 0 - mapByX
      * 1 - mapByY
      */
-    public static List<Map<Integer, List<GridCell>>> removeSquaresToConformMinWidthAndHeight(
-            Map<Integer, List<GridCell>> mapByX, Map<Integer, List<GridCell>> mapByY, int minWidth, int minHeight,
-            int tolleranceInPercent) {
+    public static List<Map<BigDecimal, List<GridCell>>> removeSquaresToConformMinWidthAndHeight(
+            Map<BigDecimal, List<GridCell>> mapByX, Map<BigDecimal, List<GridCell>> mapByY, int minWidth, int minHeight,
+            BigDecimal tolleranceInPercent) {
 
         long beforeByXCount = mapByX.entrySet().stream().flatMap(p -> p.getValue().stream()).count();
 
@@ -424,13 +447,15 @@ public class GridUtils {
 
     public static List<GridCell> removeCellsToConformSequency(List<GridCell> list,
             Function<GridCell, Integer> functionPosition, Function<GridCell, Integer> functionWidthOrHeight,
-            int minWidthOrHeightCount, int tolleranceInPercent) {
+            int minWidthOrHeightCount, BigDecimal tolleranceInPercent) {
 
         if (list.size() > minWidthOrHeightCount) {
 
             List<GridCell> listToRemove = new ArrayList<>();
 
-            list = list.stream().sorted((a, b) -> Integer.compare(functionPosition.apply(a), functionPosition.apply(b)))
+            list = list.stream()
+                    .sorted((a, b) -> BigDecimal.valueOf(functionPosition.apply(a))
+                            .compareTo(BigDecimal.valueOf(functionPosition.apply(b))))
                     .collect(Collectors.toList());
 
             int startingPosition = -1;
@@ -441,11 +466,15 @@ public class GridUtils {
                 if (startingPosition < 0)
                     startingPosition = i;
 
-                int prevPos = functionPosition.apply(list.get(i - 1));
-                int thisPos = functionPosition.apply(list.get(i));
-                int prevWidthOrHeight = functionWidthOrHeight.apply(list.get(i - 1));
-                if ((double) prevWidthOrHeight / 100 * tolleranceInPercent <= Math
-                        .abs(prevPos + prevWidthOrHeight - thisPos)) {
+                BigDecimal prevPos = BigDecimal.valueOf(functionPosition.apply(list.get(i - 1))).setScale(2,
+                        RoundingMode.HALF_EVEN);
+                BigDecimal thisPos = BigDecimal.valueOf(functionPosition.apply(list.get(i))).setScale(2,
+                        RoundingMode.HALF_EVEN);
+                BigDecimal prevWidthOrHeight = BigDecimal.valueOf(functionWidthOrHeight.apply(list.get(i - 1)))
+                        .setScale(2, RoundingMode.HALF_EVEN);
+
+                if (prevWidthOrHeight.divide(BigDecimal.valueOf(100)).multiply(tolleranceInPercent)
+                        .compareTo(prevPos.add(prevWidthOrHeight).subtract(thisPos).abs()) <= 0) {
                     ++counter;
                 } else {
                     if (counter < minWidthOrHeightCount)

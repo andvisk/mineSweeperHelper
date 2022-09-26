@@ -1,5 +1,6 @@
 package minesweeperhelper;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -14,10 +15,10 @@ public class ProcessingService extends Service<Mat> {
     private Mat screenShot;
     private int minGridHorizontalMembers;
     private int minGridVerticalMembers;
-    private int gridPositionAndSizeTolleranceInPercent;
+    private BigDecimal gridPositionAndSizeTolleranceInPercent;
 
     public ProcessingService(Mat screenShot, int minGridHorizontalMembers, int minGridVerticalMembers,
-            int gridPositionAndSizeTolleranceInPercent) {
+    BigDecimal gridPositionAndSizeTolleranceInPercent) {
         this.screenShot = screenShot;
         this.minGridHorizontalMembers = minGridHorizontalMembers;
         this.minGridVerticalMembers = minGridVerticalMembers;
@@ -30,7 +31,7 @@ public class ProcessingService extends Service<Mat> {
             @Override
             protected Mat call() throws Exception {
 
-                Map<Integer, Map<Integer, List<Grid>>> mapGridsByWidthAndHeight = GridUtils.collectGrids(screenShot,
+                Map<BigDecimal, Map<BigDecimal, List<Grid>>> mapGridsByWidthAndHeight = GridUtils.collectGrids(screenShot,
                         minGridHorizontalMembers, minGridVerticalMembers, gridPositionAndSizeTolleranceInPercent);
 
                 if (App.debug) {

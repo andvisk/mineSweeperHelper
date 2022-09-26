@@ -1,5 +1,6 @@
 package minesweeperhelper;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -20,24 +21,24 @@ public class ImageProcessing {
     private static final Logger logger = LogManager.getLogger(ImageProcessing.class);
 
     @Deprecated
-    public Board processView(Mat srcImage, Map<Integer, Map<Integer, List<Grid>>> mapGridsByWidthAndHeight,
-            int tolleranceInPercent) {
+    public Board processView(Mat srcImage, Map<BigDecimal, Map<BigDecimal, List<Grid>>> mapGridsByWidthAndHeight,
+            BigDecimal tolleranceInPercent) {
 
         List<MineSweeperGridCell> cells = findCells(srcImage);
 
         return GridUtils.collectGrid(cells, tolleranceInPercent);
     }
 
-    public Board collectBoard(Mat srcImage, Map<Integer, Map<Integer, List<Grid>>> mapGridsByWidthAndHeight,
-            int tolleranceInPercent) {
+    public Board collectBoard(Mat srcImage, Map<BigDecimal, Map<BigDecimal, List<Grid>>> mapGridsByWidthAndHeight,
+            BigDecimal tolleranceInPercent) {
 
         Mat patternImage = Imgcodecs.imread("src/main/resources/" + 0 + ".png");
         int patternImageWidth = patternImage.cols();
 
         Imgcodecs.imwrite("src/test/resources/" + "srcImage" + ".png", srcImage);
 
-        for (Integer width : mapGridsByWidthAndHeight.keySet()) {
-            for (Integer height : mapGridsByWidthAndHeight.get(width).keySet()) {
+        for (BigDecimal width : mapGridsByWidthAndHeight.keySet()) {
+            for (BigDecimal height : mapGridsByWidthAndHeight.get(width).keySet()) {
 
                 int machMethod = Imgproc.TM_CCOEFF_NORMED;
 
@@ -50,8 +51,9 @@ public class ImageProcessing {
                     Mat numberImgInit = Imgcodecs.imread("src/main/resources/" + i + ".png");
 
                     Mat resizedPatternImage = new Mat();
-                    double scaleWidthFasctor = (double) width / patternImageWidth;
-                    Imgproc.resize(numberImgInit, resizedPatternImage, new Size(), scaleWidthFasctor, scaleWidthFasctor, Imgproc.INTER_AREA);
+                    double scaleWidthFasctor = width.doubleValue() / patternImageWidth;
+                    Imgproc.resize(numberImgInit, resizedPatternImage, new Size(), scaleWidthFasctor, scaleWidthFasctor,
+                            Imgproc.INTER_AREA);
 
                     Imgproc.cvtColor(resizedPatternImage, resizedPatternImage, Imgproc.COLOR_BGR2BGRA);
 

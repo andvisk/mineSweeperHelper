@@ -19,6 +19,8 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
+import java.math.BigDecimal;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencv.core.Mat;
@@ -30,7 +32,7 @@ public class ControllerMain {
     // GRID
     public static final int MIN_WIDTH = 9;
     public static final int MIN_HEIGHT = 9;
-    public static final int TOLLERANCE_IN_PERCENT = 45; // x/2 to one direction
+    public static final BigDecimal TOLLERANCE_IN_PERCENT = BigDecimal.valueOf(45); // x/2 to one direction
 
     private Stage stage;
 
