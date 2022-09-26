@@ -25,9 +25,13 @@ public class GroupingBy {
                         BigDecimal closestValue = map.entrySet().stream()
                                         .map(p -> p.getKey())
                                         .min((a, b) -> {
-                                                return a.compareTo(
-                                                                a.subtract(BigDecimal.valueOf(functionPosition
-                                                                                .apply(list.get(finalI)))).abs());
+                                                return a.subtract(BigDecimal.valueOf(functionPosition
+                                                                .apply(list.get(finalI)))).abs()
+                                                                .compareTo(
+                                                                                b.subtract(BigDecimal.valueOf(
+                                                                                                functionPosition
+                                                                                                                .apply(list.get(finalI))))
+                                                                                                .abs());
                                         })
                                         .orElse(BigDecimal.valueOf(-1));
 
@@ -69,10 +73,14 @@ public class GroupingBy {
                         BigDecimal closestValue = map.entrySet().stream()
                                         .map(p -> p.getKey())
                                         .min((a, b) -> {
-                                                return a.compareTo(
-                                                                a.subtract(BigDecimal.valueOf(
-                                                                                functionLength.apply(list.get(finalI))))
-                                                                                .abs());
+                                                return a.subtract(BigDecimal.valueOf(
+                                                                functionLength.apply(list.get(finalI))))
+                                                                .abs()
+                                                                .compareTo(
+                                                                                b.subtract(BigDecimal.valueOf(
+                                                                                                functionLength.apply(
+                                                                                                                list.get(finalI))))
+                                                                                                .abs());
                                         })
                                         .orElse(BigDecimal.valueOf(-1));
 

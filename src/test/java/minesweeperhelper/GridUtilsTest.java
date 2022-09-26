@@ -27,11 +27,11 @@ public class GridUtilsTest {
     private int gap = 2;
     private int minGridMembersHor = 9;
     private int minGridMembersVer = 9;
-    private BigDecimal tolleranceInPercent = BigDecimal.valueOf(30);
+    private BigDecimal tolleranceInPercent = BigDecimal.valueOf(35).setScale(2, RoundingMode.HALF_EVEN);
 
     @Test
     void getIntervals() {
-        BigDecimal width = BigDecimal.valueOf(20);
+        BigDecimal width = BigDecimal.valueOf(20).setScale(2, RoundingMode.HALF_EVEN);
         List<BigDecimal> list = createFourIntervals(width, tolleranceInPercent);
         List<List<Integer>> intervals = GridUtils.getIntervals(list, width, tolleranceInPercent);
         assertEquals(4, intervals.get(0).size());
@@ -123,8 +123,14 @@ public class GridUtilsTest {
         BigDecimal x = BigDecimal.valueOf(10).setScale(2, RoundingMode.HALF_EVEN);
         for (int i = 1; i <= 20; i++) {
 
-            x = x.add(width.divide(BigDecimal.valueOf(100)).multiply(tolleranceInPercent).divide(BigDecimal.valueOf(2)
-                    .subtract(width.divide(BigDecimal.valueOf(100)).multiply(BigDecimal.valueOf(10)))));
+            x = x
+                    .add(width)
+                    .add(width
+                            .divide(BigDecimal.valueOf(100))
+                            .multiply(tolleranceInPercent)
+                            .divide(BigDecimal.valueOf(2))
+                            .subtract(
+                                    width.divide(BigDecimal.valueOf(100)).multiply(BigDecimal.valueOf(10))));
 
             list.add(x);
             if (i == 3 || i == 10 || i == 12) {
@@ -146,8 +152,17 @@ public class GridUtilsTest {
         List<BigDecimal> list = new ArrayList();
         BigDecimal x = BigDecimal.valueOf(10).setScale(2, RoundingMode.HALF_EVEN);
         for (int i = 1; i <= 20; i++) {
-            x = x.add(width.divide(BigDecimal.valueOf(100)).multiply(tolleranceInPercent).divide(BigDecimal.valueOf(2)
-                    .subtract(width.divide(BigDecimal.valueOf(100)).multiply(BigDecimal.valueOf(10)))));
+            x = x
+                    .add(width)
+                    .add(
+                            width
+                                    .divide(BigDecimal.valueOf(100))
+                                    .multiply(tolleranceInPercent)
+                                    .divide(BigDecimal.valueOf(2))
+                                            .subtract(
+                                                    width
+                                                            .divide(BigDecimal.valueOf(100))
+                                                            .multiply(BigDecimal.valueOf(10))));
             list.add(x);
         }
         return list;

@@ -186,7 +186,7 @@ public class GridUtils {
             int startingPos = 0;
             for (int i = 1; i < list.size(); i++) {
                 if (list.get(i - 1).add(widthOrHeight).subtract(list.get(i)).abs().compareTo(
-                        widthOrHeight.divide(BigDecimal.valueOf(100).multiply(tolleranceInPercent))) > 0) {
+                        widthOrHeight.divide(BigDecimal.valueOf(100)).multiply(tolleranceInPercent)) > 0) {
                     startPos.add(startingPos);
                     endPos.add(i - 1);
                     startingPos = i;
