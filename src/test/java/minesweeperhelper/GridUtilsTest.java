@@ -27,7 +27,7 @@ public class GridUtilsTest {
     private int gap = 2;
     private int minGridMembersHor = 9;
     private int minGridMembersVer = 9;
-    private BigDecimal tolleranceInPercent = BigDecimal.valueOf(35).setScale(2, RoundingMode.HALF_EVEN);
+    private BigDecimal tolleranceInPercent = BigDecimal.valueOf(25).setScale(2, RoundingMode.HALF_EVEN);
 
     @Test
     void getIntervals() {

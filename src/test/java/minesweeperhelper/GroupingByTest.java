@@ -16,7 +16,7 @@ public class GroupingByTest {
     void approximateInAreaTest() {
         int hCount = 10;
         int vCount = 10;
-        int tollerance = 35;
+        int tollerance = 25;
         List<GridCell> list = collectList(hCount, vCount, tollerance);
         Map<BigDecimal, List<GridCell>> map = GroupingBy.approximateInArea(list, p -> p.getRect().x,
                 p -> p.getRect().width, BigDecimal.valueOf(tollerance));
@@ -33,7 +33,7 @@ public class GroupingByTest {
     void approximateTest() {
         int hCount = 10;
         int vCount = 10;
-        int tollerance = 35;
+        int tollerance = 25;
         List<GridCell> list = collectListWithDifWidth(hCount, vCount, tollerance);
         Map<BigDecimal, List<GridCell>> mapByWidth = GroupingBy.approximate(list,
                 p -> p.getRect().width,
