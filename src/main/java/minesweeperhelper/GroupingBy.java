@@ -30,7 +30,7 @@ public class GroupingBy {
                     })
                     .orElse(BigDecimal.valueOf(-1));
 
-            if (closestValue.compareTo(BigDecimal.ZERO) == 1 &&
+            if (closestValue.compareTo(BigDecimal.ZERO) > 0 &&
                     BigDecimal.valueOf(functionWidthOrHeight.apply(list.get(i))).setScale(2, RoundingMode.HALF_EVEN)
                             .divide(BigDecimal.valueOf(100).setScale(2, RoundingMode.HALF_EVEN))
                             .multiply(tolleranceInPercentsBD)
@@ -43,7 +43,7 @@ public class GroupingBy {
             } else {
                 List<T> mapValueList = new ArrayList<>();
                 mapValueList.add(list.get(i));
-                map.put(BigDecimal.valueOf(functionPosition.apply(list.get(i)).setScale(2, RoundingMode.HALF_EVEN), mapValueList);
+                map.put(BigDecimal.valueOf(functionPosition.apply(list.get(i))).setScale(2, RoundingMode.HALF_EVEN), mapValueList);
             }
 
         }
@@ -53,6 +53,8 @@ public class GroupingBy {
     public static <T> Map<BigDecimal, List<T>> approximate(List<T> list, Function<T, Integer> functionLength,
             int tolleranceInPercents) {
 
+        BigDecimal tolleranceInPercentsBD = BigDecimal.valueOf(tolleranceInPercents);
+
         Map<BigDecimal, List<T>> map = new HashMap<>();
 
         for (int i = 0; i < list.size(); i++) {
@@ -61,12 +63,22 @@ public class GroupingBy {
 
             BigDecimal closestValue = map.entrySet().stream()
                     .map(p -> p.getKey())
-                    .min(Comparator
-                            .comparingDouble(p -> Math.abs(p - functionLength.apply(list.get(finalI)))))
-                    .orElse(-1);
+                    .min((a, b) -> {
+                        return a.compareTo(
+                                a.subtract(BigDecimal.valueOf(functionLength.apply(list.get(finalI)))).abs());
+                    })
+                    .orElse(BigDecimal.valueOf(-1));
 
-            if (closestValue > 0 && (double) Math.round(functionLength.apply(list.get(finalI))) / 100
-                    * tolleranceInPercents >= Math.abs(closestValue - functionLength.apply(list.get(i)))) {
+            if (closestValue.compareTo(BigDecimal.ZERO) > 0 &&
+
+                    BigDecimal.valueOf(functionLength.apply(list.get(i))).setScale(2, RoundingMode.HALF_EVEN)
+                            .divide(BigDecimal.valueOf(100).setScale(2, RoundingMode.HALF_EVEN))
+                            .multiply(tolleranceInPercentsBD)
+                            .compareTo(
+                                    closestValue.subtract(
+                                            BigDecimal.valueOf(functionLength.apply(list.get(i))).setScale(2,
+                                                    RoundingMode.HALF_EVEN))
+                                            .abs()) >= 0) {
                 map.get(closestValue).add(list.get(i));
             } else {
                 List<T> mapValueList = new ArrayList<>();
