@@ -58,7 +58,21 @@ public class GroupingBy {
                         }
 
                 }
-                return map;
+                
+                Map<BigDecimal, List<T>> mapWithAvgKeys = new HashMap<>();
+                for (Map.Entry<BigDecimal, List<T>> entry : map.entrySet()) {
+                        BigDecimal key = entry.getKey();
+                        BigDecimal count = BigDecimal.valueOf(entry.getValue().size());
+                        BigDecimal sum = entry.getValue().stream().map(p -> BigDecimal.valueOf(functionPosition.apply(p)))
+                                        .reduce(BigDecimal.ZERO,
+                                                        (subtotal, element) -> subtotal.add(element))
+                                        .setScale(2,
+                                                        RoundingMode.HALF_EVEN);
+                        BigDecimal newKey = sum.divide(count);
+                        mapWithAvgKeys.put(newKey, entry.getValue());
+                }
+
+                return mapWithAvgKeys;
         }
 
         public static <T> Map<BigDecimal, List<T>> approximate(List<T> list, Function<T, Integer> functionLength,
@@ -108,6 +122,20 @@ public class GroupingBy {
                         }
 
                 }
-                return map;
+
+                Map<BigDecimal, List<T>> mapWithAvgKeys = new HashMap<>();
+                for (Map.Entry<BigDecimal, List<T>> entry : map.entrySet()) {
+                        BigDecimal key = entry.getKey();
+                        BigDecimal count = BigDecimal.valueOf(entry.getValue().size());
+                        BigDecimal sum = entry.getValue().stream().map(p -> BigDecimal.valueOf(functionLength.apply(p)))
+                                        .reduce(BigDecimal.ZERO,
+                                                        (subtotal, element) -> subtotal.add(element))
+                                        .setScale(2,
+                                                        RoundingMode.HALF_EVEN);
+                        BigDecimal newKey = sum.divide(count);
+                        mapWithAvgKeys.put(newKey, entry.getValue());
+                }
+
+                return mapWithAvgKeys;
         }
 }
