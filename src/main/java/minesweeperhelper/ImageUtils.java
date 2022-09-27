@@ -77,5 +77,5 @@ public class ImageUtils {
         mat.put(0, 0, buffer);
         return mat;
     }
-    
+
 }

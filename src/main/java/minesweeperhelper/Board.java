@@ -11,8 +11,10 @@ import org.opencv.core.Mat;
 public class Board {
 
     private MineSweeperGridCell[][] grid;
+    private GridLocation gridLocation;
 
-    public Board(int width, int height) {
+    public Board(int width, int height, GridLocation gridLocation) {
+        this.gridLocation = gridLocation;
         grid = new MineSweeperGridCell[width][height];
     }
 
@@ -24,6 +26,10 @@ public class Board {
 
     public MineSweeperGridCell[][] getGrid() {
         return grid;
+    }
+
+    public GridLocation getGridLocation(){
+        return gridLocation;
     }
 
     public void processGrid(Mat screenShot) {

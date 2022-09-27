@@ -1,5 +1,8 @@
 package minesweeperhelper;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Grid {
 
     private GridCell[][] grid;
@@ -16,6 +19,18 @@ public class Grid {
 
     public GridCell[][] getGrid() {
         return grid;
+    }
+
+    public List<GridCell> getGridCells() {
+        List<GridCell> list = new ArrayList<>();
+        for (int i = 0; i < grid.length; i++) {
+            for (int k = 0; k < grid[i].length; k++) {
+                if (grid[i][k] != null) {
+                    list.add(grid[i][k]);
+                }
+            }
+        }
+        return list;
     }
 
 }
