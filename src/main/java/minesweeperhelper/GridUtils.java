@@ -21,6 +21,7 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 public class GridUtils {
@@ -37,11 +38,14 @@ public class GridUtils {
         Imgproc.cvtColor(screenShot, grayMat, Imgproc.COLOR_BGR2GRAY);
 
         Mat thresholdMat = new Mat();
-        Imgproc.threshold(grayMat, thresholdMat, 127, 255, Imgproc.THRESH_BINARY);
+        Imgproc.threshold(grayMat, thresholdMat, 50, 255, Imgproc.THRESH_BINARY);
 
         Mat hierarchy = new Mat();
         List<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(thresholdMat, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        Mat contourImg = screenShot.clone();
+        Imgproc.drawContours(contourImg, contours, -1, new Scalar(255, 255, 255), 1);
 
         Map<BigDecimal, Map<BigDecimal, List<GridCell>>> mapByWidthAndHeight = GridUtils.groupByWidthThenByHeight(
                 contours,
@@ -186,7 +190,8 @@ public class GridUtils {
             int startingPos = 0;
             for (int i = 1; i < list.size(); i++) {
                 if (list.get(i - 1).add(widthOrHeight).subtract(list.get(i)).abs().compareTo(
-                        widthOrHeight.divide(BigDecimal.valueOf(100)).multiply(tolleranceInPercent.multiply(BigDecimal.valueOf(2)))) >= 0) {
+                        widthOrHeight.divide(BigDecimal.valueOf(100))
+                                .multiply(tolleranceInPercent.multiply(BigDecimal.valueOf(2)))) >= 0) {
                     startPos.add(startingPos);
                     endPos.add(i - 1);
                     startingPos = i;
@@ -198,7 +203,7 @@ public class GridUtils {
         return retList;
     }
 
-     public static Mat printHelpInfo(Mat mat, MineSweeperGridCell gridCell) {
+    public static Mat printHelpInfo(Mat mat, MineSweeperGridCell gridCell) {
         Point position = new Point(
                 gridCell.getRect().x + (double) gridCell.getRect().width / 100 * 20,
                 gridCell.getRect().y + (double) gridCell.getRect().height / 100 * 20);
