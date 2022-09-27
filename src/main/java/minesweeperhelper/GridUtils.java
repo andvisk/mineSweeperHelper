@@ -190,7 +190,7 @@ public class GridUtils {
             int startingPos = 0;
             for (int i = 1; i < list.size(); i++) {
                 if (list.get(i - 1).add(widthOrHeight).subtract(list.get(i)).abs().compareTo(
-                        widthOrHeight.divide(BigDecimal.valueOf(100))
+                        widthOrHeight.divide(BigDecimal.valueOf(100),2, RoundingMode.HALF_EVEN)
                                 .multiply(tolleranceInPercent.multiply(BigDecimal.valueOf(2)))) >= 0) {
                     startPos.add(startingPos);
                     endPos.add(i - 1);
@@ -389,7 +389,7 @@ public class GridUtils {
                 BigDecimal prevWidthOrHeight = BigDecimal.valueOf(functionWidthOrHeight.apply(list.get(i - 1)))
                         .setScale(2, RoundingMode.HALF_EVEN);
 
-                if (prevWidthOrHeight.divide(BigDecimal.valueOf(100)).multiply(tolleranceInPercent)
+                if (prevWidthOrHeight.divide(BigDecimal.valueOf(100),2, RoundingMode.HALF_EVEN).multiply(tolleranceInPercent)
                         .compareTo(prevPos.add(prevWidthOrHeight).subtract(thisPos).abs()) <= 0) {
                     ++counter;
                 } else {

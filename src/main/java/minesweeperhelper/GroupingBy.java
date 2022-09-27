@@ -38,8 +38,7 @@ public class GroupingBy {
                         if (closestValue.compareTo(BigDecimal.ZERO) > 0 &&
                                         BigDecimal.valueOf(functionWidthOrHeight.apply(list.get(i)))
                                                         .setScale(2, RoundingMode.HALF_EVEN)
-                                                        .divide(BigDecimal.valueOf(100).setScale(2,
-                                                                        RoundingMode.HALF_EVEN))
+                                                        .divide(BigDecimal.valueOf(100),2, RoundingMode.HALF_EVEN)
                                                         .multiply(tolleranceInPercentsBD)
                                                         .compareTo(
                                                                         closestValue.subtract(
@@ -58,17 +57,18 @@ public class GroupingBy {
                         }
 
                 }
-                
+
                 Map<BigDecimal, List<T>> mapWithAvgKeys = new HashMap<>();
                 for (Map.Entry<BigDecimal, List<T>> entry : map.entrySet()) {
                         BigDecimal key = entry.getKey();
                         BigDecimal count = BigDecimal.valueOf(entry.getValue().size());
-                        BigDecimal sum = entry.getValue().stream().map(p -> BigDecimal.valueOf(functionPosition.apply(p)))
+                        BigDecimal sum = entry.getValue().stream()
+                                        .map(p -> BigDecimal.valueOf(functionPosition.apply(p)))
                                         .reduce(BigDecimal.ZERO,
                                                         (subtotal, element) -> subtotal.add(element))
                                         .setScale(2,
                                                         RoundingMode.HALF_EVEN);
-                        BigDecimal newKey = sum.divide(count);
+                        BigDecimal newKey = sum.divide(count,2, RoundingMode.HALF_EVEN);
                         mapWithAvgKeys.put(newKey, entry.getValue());
                 }
 
@@ -102,8 +102,7 @@ public class GroupingBy {
 
                                         BigDecimal.valueOf(functionLength.apply(list.get(i)))
                                                         .setScale(2, RoundingMode.HALF_EVEN)
-                                                        .divide(BigDecimal.valueOf(100).setScale(2,
-                                                                        RoundingMode.HALF_EVEN))
+                                                        .divide(BigDecimal.valueOf(100),2, RoundingMode.HALF_EVEN)
                                                         .multiply(tolleranceInPercentsBD)
                                                         .compareTo(
                                                                         closestValue.subtract(
@@ -130,9 +129,8 @@ public class GroupingBy {
                         BigDecimal sum = entry.getValue().stream().map(p -> BigDecimal.valueOf(functionLength.apply(p)))
                                         .reduce(BigDecimal.ZERO,
                                                         (subtotal, element) -> subtotal.add(element))
-                                        .setScale(2,
-                                                        RoundingMode.HALF_EVEN);
-                        BigDecimal newKey = sum.divide(count);
+                                        .setScale(2, RoundingMode.HALF_EVEN);
+                        BigDecimal newKey = sum.divide(count, 2, RoundingMode.HALF_EVEN);
                         mapWithAvgKeys.put(newKey, entry.getValue());
                 }
 

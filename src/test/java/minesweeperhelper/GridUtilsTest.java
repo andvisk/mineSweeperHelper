@@ -126,17 +126,17 @@ public class GridUtilsTest {
             x = x
                     .add(width)
                     .add(width
-                            .divide(BigDecimal.valueOf(100))
+                            .divide(BigDecimal.valueOf(100),2, RoundingMode.HALF_EVEN)
                             .multiply(tolleranceInPercent)
-                            .divide(BigDecimal.valueOf(2))
+                            .divide(BigDecimal.valueOf(2),2, RoundingMode.HALF_EVEN)
                             .subtract(
-                                    width.divide(BigDecimal.valueOf(100)).multiply(BigDecimal.valueOf(10))));
+                                    width.divide(BigDecimal.valueOf(100),2, RoundingMode.HALF_EVEN).multiply(BigDecimal.valueOf(10))));
 
             list.add(x);
             if (i == 3 || i == 10 || i == 12) {
 
                 x = x.add(width)
-                        .add(width.divide(BigDecimal.valueOf(100))
+                        .add(width.divide(BigDecimal.valueOf(100),2, RoundingMode.HALF_EVEN)
                                 .multiply(tolleranceInPercent.multiply(BigDecimal.valueOf(2))));
 
                 list.add(x);
@@ -156,12 +156,12 @@ public class GridUtilsTest {
                     .add(width)
                     .add(
                             width
-                                    .divide(BigDecimal.valueOf(100))
+                                    .divide(BigDecimal.valueOf(100),2, RoundingMode.HALF_EVEN)
                                     .multiply(tolleranceInPercent)
-                                    .divide(BigDecimal.valueOf(2))
+                                    .divide(BigDecimal.valueOf(2),2, RoundingMode.HALF_EVEN)
                                             .subtract(
                                                     width
-                                                            .divide(BigDecimal.valueOf(100))
+                                                            .divide(BigDecimal.valueOf(100),2, RoundingMode.HALF_EVEN)
                                                             .multiply(BigDecimal.valueOf(10))));
             list.add(x);
         }
@@ -189,7 +189,7 @@ public class GridUtilsTest {
 
                     x = x.add(BigDecimal.valueOf(width)).add(
                             BigDecimal.valueOf(width).setScale(2, RoundingMode.HALF_EVEN)
-                                    .divide(BigDecimal.valueOf(100))
+                                    .divide(BigDecimal.valueOf(100),2, RoundingMode.HALF_EVEN)
                                     .multiply(tolleranceInPercent)
                                     .multiply(BigDecimal.valueOf(2)))
                             .add(BigDecimal.valueOf(gap));

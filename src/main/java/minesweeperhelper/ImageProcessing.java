@@ -131,11 +131,11 @@ public class ImageProcessing {
                                                 RoundingMode.HALF_EVEN);
 
                                         return bdX.subtract(bdBX).abs().compareTo(
-                                                bdWidth.divide(BigDecimal.valueOf(100))
+                                                bdWidth.divide(BigDecimal.valueOf(100),2, RoundingMode.HALF_EVEN)
                                                         .multiply(tolleranceInPercent)) <= 0
                                                 &&
                                                 bdY.subtract(bdBY).abs().compareTo(
-                                                        bdHeight.divide(BigDecimal.valueOf(100))
+                                                        bdHeight.divide(BigDecimal.valueOf(100),2, RoundingMode.HALF_EVEN)
                                                                 .multiply(tolleranceInPercent)) <= 0;
 
                                     }).findAny().orElse(null);
