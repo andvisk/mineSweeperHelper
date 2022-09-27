@@ -29,84 +29,95 @@ public class ImageProcessing {
         return GridUtils.collectGrid(cells, tolleranceInPercent);
     }
 
-    public Board collectBoard(Mat srcImage, Map<BigDecimal, Map<BigDecimal, List<Grid>>> mapGridsByWidthAndHeight,
+    public Board collectBoard(Mat srcImg, Map<BigDecimal, Map<BigDecimal, List<Grid>>> mapGridsByWidthAndHeight,
             BigDecimal tolleranceInPercent) {
 
         Mat patternImage = Imgcodecs.imread("src/main/resources/" + 0 + ".png");
         int patternImageWidth = patternImage.cols();
 
-        Imgcodecs.imwrite("src/test/resources/" + "srcImage" + ".png", srcImage);
-
         for (BigDecimal width : mapGridsByWidthAndHeight.keySet()) {
             for (BigDecimal height : mapGridsByWidthAndHeight.get(width).keySet()) {
+                for (Grid grid : mapGridsByWidthAndHeight.get(width).get(height)) {
 
-                int machMethod = Imgproc.TM_CCOEFF_NORMED;
+                    GridLocation gridLocation = new GridLocation(grid.getGrid());
 
-                Mat srcForOutput = srcImage.clone();
+                    Rect rectCrop = new Rect(gridLocation.minX, gridLocation.minY,
+                            gridLocation.maxX + gridLocation.cellWidth-gridLocation.minX, gridLocation.maxY + gridLocation.cellHeight-gridLocation.minY);
 
-                for (int i = 10; i >= 0; i--) {
+                    Mat imageToMatchTemplate = srcImg.submat(rectCrop);
 
-                    List<Rect> numbersLocations = new ArrayList<>();
+                    int machMethod = Imgproc.TM_CCOEFF_NORMED;
 
-                    Mat numberImgInit = Imgcodecs.imread("src/main/resources/" + i + ".png");
+                    Mat srcForOutput = srcImg.clone();
 
-                    Mat resizedPatternImage = new Mat();
-                    double scaleWidthFasctor = width.doubleValue() / patternImageWidth;
-                    Imgproc.resize(numberImgInit, resizedPatternImage, new Size(), scaleWidthFasctor, scaleWidthFasctor,
-                            Imgproc.INTER_AREA);
+                    for (int i = 10; i >= 0; i--) {
 
-                    Imgproc.cvtColor(resizedPatternImage, resizedPatternImage, Imgproc.COLOR_BGR2BGRA);
+                        List<Rect> numbersLocations = new ArrayList<>();
 
-                    Mat outputImage = new Mat();
-                    Imgproc.matchTemplate(srcImage, resizedPatternImage, outputImage, machMethod);
+                        Mat numberImgInit = Imgcodecs.imread("src/main/resources/" + i + ".png");
 
-                    logger.debug("match finish for " + i);
+                        Mat resizedPatternImage = new Mat();
+                        double scaleWidthFasctor = width.doubleValue() / patternImageWidth;
+                        Imgproc.resize(numberImgInit, resizedPatternImage, new Size(), scaleWidthFasctor,
+                                scaleWidthFasctor,
+                                Imgproc.INTER_AREA);
 
-                    Core.MinMaxLocResult mmr = null;
+                        Imgproc.cvtColor(resizedPatternImage, resizedPatternImage, Imgproc.COLOR_BGR2BGRA);
 
-                    while (true) {
-                        mmr = Core.minMaxLoc(outputImage);
-                        if (mmr.maxVal >= 0.8) {
-                            Rect rect = new Rect(mmr.maxLoc,
-                                    new Point(mmr.maxLoc.x + resizedPatternImage.cols(),
-                                            mmr.maxLoc.y + resizedPatternImage.rows()));
-                            numbersLocations.add(rect);
+                        Mat contoursMat = new Mat();
+                        Imgproc.matchTemplate(imageToMatchTemplate, resizedPatternImage, contoursMat, machMethod);
 
-                            Imgproc.rectangle(srcForOutput, mmr.maxLoc,
-                                    new Point(mmr.maxLoc.x + resizedPatternImage.cols(),
-                                            mmr.maxLoc.y + resizedPatternImage.rows()),
-                                    new Scalar(0, 255, 0, 255));
+                        logger.debug("match finish for " + i);
 
-                            Imgproc.circle(outputImage, new Point(mmr.maxLoc.x, mmr.maxLoc.y),
-                                    (resizedPatternImage.width() + resizedPatternImage.height()) / 4,
-                                    new Scalar(0, 0, 0), -1);
+                        Core.MinMaxLocResult mmr = null;
 
-                            CellTypeEnum cellTypeEnum = null;
+                        while (true) {
+                            mmr = Core.minMaxLoc(contoursMat);
+                            if (mmr.maxVal >= 0.8) {
+                                Rect rect = new Rect(
+                                        new Point(mmr.maxLoc.x + gridLocation.minX, mmr.maxLoc.y + gridLocation.minY),
+                                        new Point(mmr.maxLoc.x + resizedPatternImage.cols() + gridLocation.minX,
+                                                mmr.maxLoc.y + resizedPatternImage.rows() + gridLocation.minY));
+                                numbersLocations.add(rect);
 
-                            if (i > 0 && i < 9)
-                                cellTypeEnum = CellTypeEnum.NUMBER;
-                            if (i == 0)
-                                cellTypeEnum = CellTypeEnum.EMPTY;
-                            if (i == 9)
-                                cellTypeEnum = CellTypeEnum.FLAG;
-                            if (i == 10)
-                                cellTypeEnum = CellTypeEnum.UNCHECKED;
+                                Imgproc.rectangle(srcForOutput, 
+                                new Point(mmr.maxLoc.x + gridLocation.minX, mmr.maxLoc.y + gridLocation.minY),
+                                        new Point(mmr.maxLoc.x + resizedPatternImage.cols()+ gridLocation.minX,
+                                                mmr.maxLoc.y + resizedPatternImage.rows()+ gridLocation.minY
+                                                ),
+                                        new Scalar(0, 255, 0, 255));
 
-                            MineSweeperGridCell gridCell = new MineSweeperGridCell(cellTypeEnum, rect,
-                                    (i >= 0 && i < 9) ? i : -1);
+                                Imgproc.circle(contoursMat, new Point(mmr.maxLoc.x, mmr.maxLoc.y),
+                                        (resizedPatternImage.width() + resizedPatternImage.height()) / 4,
+                                        new Scalar(0, 0, 0), -1);
 
-                        } else {
-                            break;
+                                CellTypeEnum cellTypeEnum = null;
+
+                                if (i > 0 && i < 9)
+                                    cellTypeEnum = CellTypeEnum.NUMBER;
+                                if (i == 0)
+                                    cellTypeEnum = CellTypeEnum.EMPTY;
+                                if (i == 9)
+                                    cellTypeEnum = CellTypeEnum.FLAG;
+                                if (i == 10)
+                                    cellTypeEnum = CellTypeEnum.UNCHECKED;
+
+                                MineSweeperGridCell gridCell = new MineSweeperGridCell(cellTypeEnum, rect,
+                                        (i >= 0 && i < 9) ? i : -1);
+
+                            } else {
+                                break;
+                            }
                         }
+
+                        logger.debug(i + " " + numbersLocations.size());
+
                     }
 
-                    logger.debug(i + " " + numbersLocations.size());
+                    Board board = new Board(1, 1);
+                    return board;
 
                 }
-
-                Board board = new Board(1, 1);
-                return board;
-
             }
         }
         return null;

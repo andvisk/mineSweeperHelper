@@ -46,38 +46,13 @@ public class HelpScreen {
         }
 
         public static Mat process(Mat screenShot, Map<BigDecimal, Map<BigDecimal, List<Grid>>> mapGridsByWidthAndHeight, BigDecimal tolleranceInPercent) {
+
                 Board grid = new ImageProcessing().collectBoard(screenShot, mapGridsByWidthAndHeight, tolleranceInPercent);
 
                 if (grid != null) {
-                        Mat screenShotBlured = new Mat();
-                        screenShot.copyTo(screenShotBlured);
+                        Mat screenShotBlured = screenShot.clone();
 
-                        int minX = -1;
-                        int maxX = -1;
-                        int minY = -1;
-                        int maxY = -1;
-                        int cellHeight = -1;
-                        int cellWidth = -1;
-                        for (int i = 0; i < grid.getGrid().length; i++) {
-                                for (int y = 0; y < grid.getGrid()[i].length; y++) {
-                                        if (cellHeight < 0) {
-                                                cellHeight = grid.getGrid()[i][y].getRect().height;
-                                                cellWidth = grid.getGrid()[i][y].getRect().width;
-                                        }
-                                        if (minX < 0 || minX > grid.getGrid()[i][y].getRect().x) {
-                                                minX = grid.getGrid()[i][y].getRect().x;
-                                        }
-                                        if (minY < 0 || minY > grid.getGrid()[i][y].getRect().y) {
-                                                minY = grid.getGrid()[i][y].getRect().y;
-                                        }
-                                        if (maxX < 0 || maxX < grid.getGrid()[i][y].getRect().x) {
-                                                maxX = grid.getGrid()[i][y].getRect().x;
-                                        }
-                                        if (maxY < 0 || maxY < grid.getGrid()[i][y].getRect().y) {
-                                                maxY = grid.getGrid()[i][y].getRect().y;
-                                        }
-                                }
-                        }
+                        GridLocation gridLocation = new GridLocation(grid.getGrid());
 
                         grid.processGrid(screenShot);
 
@@ -85,8 +60,8 @@ public class HelpScreen {
 
                         Mat squareMat = new Mat(screenShotBlured.height(), screenShotBlured.width(),
                                         CvType.CV_8UC4, new Scalar(0, 0, 0, 0));
-                        Imgproc.rectangle(squareMat, new Point(minX - cellWidth / 2, minY - cellHeight / 2),
-                                        new Point(maxX + cellWidth * 1.5, maxY + cellHeight * 1.5),
+                        Imgproc.rectangle(squareMat, new Point(gridLocation.minX - gridLocation.cellWidth / 2, gridLocation.minY - gridLocation.cellHeight / 2),
+                                        new Point(gridLocation.maxX + gridLocation.cellWidth * 1.5, gridLocation.maxY + gridLocation.cellHeight * 1.5),
                                         new Scalar(255, 0, 0, 0), -1);
 
                         Mat drawing2gray = new Mat();

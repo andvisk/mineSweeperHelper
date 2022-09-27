@@ -3,8 +3,10 @@ package minesweeperhelper;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.opencv.core.Mat;
+import org.opencv.core.Scalar;
 import org.opencv.imgcodecs.Imgcodecs;
 
 import javafx.concurrent.Service;
@@ -18,7 +20,7 @@ public class ProcessingService extends Service<Mat> {
     private BigDecimal gridPositionAndSizeTolleranceInPercent;
 
     public ProcessingService(Mat screenShot, int minGridHorizontalMembers, int minGridVerticalMembers,
-    BigDecimal gridPositionAndSizeTolleranceInPercent) {
+            BigDecimal gridPositionAndSizeTolleranceInPercent) {
         this.screenShot = screenShot;
         this.minGridHorizontalMembers = minGridHorizontalMembers;
         this.minGridVerticalMembers = minGridVerticalMembers;
@@ -31,14 +33,20 @@ public class ProcessingService extends Service<Mat> {
             @Override
             protected Mat call() throws Exception {
 
-                Map<BigDecimal, Map<BigDecimal, List<Grid>>> mapGridsByWidthAndHeight = GridUtils.collectGrids(screenShot,
+                Map<BigDecimal, Map<BigDecimal, List<Grid>>> mapGridsByWidthAndHeight = GridUtils.collectGrids(
+                        screenShot,
                         minGridHorizontalMembers, minGridVerticalMembers, gridPositionAndSizeTolleranceInPercent);
 
                 if (App.debug) {
+                    Mat screenShotCpy = screenShot.clone();
+                    Random rng = new Random(12345);
                     mapGridsByWidthAndHeight.entrySet().stream().flatMap(p -> p.getValue().entrySet().stream())
-                            .flatMap(p -> p.getValue().stream()).forEach(p -> GridUtils.drawLocations(screenShot, p));
+                            .flatMap(p -> p.getValue().stream()).forEach(p -> {
+                                Scalar color = new Scalar(rng.nextInt(256), rng.nextInt(256), rng.nextInt(256));
+                                GridUtils.drawLocations(screenShotCpy, p, color);
+                            });
 
-                    Imgcodecs.imwrite("all_grids.jpg", screenShot);
+                    Imgcodecs.imwrite("all_grids.jpg", screenShotCpy);
                 }
 
                 return HelpScreen.process(screenShot, mapGridsByWidthAndHeight, gridPositionAndSizeTolleranceInPercent);

@@ -186,7 +186,7 @@ public class GridUtils {
             int startingPos = 0;
             for (int i = 1; i < list.size(); i++) {
                 if (list.get(i - 1).add(widthOrHeight).subtract(list.get(i)).abs().compareTo(
-                        widthOrHeight.divide(BigDecimal.valueOf(100)).multiply(tolleranceInPercent)) > 0) {
+                        widthOrHeight.divide(BigDecimal.valueOf(100)).multiply(tolleranceInPercent.multiply(BigDecimal.valueOf(2)))) >= 0) {
                     startPos.add(startingPos);
                     endPos.add(i - 1);
                     startingPos = i;
@@ -322,23 +322,22 @@ public class GridUtils {
         return mat;
     }
 
-    public static Mat drawLocations(Mat mat, Grid grid) {
+    public static Mat drawLocations(Mat mat, Grid grid, Scalar color) {
 
         for (int i = 0; i < grid.getGrid().length; i++) {
             for (int j = 0; j < grid.getGrid()[i].length; j++) {
-                mat = drawLocation(mat, grid.getGrid()[i][j]);
+                mat = drawLocation(mat, grid.getGrid()[i][j], color);
             }
         }
         return mat;
     }
 
-    public static Mat drawLocation(Mat mat, GridCell gridCell) {
+    public static Mat drawLocation(Mat mat, GridCell gridCell, Scalar color) {
 
         if (gridCell != null) {
-            Scalar color = new Scalar(0, 255, 0);
             Rect rect = gridCell.getRect();
             Imgproc.rectangle(mat, new Point(rect.x, rect.y),
-                    new Point(rect.x + rect.width, rect.y + rect.height), color, 1);
+                    new Point(rect.x + rect.width, rect.y + rect.height), color, 2);
         }
         return mat;
 
