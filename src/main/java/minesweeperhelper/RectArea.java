@@ -28,10 +28,9 @@ public class RectArea {
     public List<Set<RectArea>> widthGroups = new ArrayList<>();
     public List<Set<RectArea>> heightGroups = new ArrayList<>();
 
-    Set<RectArea> maxWidthGroup = new HashSet<>();
-    Set<RectArea> maxHeightGroup = new HashSet<>();
-
-    int sizeOfMaxGroup = -1;
+    int sizeOfMaxWidthGroup = -1;
+    int sizeOfMaxHeightGroup = -1;
+    int weight = -1;
 
     public RectArea(MatOfPoint contour, BigDecimal tollerance){
         rectangle = Imgproc.boundingRect(contour);
