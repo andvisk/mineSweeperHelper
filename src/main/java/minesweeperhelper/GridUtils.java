@@ -360,6 +360,11 @@ public class GridUtils {
         return map;
     }
 
+    private static List<List<RectArea>> getIntervals(List<RectArea> list) {
+        list = list.stream().sorted((a, b) -> a.width.compareTo(b.width)).toList();
+        
+    }
+
     private static Map<BigDecimal, List<GridCell>> convertToGridCells(Map<BigDecimal, List<MatOfPoint>> map) {
         Map<BigDecimal, List<GridCell>> mapR = map.entrySet().stream()
                 .collect(Collectors.toMap(k -> k.getKey(),
