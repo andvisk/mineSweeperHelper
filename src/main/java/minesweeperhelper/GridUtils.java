@@ -38,7 +38,7 @@ public class GridUtils {
         Imgproc.cvtColor(screenShot, grayMat, Imgproc.COLOR_BGR2GRAY);
 
         Mat thresholdMat = new Mat();
-        Imgproc.threshold(grayMat, thresholdMat, 50, 255, Imgproc.THRESH_BINARY);
+        Imgproc.threshold(grayMat, thresholdMat, 80, 255, Imgproc.THRESH_BINARY);
 
         Mat hierarchy = new Mat();
         List<MatOfPoint> contours = new ArrayList<>();
@@ -190,7 +190,7 @@ public class GridUtils {
             int startingPos = 0;
             for (int i = 1; i < list.size(); i++) {
                 if (list.get(i - 1).add(widthOrHeight).subtract(list.get(i)).abs().compareTo(
-                        widthOrHeight.divide(BigDecimal.valueOf(100),2, RoundingMode.HALF_EVEN)
+                        widthOrHeight.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN)
                                 .multiply(tolleranceInPercent.multiply(BigDecimal.valueOf(2)))) >= 0) {
                     startPos.add(startingPos);
                     endPos.add(i - 1);
@@ -260,9 +260,58 @@ public class GridUtils {
 
     }
 
+    /*
+     * public static Map<BigDecimal, Map<BigDecimal, List<GridCell>>>
+     * groupByWidthThenByHeight(List<MatOfPoint> contours,
+     * int minimumHorizontalCount, int minimumVerticalCout, BigDecimal
+     * tolleranceInPercent) {
+     * Map<BigDecimal, Map<BigDecimal, List<GridCell>>> map = new HashMap<>();
+     * // map by width
+     * Map<BigDecimal, List<GridCell>> mapByWidth =
+     * convertToGridCells(GroupingBy.approximate(contours,
+     * p -> {
+     * Rect rect = Imgproc.boundingRect(p);
+     * return rect.width;
+     * },
+     * tolleranceInPercent));
+     * 
+     * List<Map.Entry<BigDecimal, List<GridCell>>> filteredByWidth =
+     * mapByWidth.entrySet().stream()
+     * .filter(p -> p.getValue().size() >= minimumHorizontalCount *
+     * minimumVerticalCout)
+     * .collect(Collectors.toList());
+     * 
+     * for (Map.Entry<BigDecimal, List<GridCell>> listByWidth : filteredByWidth) {
+     * // map by height
+     * Map<BigDecimal, List<GridCell>> mapByHeight =
+     * GroupingBy.approximate(listByWidth.getValue(),
+     * p -> p.getRect().height,
+     * tolleranceInPercent);
+     * Map<BigDecimal, List<GridCell>> filteredByHeight =
+     * mapByHeight.entrySet().stream()
+     * .filter(p -> p.getValue().size() >= minimumHorizontalCount *
+     * minimumVerticalCout)
+     * .collect(Collectors.toMap(p -> p.getKey(), v -> v.getValue()));
+     * 
+     * map.put(listByWidth.getKey(), filteredByHeight);
+     * }
+     * return map;
+     * }
+     */
+
     public static Map<BigDecimal, Map<BigDecimal, List<GridCell>>> groupByWidthThenByHeight(List<MatOfPoint> contours,
             int minimumHorizontalCount, int minimumVerticalCout, BigDecimal tolleranceInPercent) {
         Map<BigDecimal, Map<BigDecimal, List<GridCell>>> map = new HashMap<>();
+
+        List<RectArea> rectAreaList = contours.stream().map(p -> new RectArea(p, tolleranceInPercent))
+                .collect(Collectors.toList());
+
+        List<Set<RectArea>> areasByAreaSize = GroupingBy.makeGroups(rectAreaList, p->p.areaSize, p->p.increasedAreaSize, p->p.areaGroups);
+        List<Set<RectArea>> areasByWidth = GroupingBy.makeGroups(rectAreaList, p->p.width, p->p.widthIncreased, p->p.widthGroups);
+        List<Set<RectArea>> areasByHeight = GroupingBy.makeGroups(rectAreaList, p->p.height, p->p.heightIncreased, p->p.heightGroups);
+
+        
+
         // map by width
         Map<BigDecimal, List<GridCell>> mapByWidth = convertToGridCells(GroupingBy.approximate(contours,
                 p -> {
@@ -389,7 +438,8 @@ public class GridUtils {
                 BigDecimal prevWidthOrHeight = BigDecimal.valueOf(functionWidthOrHeight.apply(list.get(i - 1)))
                         .setScale(2, RoundingMode.HALF_EVEN);
 
-                if (prevWidthOrHeight.divide(BigDecimal.valueOf(100),2, RoundingMode.HALF_EVEN).multiply(tolleranceInPercent)
+                if (prevWidthOrHeight.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN)
+                        .multiply(tolleranceInPercent)
                         .compareTo(prevPos.add(prevWidthOrHeight).subtract(thisPos).abs()) <= 0) {
                     ++counter;
                 } else {

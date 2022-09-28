@@ -9,6 +9,7 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class GroupingBy {
 
@@ -38,7 +39,7 @@ public class GroupingBy {
                         if (closestValue.compareTo(BigDecimal.ZERO) > 0 &&
                                         BigDecimal.valueOf(functionWidthOrHeight.apply(list.get(i)))
                                                         .setScale(2, RoundingMode.HALF_EVEN)
-                                                        .divide(BigDecimal.valueOf(100),2, RoundingMode.HALF_EVEN)
+                                                        .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN)
                                                         .multiply(tolleranceInPercentsBD)
                                                         .compareTo(
                                                                         closestValue.subtract(
@@ -68,7 +69,7 @@ public class GroupingBy {
                                                         (subtotal, element) -> subtotal.add(element))
                                         .setScale(2,
                                                         RoundingMode.HALF_EVEN);
-                        BigDecimal newKey = sum.divide(count,2, RoundingMode.HALF_EVEN);
+                        BigDecimal newKey = sum.divide(count, 2, RoundingMode.HALF_EVEN);
                         mapWithAvgKeys.put(newKey, entry.getValue());
                 }
 
@@ -102,7 +103,7 @@ public class GroupingBy {
 
                                         BigDecimal.valueOf(functionLength.apply(list.get(i)))
                                                         .setScale(2, RoundingMode.HALF_EVEN)
-                                                        .divide(BigDecimal.valueOf(100),2, RoundingMode.HALF_EVEN)
+                                                        .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN)
                                                         .multiply(tolleranceInPercentsBD)
                                                         .compareTo(
                                                                         closestValue.subtract(
@@ -135,5 +136,38 @@ public class GroupingBy {
                 }
 
                 return mapWithAvgKeys;
+        }
+
+        public static List<Set<RectArea>> makeGroups(List<RectArea> list,
+                        Function<RectArea, BigDecimal> functionRealSize,
+                        Function<RectArea, BigDecimal> functionComparedSize,
+                        Function<RectArea, List<Set<RectArea>>> functionAddMeToGroup) {
+
+                list = list.stream().sorted((a, b) -> functionRealSize.apply(a).compareTo(functionRealSize.apply(b)))
+                                .collect(Collectors.toList());
+
+                List<Set<RectArea>> listBySize = new ArrayList<>();
+                for (int i = 0; i < list.size(); i++) {
+                        Set<RectArea> set = new HashSet<>();
+                        RectArea rectArea = list.get(i);
+                        set.add(rectArea);
+                        int k = i + 1;
+                        boolean found = true;
+                        while (k < list.size() && found) {
+                                RectArea rectAreaToCompare = list.get(k);
+                                if (functionComparedSize.apply(rectArea)
+                                                .compareTo(functionRealSize.apply(rectAreaToCompare)) >= 0) {
+                                        set.add(rectAreaToCompare);
+                                } else {
+                                        found = false;
+                                }
+                                k += 1;
+                        }
+                        for (RectArea setArea : set) {
+                                functionAddMeToGroup.apply(setArea).add(set);
+                        }
+                        listBySize.add(set);
+                }
+                return listBySize;
         }
 }
