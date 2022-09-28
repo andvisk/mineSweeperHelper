@@ -306,11 +306,28 @@ public class GridUtils {
         List<RectArea> rectAreaList = contours.stream().map(p -> new RectArea(p, tolleranceInPercent))
                 .collect(Collectors.toList());
 
-        List<Set<RectArea>> areasByAreaSize = GroupingBy.makeGroups(rectAreaList, p->p.areaSize, p->p.increasedAreaSize, p->p.areaGroups);
-        List<Set<RectArea>> areasByWidth = GroupingBy.makeGroups(rectAreaList, p->p.width, p->p.widthIncreased, p->p.widthGroups);
-        List<Set<RectArea>> areasByHeight = GroupingBy.makeGroups(rectAreaList, p->p.height, p->p.heightIncreased, p->p.heightGroups);
+        // List<Set<RectArea>> areasByAreaSize = GroupingBy.makeGroups(rectAreaList,
+        // p->p.areaSize, p->p.increasedAreaSize, p->p.areaGroups);
+        List<Set<RectArea>> areasByWidth = GroupingBy.makeGroups(rectAreaList, p -> p.width, p -> p.widthIncreased,
+                p -> p.widthGroups).stream().sorted((a,b)->Integer.compare(a.size(), b.size())).toList();
+        List<Set<RectArea>> areasByHeight = GroupingBy.makeGroups(rectAreaList, p -> p.height, p -> p.heightIncreased,
+                p -> p.heightGroups).stream().sorted((a,b)->Integer.compare(a.size(), b.size())).toList();;
 
-        
+        for (RectArea recArea : rectAreaList) {
+            for (Set<RectArea> setWidth : recArea.widthGroups) {
+                for (Set<RectArea> setHeight : recArea.heightGroups) {
+                    Set<RectArea> testSet = new HashSet<>(setWidth);
+                    testSet.retainAll(setHeight);
+                    if(testSet.size() > recArea.sizeOfMaxGroup){
+                        recArea.sizeOfMaxGroup = testSet.size();
+                        recArea.maxHeightGroup = setHeight;
+                        recArea.maxWidthGroup = setWidth;
+                    }
+                }
+            }
+        }
+
+        rectAreaList = rectAreaList.stream().sorted((a,b)->Integer.compare(a.sizeOfMaxGroup, b.sizeOfMaxGroup)).collect(Collectors.toList());
 
         // map by width
         Map<BigDecimal, List<GridCell>> mapByWidth = convertToGridCells(GroupingBy.approximate(contours,

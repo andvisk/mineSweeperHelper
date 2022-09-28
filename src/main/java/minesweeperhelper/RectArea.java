@@ -3,6 +3,7 @@ package minesweeperhelper;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -26,6 +27,11 @@ public class RectArea {
     public List<Set<RectArea>> areaGroups = new ArrayList<>();
     public List<Set<RectArea>> widthGroups = new ArrayList<>();
     public List<Set<RectArea>> heightGroups = new ArrayList<>();
+
+    Set<RectArea> maxWidthGroup = new HashSet<>();
+    Set<RectArea> maxHeightGroup = new HashSet<>();
+
+    int sizeOfMaxGroup = -1;
 
     public RectArea(MatOfPoint contour, BigDecimal tollerance){
         rectangle = Imgproc.boundingRect(contour);
