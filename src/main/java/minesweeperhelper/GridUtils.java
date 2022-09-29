@@ -47,29 +47,21 @@ public class GridUtils {
         Mat contourImg = screenShot.clone();
         Imgproc.drawContours(contourImg, contours, -1, new Scalar(255, 255, 255), 1);
 
-        Map<BigDecimal, Map<BigDecimal, List<GridCell>>> mapByWidthAndHeight = GridUtils.groupByWidthThenByHeight(
+        Map<BigDecimal, Map<BigDecimal, ListReactArea>> mapByWidthAndHeight = GridUtils.groupByWidthThenByHeight(
                 contours,
                 minGridHorizontalMembers, minGridVerticalMembers, gridPositionAndSizeTolleranceInPercent);
 
-        for (Map.Entry<BigDecimal, Map<BigDecimal, List<GridCell>>> entry : mapByWidthAndHeight.entrySet()) {
+        for (Map.Entry<BigDecimal, Map<BigDecimal, ListReactArea>> entry : mapByWidthAndHeight.entrySet()) {
             BigDecimal width = entry.getKey(); // cell width
-            Map<BigDecimal, List<GridCell>> mapByHeight = entry.getValue();
-            for (Map.Entry<BigDecimal, List<GridCell>> entryByHeight : mapByHeight.entrySet()) {
+            Map<BigDecimal, ListReactArea> mapByHeight = entry.getValue();
+            for (Map.Entry<BigDecimal, ListReactArea> entryByHeight : mapByHeight.entrySet()) {
                 BigDecimal height = entryByHeight.getKey(); // cell height
-                List<GridCell> points = entryByHeight.getValue();
+                List<RectArea> points = entryByHeight.getValue().list;
 
-                Map<BigDecimal, List<GridCell>> mapByX = GroupingBy.approximateInArea(points,
-                        p -> p.getRect().x,
-                        p -> p.getRect().width, gridPositionAndSizeTolleranceInPercent);
+                Map<BigDecimal, ListReactArea> mapByX = groupByInCollecting(points, p -> p.x, p -> p.xIncreased);
+                Map<BigDecimal, ListReactArea> mapByY = groupByInCollecting(points, p -> p.y, p -> p.yIncreased);
 
-                Map<BigDecimal, List<GridCell>> mapByY = GroupingBy.approximateInArea(points,
-                        p -> p.getRect().y,
-                        p -> p.getRect().height, gridPositionAndSizeTolleranceInPercent);
-
-                mapByY = mapByY.entrySet().stream().filter(p -> p.getValue().size() >= minGridVerticalMembers)
-                        .collect(Collectors.toMap(k -> k.getKey(), v -> v.getValue()));
-
-                List<Map<BigDecimal, List<GridCell>>> listOfxyMaps = GridUtils
+                List<Map<BigDecimal, ListReactArea>> listOfxyMaps = GridUtils
                         .removeSquaresToConformMinWidthAndHeight(mapByX, mapByY, minGridHorizontalMembers,
                                 minGridVerticalMembers,
                                 gridPositionAndSizeTolleranceInPercent);
@@ -299,14 +291,26 @@ public class GridUtils {
      * }
      */
 
-    public static Map<BigDecimal, Map<BigDecimal, List<GridCell>>> groupByWidthThenByHeight(List<MatOfPoint> contours,
+    public static Map<BigDecimal, Map<BigDecimal, ListReactArea>> groupByWidthThenByHeight(List<MatOfPoint> contours,
             int minimumHorizontalCount, int minimumVerticalCout, BigDecimal tolleranceInPercent) {
-        Map<BigDecimal, Map<BigDecimal, List<GridCell>>> map = new HashMap<>();
 
         List<RectArea> rectAreaList = contours.stream().map(p -> new RectArea(p, tolleranceInPercent))
                 .collect(Collectors.toList());
 
-        Map<BigDecimal, ListReactArea> mapByX = rectAreaList.stream().collect(Collectors.groupingBy(p -> p.width))
+        Map<BigDecimal, ListReactArea> mapByW = groupByInCollecting(rectAreaList, p -> p.width, p -> p.widthIncreased);
+
+        Map<BigDecimal, Map<BigDecimal, ListReactArea>> mapByWH = mapByW.entrySet().stream()
+                .collect(Collectors.toMap(k -> k.getKey(),
+                        v -> groupByInCollecting(v.getValue().list, p -> p.height, p -> p.heightIncreased)));
+
+        return mapByWH;
+    }
+
+    private static Map<BigDecimal, ListReactArea> groupByInCollecting(List<RectArea> rectAreaList,
+            Function<RectArea, BigDecimal> funcGetDimensionBy,
+            Function<RectArea, BigDecimal> funcGetDimensionByIncresed) {
+        Map<BigDecimal, ListReactArea> mapByDimension = rectAreaList.stream()
+                .collect(Collectors.groupingBy(funcGetDimensionBy))
                 .entrySet().stream()
                 .collect(Collectors.toMap(k -> k.getKey(), v -> {
                     ListReactArea listReactArea = new ListReactArea(v.getValue().get(0));
@@ -314,16 +318,18 @@ public class GridUtils {
                     return listReactArea;
                 }));
 
-        List<BigDecimal> listXs = mapByX.keySet().stream().sorted((a, b) -> a.compareTo(b) * -1).toList();
+        List<BigDecimal> listDimensions = mapByDimension.keySet().stream().sorted((a, b) -> a.compareTo(b) * -1)
+                .toList();
 
-        for (int i = 0; i < listXs.size() - 1; i++) {
-            ListReactArea listAreas = mapByX.get(listXs.get(i));
+        for (int i = 0; i < listDimensions.size() - 1; i++) {
+            ListReactArea listAreas = mapByDimension.get(listDimensions.get(i));
             if (listAreas.list.size() > 0) {
                 int k = i + 1;
                 boolean found = true;
-                while (k < listXs.size() && found) {
-                    ListReactArea listTestAreas = mapByX.get(listXs.get(k));
-                    if (listAreas.mainMember.width.compareTo(listTestAreas.mainMember.widthIncreased) <= 0) {
+                while (k < listDimensions.size() && found) {
+                    ListReactArea listTestAreas = mapByDimension.get(listDimensions.get(k));
+                    if (funcGetDimensionBy.apply(listAreas.mainMember)
+                            .compareTo(funcGetDimensionByIncresed.apply(listTestAreas.mainMember)) <= 0) {
                         listAreas.list.addAll(listTestAreas.list);
                         listTestAreas.list = new ArrayList<>();
                     }
@@ -332,10 +338,9 @@ public class GridUtils {
             }
         }
 
-        mapByX = mapByX.entrySet().stream().filter(p -> p.getValue().list.size() > 0)
+        mapByDimension = mapByDimension.entrySet().stream().filter(p -> p.getValue().list.size() > 0)
                 .collect(Collectors.toMap(k -> k.getKey(), v -> v.getValue()));
-
-        return map;
+        return mapByDimension;
     }
 
     private static Map<BigDecimal, List<GridCell>> convertToGridCells(Map<BigDecimal, List<MatOfPoint>> map) {
@@ -357,51 +362,54 @@ public class GridUtils {
      * 0 - mapByX
      * 1 - mapByY
      */
-    public static List<Map<BigDecimal, List<GridCell>>> removeSquaresToConformMinWidthAndHeight(
-            Map<BigDecimal, List<GridCell>> mapByX, Map<BigDecimal, List<GridCell>> mapByY, int minWidth, int minHeight,
+    public static List<Map<BigDecimal, ListReactArea>> removeSquaresToConformMinWidthAndHeight(
+            Map<BigDecimal, ListReactArea> mapByX, Map<BigDecimal, ListReactArea> mapByY, int minGridHorizontalMembers,
+            int minGridVerticalMembers,
             BigDecimal tolleranceInPercent) {
 
-        long beforeByXCount = mapByX.entrySet().stream().flatMap(p -> p.getValue().stream()).count();
+        long beforeByXCount = mapByX.entrySet().stream().flatMap(p -> p.getValue().list.stream()).count();
 
-        // romeve if absent in mapByY
-        Set<UUID> mapByYIDs = mapByY.entrySet().stream().flatMap(p -> p.getValue().stream()).map(p -> p.getId())
+        Set<UUID> mapByYIDs = mapByY.entrySet().stream().flatMap(p -> p.getValue().list.stream()).map(p -> p.id)
                 .collect(Collectors.toSet());
 
+        // romeve if absent in mapByY
         mapByX = mapByX.entrySet().stream().collect(Collectors.toMap(k -> k.getKey(), v -> {
-            List<GridCell> list = v.getValue().stream().filter(i -> mapByYIDs.contains(i.getId()))
+            List<RectArea> list = v.getValue().list.stream().filter(i -> mapByYIDs.contains(i.id))
                     .collect(Collectors.toList());
-            list = removeCellsToConformSequency(list, p -> p.getRect().x, p -> p.getRect().width, minWidth,
+            list = removeCellsToConformSequency(list, p -> p.x, p -> p.width, minGridHorizontalMembers,
                     tolleranceInPercent);
-            return list;
+            v.getValue().list = list;
+            return v.getValue();
         }));
 
-        mapByX = mapByX.entrySet().stream().filter(p -> p.getValue().size() >= minWidth)
+        mapByX = mapByX.entrySet().stream().filter(p -> p.getValue().list.size() >= minGridHorizontalMembers)
                 .collect(Collectors.toMap(k -> k.getKey(), v -> v.getValue()));
 
-        long afterByXCount = mapByX.entrySet().stream().flatMap(p -> p.getValue().stream()).count();
+        long afterByXCount = mapByX.entrySet().stream().flatMap(p -> p.getValue().list.stream()).count();
 
-        long beforeByYCount = mapByY.entrySet().stream().flatMap(p -> p.getValue().stream()).count();
+        long beforeByYCount = mapByY.entrySet().stream().flatMap(p -> p.getValue().list.stream()).count();
 
         // romeve if absent in mapByY
-        Set<UUID> mapByXIDs = mapByX.entrySet().stream().flatMap(p -> p.getValue().stream()).map(p -> p.getId())
+        Set<UUID> mapByXIDs = mapByX.entrySet().stream().flatMap(p -> p.getValue().list.stream()).map(p -> p.id)
                 .collect(Collectors.toSet());
 
         mapByY = mapByY.entrySet().stream().collect(Collectors.toMap(k -> k.getKey(), v -> {
-            List<GridCell> list = v.getValue().stream().filter(i -> mapByXIDs.contains(i.getId()))
+            List<RectArea> list = v.getValue().list.stream().filter(i -> mapByXIDs.contains(i.id))
                     .collect(Collectors.toList());
-            list = removeCellsToConformSequency(list, p -> p.getRect().y, p -> p.getRect().height, minHeight,
+            list = removeCellsToConformSequency(list, p -> p.y, p -> p.height, minGridVerticalMembers,
                     tolleranceInPercent);
-            return list;
+                    v.getValue().list = list;
+            return v.getValue();
         }));
 
-        mapByY = mapByY.entrySet().stream().filter(p -> p.getValue().size() >= minHeight)
+        mapByY = mapByY.entrySet().stream().filter(p -> p.getValue().list.size() >= minGridVerticalMembers)
                 .collect(Collectors.toMap(k -> k.getKey(), v -> v.getValue()));
 
-        long afterByYCount = mapByY.entrySet().stream().flatMap(p -> p.getValue().stream()).count();
+        long afterByYCount = mapByY.entrySet().stream().flatMap(p -> p.getValue().list.stream()).count();
 
         if (mapByX.size() > 0 && mapByY.size() > 0
                 && (beforeByXCount != afterByXCount || beforeByYCount != afterByYCount)) {
-            return removeSquaresToConformMinWidthAndHeight(mapByX, mapByY, minWidth, minHeight, tolleranceInPercent);
+            return removeSquaresToConformMinWidthAndHeight(mapByX, mapByY, minGridHorizontalMembers, minGridVerticalMembers, tolleranceInPercent);
         }
 
         if (mapByX.size() > 0 && mapByY.size() > 0)
@@ -410,8 +418,8 @@ public class GridUtils {
             return Arrays.asList(new HashMap<>(), new HashMap<>());
     }
 
-    public static List<GridCell> removeCellsToConformSequency(List<GridCell> list,
-            Function<GridCell, Integer> functionPosition, Function<GridCell, Integer> functionWidthOrHeight,
+    public static List<RectArea> removeCellsToConformSequency(List<RectArea> list,
+            Function<RectArea, BigDecimal> functionPosition, Function<RectArea, BigDecimal> functionWidthOrHeight,
             int minWidthOrHeightCount, BigDecimal tolleranceInPercent) {
 
         if (list.size() > minWidthOrHeightCount) {
