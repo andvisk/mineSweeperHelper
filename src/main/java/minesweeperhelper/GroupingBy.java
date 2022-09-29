@@ -137,39 +137,5 @@ public class GroupingBy {
 
                 return mapWithAvgKeys;
         }
-
-        public static List<Set<RectArea>> makeGroups(List<RectArea> list,
-                        Function<RectArea, BigDecimal> functionRealSize,
-                        Function<RectArea, BigDecimal> functionComparedSize,
-                        Function<RectArea, List<Set<RectArea>>> functionAddMeToGroup) {
-
-                list = list.stream().sorted((a, b) -> functionRealSize.apply(a).compareTo(functionRealSize.apply(b)))
-                                .collect(Collectors.toList());
-
-                List<Set<RectArea>> listBySize = new ArrayList<>();
-                for (int i = 0; i < list.size(); i++) {
-                        Set<RectArea> set = new HashSet<>();
-                        RectArea rectArea = list.get(i);
-                        set.add(rectArea);
-                        int k = i + 1;
-                        boolean found = true;
-                        while (k < list.size() && found) {
-                                RectArea rectAreaToCompare = list.get(k);
-                                if (functionComparedSize.apply(rectArea)
-                                                .compareTo(functionRealSize.apply(rectAreaToCompare)) >= 0) {
-                                        set.add(rectAreaToCompare);
-                                } else {
-                                        found = false;
-                                }
-                                k += 1;
-                        }
-                        for (RectArea setArea : set) {
-                                functionAddMeToGroup.apply(setArea).add(set);
-                        }
-                        listBySize.add(set);
-                }
-                return listBySize;
-        }
-
         
 }

@@ -306,63 +306,36 @@ public class GridUtils {
         List<RectArea> rectAreaList = contours.stream().map(p -> new RectArea(p, tolleranceInPercent))
                 .collect(Collectors.toList());
 
-        // List<Set<RectArea>> areasByAreaSize = GroupingBy.makeGroups(rectAreaList,
-        // p->p.areaSize, p->p.increasedAreaSize, p->p.areaGroups);
-        List<Set<RectArea>> areasByWidth = GroupingBy.makeGroups(rectAreaList, p -> p.width, p -> p.widthIncreased,
-                p -> p.widthGroups).stream().sorted((a, b) -> Integer.compare(a.size(), b.size())).toList();
-        List<Set<RectArea>> areasByHeight = GroupingBy.makeGroups(rectAreaList, p -> p.height, p -> p.heightIncreased,
-                p -> p.heightGroups).stream().sorted((a, b) -> Integer.compare(a.size(), b.size())).toList();
-        ;
+        Map<BigDecimal, ListReactArea> mapByX = rectAreaList.stream().collect(Collectors.groupingBy(p -> p.width))
+                .entrySet().stream()
+                .collect(Collectors.toMap(k -> k.getKey(), v -> {
+                    ListReactArea listReactArea = new ListReactArea(v.getValue().get(0));
+                    listReactArea.list = v.getValue();
+                    return listReactArea;
+                }));
 
-        for (Set<RectArea> setByWidth : areasByWidth) {
-            for (RectArea recArea : setByWidth) {
-                if (setByWidth.size() > recArea.sizeOfMaxWidthGroup) {
-                    recArea.sizeOfMaxWidthGroup = setByWidth.size();
+        List<BigDecimal> listXs = mapByX.keySet().stream().sorted((a, b) -> a.compareTo(b) * -1).toList();
+
+        for (int i = 0; i < listXs.size() - 1; i++) {
+            ListReactArea listAreas = mapByX.get(listXs.get(i));
+            if (listAreas.list.size() > 0) {
+                int k = i + 1;
+                boolean found = true;
+                while (k < listXs.size() && found) {
+                    ListReactArea listTestAreas = mapByX.get(listXs.get(k));
+                    if (listAreas.mainMember.width.compareTo(listTestAreas.mainMember.widthIncreased) <= 0) {
+                        listAreas.list.addAll(listTestAreas.list);
+                        listTestAreas.list = new ArrayList<>();
+                    }
+                    k += 1;
                 }
             }
         }
 
-        for (Set<RectArea> setByHeight : areasByHeight) {
-            for (RectArea recArea : setByHeight) {
-                if (setByHeight.size() > recArea.sizeOfMaxHeightGroup) {
-                    recArea.sizeOfMaxHeightGroup = setByHeight.size();
-                    recArea.weight = recArea.sizeOfMaxHeightGroup * recArea.sizeOfMaxWidthGroup;
-                }
-            }
-        }
+        mapByX = mapByX.entrySet().stream().filter(p -> p.getValue().list.size() > 0)
+                .collect(Collectors.toMap(k -> k.getKey(), v -> v.getValue()));
 
-        rectAreaList = rectAreaList.stream().sorted((a, b) -> Integer.compare(a.weight, b.weight))
-                .collect(Collectors.toList());
-
-        // map by width
-        Map<BigDecimal, List<GridCell>> mapByWidth = convertToGridCells(GroupingBy.approximate(contours,
-                p -> {
-                    Rect rect = Imgproc.boundingRect(p);
-                    return rect.width;
-                },
-                tolleranceInPercent));
-
-        List<Map.Entry<BigDecimal, List<GridCell>>> filteredByWidth = mapByWidth.entrySet().stream()
-                .filter(p -> p.getValue().size() >= minimumHorizontalCount * minimumVerticalCout)
-                .collect(Collectors.toList());
-
-        for (Map.Entry<BigDecimal, List<GridCell>> listByWidth : filteredByWidth) {
-            // map by height
-            Map<BigDecimal, List<GridCell>> mapByHeight = GroupingBy.approximate(listByWidth.getValue(),
-                    p -> p.getRect().height,
-                    tolleranceInPercent);
-            Map<BigDecimal, List<GridCell>> filteredByHeight = mapByHeight.entrySet().stream()
-                    .filter(p -> p.getValue().size() >= minimumHorizontalCount * minimumVerticalCout)
-                    .collect(Collectors.toMap(p -> p.getKey(), v -> v.getValue()));
-
-            map.put(listByWidth.getKey(), filteredByHeight);
-        }
         return map;
-    }
-
-    private static List<List<RectArea>> getIntervals(List<RectArea> list) {
-        list = list.stream().sorted((a, b) -> a.width.compareTo(b.width)).toList();
-        
     }
 
     private static Map<BigDecimal, List<GridCell>> convertToGridCells(Map<BigDecimal, List<MatOfPoint>> map) {

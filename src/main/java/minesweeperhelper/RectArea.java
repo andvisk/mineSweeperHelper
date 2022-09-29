@@ -2,10 +2,6 @@ package minesweeperhelper;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Rect;
@@ -13,9 +9,6 @@ import org.opencv.imgproc.Imgproc;
 
 public class RectArea {
     
-    public BigDecimal areaSize;
-    public BigDecimal decreasedAreaSize;
-    public BigDecimal increasedAreaSize;
     public Rect rectangle;
     public BigDecimal width;
     public BigDecimal widthDecreased;
@@ -23,14 +16,6 @@ public class RectArea {
     public BigDecimal height;
     public BigDecimal heightDecreased;
     public BigDecimal heightIncreased;
-
-    public List<Set<RectArea>> areaGroups = new ArrayList<>();
-    public List<Set<RectArea>> widthGroups = new ArrayList<>();
-    public List<Set<RectArea>> heightGroups = new ArrayList<>();
-
-    int sizeOfMaxWidthGroup = -1;
-    int sizeOfMaxHeightGroup = -1;
-    int weight = -1;
 
     public RectArea(MatOfPoint contour, BigDecimal tollerance){
         rectangle = Imgproc.boundingRect(contour);
@@ -43,11 +28,6 @@ public class RectArea {
         heightDecreased = height.subtract(height.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN).multiply(tollerance));
         heightIncreased = height.add(height.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN).multiply(tollerance));
 
-        areaSize = width.multiply(height);
-        decreasedAreaSize = widthDecreased.multiply(heightDecreased);
-        increasedAreaSize = widthIncreased.multiply(heightIncreased);
-
     }
-
 
 }
