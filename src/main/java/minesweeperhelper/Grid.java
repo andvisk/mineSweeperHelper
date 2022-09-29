@@ -5,24 +5,24 @@ import java.util.List;
 
 public class Grid {
 
-    private GridCell[][] grid;
+    private RectArea[][] grid;
 
     public Grid(int width, int height) {
-        grid = new GridCell[width][height];
+        grid = new RectArea[width][height];
     }
 
-    public void setCell(int x, int y, GridCell gridCell) {
+    public void setCell(int x, int y, RectArea gridCell) {
         grid[x][y] = gridCell;
-        gridCell.setPositionInGridX(x);
-        gridCell.setPositionInGridY(y);
+        gridCell.positionInGridX = x;
+        gridCell.positionInGridY = y;
     }
 
-    public GridCell[][] getGrid() {
+    public RectArea[][] getGrid() {
         return grid;
     }
 
-    public List<GridCell> getGridCells() {
-        List<GridCell> list = new ArrayList<>();
+    public List<RectArea> getGridCells() {
+        List<RectArea> list = new ArrayList<>();
         for (int i = 0; i < grid.length; i++) {
             for (int k = 0; k < grid[i].length; k++) {
                 if (grid[i][k] != null) {

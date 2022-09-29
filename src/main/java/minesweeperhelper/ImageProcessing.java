@@ -110,24 +110,24 @@ public class ImageProcessing {
 
                     }
 
-                    List<GridCell> gridCells = grid.getGridCells();
+                    List<RectArea> gridCells = grid.getGridCells();
 
                     if (boardCells.size() == gridCells.size()) {
                         for (MineSweeperGridCell boardCell : boardCells) {
-                            GridCell gridCell = gridCells.stream().filter(
+                            RectArea gridCell = gridCells.stream().filter(
                                     p -> {
-                                        BigDecimal bdX = BigDecimal.valueOf(p.getRect().x).setScale(2,
+                                        BigDecimal bdX = BigDecimal.valueOf(p.rectangle.x).setScale(2,
                                                 RoundingMode.HALF_EVEN);
-                                        BigDecimal bdY = BigDecimal.valueOf(p.getRect().y).setScale(2,
+                                        BigDecimal bdY = BigDecimal.valueOf(p.rectangle.y).setScale(2,
                                                 RoundingMode.HALF_EVEN);
-                                        BigDecimal bdWidth = BigDecimal.valueOf(p.getRect().width).setScale(2,
+                                        BigDecimal bdWidth = BigDecimal.valueOf(p.rectangle.width).setScale(2,
                                                 RoundingMode.HALF_EVEN);
-                                        BigDecimal bdHeight = BigDecimal.valueOf(p.getRect().height).setScale(2,
+                                        BigDecimal bdHeight = BigDecimal.valueOf(p.rectangle.height).setScale(2,
                                                 RoundingMode.HALF_EVEN);
 
-                                        BigDecimal bdBX = BigDecimal.valueOf(boardCell.getRect().x).setScale(2,
+                                        BigDecimal bdBX = BigDecimal.valueOf(boardCell.rectangle.x).setScale(2,
                                                 RoundingMode.HALF_EVEN);
-                                        BigDecimal bdBY = BigDecimal.valueOf(boardCell.getRect().y).setScale(2,
+                                        BigDecimal bdBY = BigDecimal.valueOf(boardCell.rectangle.y).setScale(2,
                                                 RoundingMode.HALF_EVEN);
 
                                         return bdX.subtract(bdBX).abs().compareTo(
@@ -141,18 +141,18 @@ public class ImageProcessing {
                                     }).findAny().orElse(null);
 
                             if (gridCell != null) {
-                                boardCell.setPositionInGridX(gridCell.getX());
-                                boardCell.setPositionInGridY(gridCell.getY());
+                                boardCell.positionInGridX = gridCell.positionInGridX;
+                                boardCell.positionInGridY = gridCell.positionInGridY;
                             }
                         }
-                        int maxXpos = boardCells.stream().max((a, b) -> Integer.compare(a.getX(), b.getX())).get()
-                                .getX();
-                        int maxYpos = boardCells.stream().max((a, b) -> Integer.compare(a.getY(), b.getY())).get()
-                                .getY();
+                        int maxXpos = boardCells.stream().max((a, b) -> Integer.compare(a.positionInGridX, b.positionInGridX)).get()
+                                .positionInGridX;
+                        int maxYpos = boardCells.stream().max((a, b) -> Integer.compare(a.positionInGridY, b.positionInGridY)).get()
+                                .positionInGridY;
                         Board board = new Board(maxXpos + 1, maxYpos + 1, gridLocation);
 
                         for (MineSweeperGridCell boardCell : boardCells) {
-                            board.setCell(boardCell.getX(), boardCell.getY(), boardCell);
+                            board.setCell(boardCell.positionInGridX, boardCell.positionInGridY, boardCell);
                         }
 
                         listBoards.add(board);

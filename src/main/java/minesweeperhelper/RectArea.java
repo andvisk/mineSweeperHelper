@@ -21,6 +21,13 @@ public class RectArea {
     public BigDecimal y;
     public BigDecimal yIncreased;
 
+    public int positionInGridX = -1;
+    public int positionInGridY = -1;
+
+    public RectArea(){
+        
+    }
+
     public RectArea(MatOfPoint contour, BigDecimal tollerance){
 
         this.id = UUID.randomUUID();

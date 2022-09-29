@@ -87,7 +87,7 @@ public class GridUtils {
         return mapGridsByWidthAndHeight;
     }
 
-    public static List<Grid> collectGridsFromCells(Map<BigDecimal, ListReactArea> mapByX,
+    private static List<Grid> collectGridsFromCells(Map<BigDecimal, ListReactArea> mapByX,
             Map<BigDecimal, ListReactArea> mapByY, BigDecimal width, BigDecimal height,
             BigDecimal tolleranceInPercent) {
         List<Grid> gridList = new ArrayList<>();
@@ -107,14 +107,14 @@ public class GridUtils {
             int xEnd = xsEndPos.get(i);
             Set<RectArea> xsSet = mapByX.entrySet().stream()
                     .filter(p -> p.getKey().compareTo(xs.get(xStart)) >= 0 && p.getKey().compareTo(xs.get(xEnd)) <= 0)
-                    .flatMap(p -> p.getValue().stream()).collect(Collectors.toSet());
+                    .flatMap(p -> p.getValue().list.stream()).collect(Collectors.toSet());
             for (int j = 0; j < ysStartPos.size(); j++) {
                 int yStart = ysStartPos.get(j);
                 int yEnd = ysEndPos.get(j);
                 Set<RectArea> ysSet = mapByY.entrySet().stream()
                         .filter(p -> p.getKey().compareTo(ys.get(yStart)) >= 0
                                 && p.getKey().compareTo(ys.get(yEnd)) <= 0)
-                        .flatMap(p -> p.getValue().stream()).collect(Collectors.toSet());
+                        .flatMap(p -> p.getValue().list.stream()).collect(Collectors.toSet());
 
                 Set<RectArea> xGridSet = new HashSet<RectArea>(xsSet);
                 xGridSet.retainAll(ysSet);
@@ -122,22 +122,15 @@ public class GridUtils {
                 Set<RectArea> yGridSet = new HashSet<RectArea>(ysSet);
                 yGridSet.retainAll(xsSet);
 
-                Map<BigDecimal, ListReactArea> mapByXGrid = GroupingBy.approximateInArea(
-                        xGridSet.stream().collect(Collectors.toList()),
-                        p -> p.getRect().x,
-                        p -> p.getRect().width, tolleranceInPercent);
-
-                Map<BigDecimal, ListReactArea> mapByYGrid = GroupingBy.approximateInArea(
-                        yGridSet.stream().collect(Collectors.toList()),
-                        p -> p.getRect().y,
-                        p -> p.getRect().height, tolleranceInPercent);
-
+                Map<BigDecimal, ListReactArea> mapByXGrid = groupByInCollecting(xGridSet.stream().collect(Collectors.toList()), p -> p.x, p -> p.xIncreased);
+                Map<BigDecimal, ListReactArea> mapByYGrid = groupByInCollecting(yGridSet.stream().collect(Collectors.toList()), p -> p.y, p -> p.yIncreased);
+                
                 int counter = -1;
                 int lastIndexX = -1;
                 for (BigDecimal xValue : mapByXGrid.keySet().stream().sorted().collect(Collectors.toList())) {
                     ++counter;
-                    for (GridCell gridCell : mapByXGrid.get(xValue)) {
-                        gridCell.setPositionInGridX(counter);
+                    for (RectArea gridCell : mapByXGrid.get(xValue).list) {
+                        gridCell.positionInGridX = counter;
                     }
                 }
                 lastIndexX = counter;
@@ -146,8 +139,8 @@ public class GridUtils {
                 int lastIndexY = -1;
                 for (BigDecimal yValue : mapByYGrid.keySet().stream().sorted().collect(Collectors.toList())) {
                     ++counter;
-                    for (GridCell gridCell : mapByYGrid.get(yValue)) {
-                        gridCell.setPositionInGridY(counter);
+                    for (RectArea gridCell : mapByYGrid.get(yValue).list) {
+                        gridCell.positionInGridY = counter;
                     }
                 }
                 lastIndexY = counter;
@@ -155,8 +148,8 @@ public class GridUtils {
                 Grid grid = new Grid(lastIndexX + 1, lastIndexY + 1);
 
                 for (BigDecimal xValue : mapByXGrid.keySet()) {
-                    for (GridCell gridCell : mapByXGrid.get(xValue)) {
-                        grid.setCell(gridCell.getX(), gridCell.getY(), gridCell);
+                    for (RectArea gridCell : mapByXGrid.get(xValue).list) {
+                        grid.setCell(gridCell.positionInGridX, gridCell.positionInGridY, gridCell);
                     }
                 }
 
@@ -241,10 +234,10 @@ public class GridUtils {
         return mat;
     }
 
-    public static Mat drawLocation(Mat mat, GridCell gridCell, Scalar color) {
+    public static Mat drawLocation(Mat mat, RectArea gridCell, Scalar color) {
 
         if (gridCell != null) {
-            Rect rect = gridCell.getRect();
+            Rect rect = gridCell.rectangle;
             Imgproc.rectangle(mat, new Point(rect.x, rect.y),
                     new Point(rect.x + rect.width, rect.y + rect.height), color, 2);
         }
@@ -398,7 +391,7 @@ public class GridUtils {
                     .collect(Collectors.toList());
             list = removeCellsToConformSequency(list, p -> p.y, p -> p.height, minGridVerticalMembers,
                     tolleranceInPercent);
-                    v.getValue().list = list;
+            v.getValue().list = list;
             return v.getValue();
         }));
 
@@ -409,7 +402,8 @@ public class GridUtils {
 
         if (mapByX.size() > 0 && mapByY.size() > 0
                 && (beforeByXCount != afterByXCount || beforeByYCount != afterByYCount)) {
-            return removeSquaresToConformMinWidthAndHeight(mapByX, mapByY, minGridHorizontalMembers, minGridVerticalMembers, tolleranceInPercent);
+            return removeSquaresToConformMinWidthAndHeight(mapByX, mapByY, minGridHorizontalMembers,
+                    minGridVerticalMembers, tolleranceInPercent);
         }
 
         if (mapByX.size() > 0 && mapByY.size() > 0)
