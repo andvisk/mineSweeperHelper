@@ -87,8 +87,8 @@ public class GridUtils {
         return mapGridsByWidthAndHeight;
     }
 
-    public static List<Grid> collectGridsFromCells(Map<BigDecimal, List<GridCell>> mapByX,
-            Map<BigDecimal, List<GridCell>> mapByY, BigDecimal width, BigDecimal height,
+    public static List<Grid> collectGridsFromCells(Map<BigDecimal, ListReactArea> mapByX,
+            Map<BigDecimal, ListReactArea> mapByY, BigDecimal width, BigDecimal height,
             BigDecimal tolleranceInPercent) {
         List<Grid> gridList = new ArrayList<>();
         List<BigDecimal> xs = mapByX.keySet().stream().sorted().collect(Collectors.toList());
@@ -105,29 +105,29 @@ public class GridUtils {
         for (int i = 0; i < xsStartPos.size(); i++) {
             int xStart = xsStartPos.get(i);
             int xEnd = xsEndPos.get(i);
-            Set<GridCell> xsSet = mapByX.entrySet().stream()
+            Set<RectArea> xsSet = mapByX.entrySet().stream()
                     .filter(p -> p.getKey().compareTo(xs.get(xStart)) >= 0 && p.getKey().compareTo(xs.get(xEnd)) <= 0)
                     .flatMap(p -> p.getValue().stream()).collect(Collectors.toSet());
             for (int j = 0; j < ysStartPos.size(); j++) {
                 int yStart = ysStartPos.get(j);
                 int yEnd = ysEndPos.get(j);
-                Set<GridCell> ysSet = mapByY.entrySet().stream()
+                Set<RectArea> ysSet = mapByY.entrySet().stream()
                         .filter(p -> p.getKey().compareTo(ys.get(yStart)) >= 0
                                 && p.getKey().compareTo(ys.get(yEnd)) <= 0)
                         .flatMap(p -> p.getValue().stream()).collect(Collectors.toSet());
 
-                Set<GridCell> xGridSet = new HashSet<GridCell>(xsSet);
+                Set<RectArea> xGridSet = new HashSet<RectArea>(xsSet);
                 xGridSet.retainAll(ysSet);
 
-                Set<GridCell> yGridSet = new HashSet<GridCell>(ysSet);
+                Set<RectArea> yGridSet = new HashSet<RectArea>(ysSet);
                 yGridSet.retainAll(xsSet);
 
-                Map<BigDecimal, List<GridCell>> mapByXGrid = GroupingBy.approximateInArea(
+                Map<BigDecimal, ListReactArea> mapByXGrid = GroupingBy.approximateInArea(
                         xGridSet.stream().collect(Collectors.toList()),
                         p -> p.getRect().x,
                         p -> p.getRect().width, tolleranceInPercent);
 
-                Map<BigDecimal, List<GridCell>> mapByYGrid = GroupingBy.approximateInArea(
+                Map<BigDecimal, ListReactArea> mapByYGrid = GroupingBy.approximateInArea(
                         yGridSet.stream().collect(Collectors.toList()),
                         p -> p.getRect().y,
                         p -> p.getRect().height, tolleranceInPercent);
