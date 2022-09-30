@@ -38,16 +38,14 @@ public class GridUtils {
         Imgproc.cvtColor(screenShot, grayMat, Imgproc.COLOR_BGR2GRAY);
 
         Mat thresholdMat = new Mat();
-        Imgproc.threshold(grayMat, thresholdMat, 55, 255, Imgproc.THRESH_BINARY);
+        Imgproc.threshold(grayMat, thresholdMat, ControllerMain.THRESH, 255, Imgproc.THRESH_BINARY);
 
         Mat hierarchy = new Mat();
         List<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(thresholdMat, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
 
-        Mat contourImg = screenShot.clone();
-        Imgproc.drawContours(contourImg, contours, -1, new Scalar(255, 255, 255), 1);
-
         Map<BigDecimal, Map<BigDecimal, ListReactArea>> mapByWidthAndHeight = GridUtils.groupByWidthThenByHeight(
+                screenShot,
                 contours,
                 minGridHorizontalMembers, minGridVerticalMembers, gridPositionAndSizeTolleranceInPercent);
 
@@ -58,8 +56,10 @@ public class GridUtils {
                 BigDecimal height = entryByHeight.getKey(); // cell height
                 List<RectArea> points = entryByHeight.getValue().list;
 
-                Map<BigDecimal, ListReactArea> mapByX = groupByInCollecting(points, p -> p.x, p -> p.xDecreased);
-                Map<BigDecimal, ListReactArea> mapByY = groupByInCollecting(points, p -> p.y, p -> p.yDecreased);
+                Map<BigDecimal, ListReactArea> mapByX = groupByInCollecting(points, p -> p.x, p -> p.xIncreased,
+                        p -> p.xDecreased);
+                Map<BigDecimal, ListReactArea> mapByY = groupByInCollecting(points, p -> p.y, p -> p.yIncreased,
+                        p -> p.yDecreased);
 
                 List<Map<BigDecimal, ListReactArea>> listOfxyMaps = GridUtils
                         .removeSquaresToConformMinWidthAndHeight(mapByX, mapByY, minGridHorizontalMembers,
@@ -69,27 +69,31 @@ public class GridUtils {
                 mapByX = listOfxyMaps.get(0);
                 mapByY = listOfxyMaps.get(1);
 
-                List<Grid> gridList = collectGridsFromCells(mapByX, mapByY, width, height,
-                        gridPositionAndSizeTolleranceInPercent);
+                if (mapByX.size() > 0 && mapByY.size() > 0) {
+                    List<Grid> gridList = collectGridsFromCells(mapByX, mapByY, width, height,
+                            gridPositionAndSizeTolleranceInPercent);
 
-                if (gridList.size() > 0) {
-                    Map<BigDecimal, List<Grid>> returnMapByHeight = mapGridsByWidthAndHeight.get(width);
-                    if (returnMapByHeight == null)
-                        returnMapByHeight = new HashMap<>();
+                    if (gridList.size() > 0) {
+                        Map<BigDecimal, List<Grid>> returnMapByHeight = mapGridsByWidthAndHeight.get(width);
+                        if (returnMapByHeight == null)
+                            returnMapByHeight = new HashMap<>();
 
-                    returnMapByHeight.put(height, gridList);
+                        returnMapByHeight.put(height, gridList);
 
-                    mapGridsByWidthAndHeight.put(width, returnMapByHeight);
+                        mapGridsByWidthAndHeight.put(width, returnMapByHeight);
+                    }
                 }
             }
         }
 
         return mapGridsByWidthAndHeight;
+
     }
 
     private static List<Grid> collectGridsFromCells(Map<BigDecimal, ListReactArea> mapByX,
             Map<BigDecimal, ListReactArea> mapByY, BigDecimal width, BigDecimal height,
             BigDecimal tolleranceInPercent) {
+
         List<Grid> gridList = new ArrayList<>();
         List<BigDecimal> xs = mapByX.keySet().stream().sorted().collect(Collectors.toList());
         List<BigDecimal> ys = mapByY.keySet().stream().sorted().collect(Collectors.toList());
@@ -123,9 +127,9 @@ public class GridUtils {
                 yGridSet.retainAll(xsSet);
 
                 Map<BigDecimal, ListReactArea> mapByXGrid = groupByInCollecting(
-                        xGridSet.stream().collect(Collectors.toList()), p -> p.x, p -> p.xDecreased);
+                        xGridSet.stream().collect(Collectors.toList()), p -> p.x, p -> p.xIncreased, p -> p.xDecreased);
                 Map<BigDecimal, ListReactArea> mapByYGrid = groupByInCollecting(
-                        yGridSet.stream().collect(Collectors.toList()), p -> p.y, p -> p.yDecreased);
+                        yGridSet.stream().collect(Collectors.toList()), p -> p.y, p -> p.yIncreased, p -> p.yDecreased);
 
                 int counter = -1;
                 int lastIndexX = -1;
@@ -178,8 +182,9 @@ public class GridUtils {
             for (int i = 1; i < list.size(); i++) {
                 if (list.get(i - 1).add(widthOrHeight).subtract(list.get(i)).abs().compareTo(
                         widthOrHeight.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN)
-                                .multiply(tolleranceInPercent.multiply(BigDecimal.valueOf(2)))) >= 0) { //todo mult by 2 ???
-                    startPos.add(startingPos); 
+                                .multiply(tolleranceInPercent.multiply(BigDecimal.valueOf(2)))) >= 0) { // todo mult by
+                                                                                                        // 2 ???
+                    startPos.add(startingPos);
                     endPos.add(i - 1);
                     startingPos = i;
                 }
@@ -286,23 +291,27 @@ public class GridUtils {
      * }
      */
 
-    public static Map<BigDecimal, Map<BigDecimal, ListReactArea>> groupByWidthThenByHeight(List<MatOfPoint> contours,
+    public static Map<BigDecimal, Map<BigDecimal, ListReactArea>> groupByWidthThenByHeight(Mat screenShot,
+            List<MatOfPoint> contours,
             int minimumHorizontalCount, int minimumVerticalCout, BigDecimal tolleranceInPercent) {
 
         List<RectArea> rectAreaList = contours.stream().map(p -> new RectArea(p, tolleranceInPercent))
                 .collect(Collectors.toList());
 
-        Map<BigDecimal, ListReactArea> mapByW = groupByInCollecting(rectAreaList, p -> p.width, p -> p.widthDecreased);
+        Map<BigDecimal, ListReactArea> mapByW = groupByInCollecting(rectAreaList, p -> p.width, p -> p.widthIncreased,
+                p -> p.widthDecreased);
 
         Map<BigDecimal, Map<BigDecimal, ListReactArea>> mapByWH = mapByW.entrySet().stream()
                 .collect(Collectors.toMap(k -> k.getKey(),
-                        v -> groupByInCollecting(v.getValue().list, p -> p.height, p -> p.heightDecreased)));
+                        v -> groupByInCollecting(v.getValue().list, p -> p.height, p -> p.heightIncreased,
+                                p -> p.heightDecreased)));
 
         return mapByWH;
     }
 
     private static Map<BigDecimal, ListReactArea> groupByInCollecting(List<RectArea> rectAreaList,
             Function<RectArea, BigDecimal> funcGetDimensionBy,
+            Function<RectArea, BigDecimal> funcGetDimensionByIncreased,
             Function<RectArea, BigDecimal> funcGetDimensionByDecreased) {
         Map<BigDecimal, ListReactArea> mapByDimension = rectAreaList.stream()
                 .collect(Collectors.groupingBy(funcGetDimensionBy))
