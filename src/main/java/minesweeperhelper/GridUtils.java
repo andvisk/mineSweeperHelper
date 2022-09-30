@@ -58,8 +58,8 @@ public class GridUtils {
                 BigDecimal height = entryByHeight.getKey(); // cell height
                 List<RectArea> points = entryByHeight.getValue().list;
 
-                Map<BigDecimal, ListReactArea> mapByX = groupByInCollecting(points, p -> p.x, p -> p.xIncreased);
-                Map<BigDecimal, ListReactArea> mapByY = groupByInCollecting(points, p -> p.y, p -> p.yIncreased);
+                Map<BigDecimal, ListReactArea> mapByX = groupByInCollecting(points, p -> p.x, p -> p.xDecreased);
+                Map<BigDecimal, ListReactArea> mapByY = groupByInCollecting(points, p -> p.y, p -> p.yDecreased);
 
                 List<Map<BigDecimal, ListReactArea>> listOfxyMaps = GridUtils
                         .removeSquaresToConformMinWidthAndHeight(mapByX, mapByY, minGridHorizontalMembers,
@@ -123,9 +123,9 @@ public class GridUtils {
                 yGridSet.retainAll(xsSet);
 
                 Map<BigDecimal, ListReactArea> mapByXGrid = groupByInCollecting(
-                        xGridSet.stream().collect(Collectors.toList()), p -> p.x, p -> p.xIncreased);
+                        xGridSet.stream().collect(Collectors.toList()), p -> p.x, p -> p.xDecreased);
                 Map<BigDecimal, ListReactArea> mapByYGrid = groupByInCollecting(
-                        yGridSet.stream().collect(Collectors.toList()), p -> p.y, p -> p.yIncreased);
+                        yGridSet.stream().collect(Collectors.toList()), p -> p.y, p -> p.yDecreased);
 
                 int counter = -1;
                 int lastIndexX = -1;
@@ -178,8 +178,8 @@ public class GridUtils {
             for (int i = 1; i < list.size(); i++) {
                 if (list.get(i - 1).add(widthOrHeight).subtract(list.get(i)).abs().compareTo(
                         widthOrHeight.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN)
-                                .multiply(tolleranceInPercent.multiply(BigDecimal.valueOf(2)))) >= 0) {
-                    startPos.add(startingPos);
+                                .multiply(tolleranceInPercent.multiply(BigDecimal.valueOf(2)))) >= 0) { //todo mult by 2 ???
+                    startPos.add(startingPos); 
                     endPos.add(i - 1);
                     startingPos = i;
                 }
@@ -292,18 +292,18 @@ public class GridUtils {
         List<RectArea> rectAreaList = contours.stream().map(p -> new RectArea(p, tolleranceInPercent))
                 .collect(Collectors.toList());
 
-        Map<BigDecimal, ListReactArea> mapByW = groupByInCollecting(rectAreaList, p -> p.width, p -> p.widthIncreased);
+        Map<BigDecimal, ListReactArea> mapByW = groupByInCollecting(rectAreaList, p -> p.width, p -> p.widthDecreased);
 
         Map<BigDecimal, Map<BigDecimal, ListReactArea>> mapByWH = mapByW.entrySet().stream()
                 .collect(Collectors.toMap(k -> k.getKey(),
-                        v -> groupByInCollecting(v.getValue().list, p -> p.height, p -> p.heightIncreased)));
+                        v -> groupByInCollecting(v.getValue().list, p -> p.height, p -> p.heightDecreased)));
 
         return mapByWH;
     }
 
     private static Map<BigDecimal, ListReactArea> groupByInCollecting(List<RectArea> rectAreaList,
             Function<RectArea, BigDecimal> funcGetDimensionBy,
-            Function<RectArea, BigDecimal> funcGetDimensionByIncresed) {
+            Function<RectArea, BigDecimal> funcGetDimensionByDecreased) {
         Map<BigDecimal, ListReactArea> mapByDimension = rectAreaList.stream()
                 .collect(Collectors.groupingBy(funcGetDimensionBy))
                 .entrySet().stream()
@@ -323,8 +323,8 @@ public class GridUtils {
                 boolean found = true;
                 while (k < listDimensions.size() && found) {
                     ListReactArea listTestAreas = mapByDimension.get(listDimensions.get(k));
-                    if (funcGetDimensionBy.apply(listAreas.mainMember)
-                            .compareTo(funcGetDimensionByIncresed.apply(listTestAreas.mainMember)) <= 0) {
+                    if (funcGetDimensionByDecreased.apply(listAreas.mainMember)
+                            .compareTo(funcGetDimensionBy.apply(listTestAreas.mainMember)) <= 0) {
                         listAreas.list.addAll(listTestAreas.list);
                         listTestAreas.list = new ArrayList<>();
                     }
