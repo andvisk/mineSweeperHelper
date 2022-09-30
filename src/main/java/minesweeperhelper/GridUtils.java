@@ -38,7 +38,7 @@ public class GridUtils {
         Imgproc.cvtColor(screenShot, grayMat, Imgproc.COLOR_BGR2GRAY);
 
         Mat thresholdMat = new Mat();
-        Imgproc.threshold(grayMat, thresholdMat, 80, 255, Imgproc.THRESH_BINARY);
+        Imgproc.threshold(grayMat, thresholdMat, 55, 255, Imgproc.THRESH_BINARY);
 
         Mat hierarchy = new Mat();
         List<MatOfPoint> contours = new ArrayList<>();
@@ -122,9 +122,11 @@ public class GridUtils {
                 Set<RectArea> yGridSet = new HashSet<RectArea>(ysSet);
                 yGridSet.retainAll(xsSet);
 
-                Map<BigDecimal, ListReactArea> mapByXGrid = groupByInCollecting(xGridSet.stream().collect(Collectors.toList()), p -> p.x, p -> p.xIncreased);
-                Map<BigDecimal, ListReactArea> mapByYGrid = groupByInCollecting(yGridSet.stream().collect(Collectors.toList()), p -> p.y, p -> p.yIncreased);
-                
+                Map<BigDecimal, ListReactArea> mapByXGrid = groupByInCollecting(
+                        xGridSet.stream().collect(Collectors.toList()), p -> p.x, p -> p.xIncreased);
+                Map<BigDecimal, ListReactArea> mapByYGrid = groupByInCollecting(
+                        yGridSet.stream().collect(Collectors.toList()), p -> p.y, p -> p.yIncreased);
+
                 int counter = -1;
                 int lastIndexX = -1;
                 for (BigDecimal xValue : mapByXGrid.keySet().stream().sorted().collect(Collectors.toList())) {
@@ -190,8 +192,8 @@ public class GridUtils {
 
     public static Mat printHelpInfo(Mat mat, MineSweeperGridCell gridCell) {
         Point position = new Point(
-                gridCell.getRect().x + (double) gridCell.getRect().width / 100 * 20,
-                gridCell.getRect().y + (double) gridCell.getRect().height / 100 * 20);
+                gridCell.rectangle.x + (double) gridCell.rectangle.width / 100 * 20,
+                gridCell.rectangle.y + (double) gridCell.rectangle.height / 100 * 20);
         Scalar color = null;
 
         if (gridCell.getCellTypeEnum().equals(CellTypeEnum.NEEDS_TO_BE_CHECKED)) {
@@ -202,16 +204,16 @@ public class GridUtils {
             color = new Scalar(0, 0, 255);
         }
 
-        Imgproc.circle(mat, position, gridCell.getRect().height / 5, color, -1);
+        Imgproc.circle(mat, position, gridCell.rectangle.height / 5, color, -1);
 
         return mat;
     }
 
     public static Mat printDebugInfo(Mat mat, MineSweeperGridCell gridCell) {
-        Point position = new Point(gridCell.getRect().x,
-                gridCell.getRect().y + (double) gridCell.getRect().height / 100 * 30);
-        Point position2 = new Point(gridCell.getRect().x,
-                gridCell.getRect().y + (double) gridCell.getRect().height / 100 * 80);
+        Point position = new Point(gridCell.rectangle.x,
+                gridCell.rectangle.y + (double) gridCell.rectangle.height / 100 * 30);
+        Point position2 = new Point(gridCell.rectangle.x,
+                gridCell.rectangle.y + (double) gridCell.rectangle.height / 100 * 80);
         Scalar color = new Scalar(0, 0, 255);
         int font = Imgproc.FONT_HERSHEY_PLAIN;
         double scale = 1;
@@ -418,11 +420,11 @@ public class GridUtils {
 
         if (list.size() > minWidthOrHeightCount) {
 
-            List<GridCell> listToRemove = new ArrayList<>();
+            List<RectArea> listToRemove = new ArrayList<>();
 
             list = list.stream()
-                    .sorted((a, b) -> BigDecimal.valueOf(functionPosition.apply(a))
-                            .compareTo(BigDecimal.valueOf(functionPosition.apply(b))))
+                    .sorted((a, b) -> functionPosition.apply(a)
+                            .compareTo(functionPosition.apply(b)))
                     .collect(Collectors.toList());
 
             int startingPosition = -1;
@@ -433,12 +435,9 @@ public class GridUtils {
                 if (startingPosition < 0)
                     startingPosition = i;
 
-                BigDecimal prevPos = BigDecimal.valueOf(functionPosition.apply(list.get(i - 1))).setScale(2,
-                        RoundingMode.HALF_EVEN);
-                BigDecimal thisPos = BigDecimal.valueOf(functionPosition.apply(list.get(i))).setScale(2,
-                        RoundingMode.HALF_EVEN);
-                BigDecimal prevWidthOrHeight = BigDecimal.valueOf(functionWidthOrHeight.apply(list.get(i - 1)))
-                        .setScale(2, RoundingMode.HALF_EVEN);
+                BigDecimal prevPos = functionPosition.apply(list.get(i - 1));
+                BigDecimal thisPos = functionPosition.apply(list.get(i));
+                BigDecimal prevWidthOrHeight = functionWidthOrHeight.apply(list.get(i - 1));
 
                 if (prevWidthOrHeight.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN)
                         .multiply(tolleranceInPercent)

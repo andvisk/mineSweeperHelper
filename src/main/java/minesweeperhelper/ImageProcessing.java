@@ -69,7 +69,7 @@ public class ImageProcessing {
 
                         while (true) {
                             mmr = Core.minMaxLoc(contoursMat);
-                            if (mmr.maxVal >= 0.8) {
+                            if (mmr.maxVal >= 0.65) {
                                 Rect rect = new Rect(
                                         new Point(mmr.maxLoc.x + gridLocation.minX, mmr.maxLoc.y + gridLocation.minY),
                                         new Point(mmr.maxLoc.x + resizedPatternImage.cols() + gridLocation.minX,

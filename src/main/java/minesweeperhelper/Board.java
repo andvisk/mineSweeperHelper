@@ -20,8 +20,8 @@ public class Board {
 
     public void setCell(int x, int y, MineSweeperGridCell gridCell) {
         grid[x][y] = gridCell;
-        gridCell.setPositionInGridX(x);
-        gridCell.setPositionInGridY(y);
+        gridCell.positionInGridX = x;
+        gridCell.positionInGridY = y;
     }
 
     public MineSweeperGridCell[][] getGrid() {
@@ -157,14 +157,14 @@ public class Board {
 
     private List<MineSweeperGridCell> getNeighbourCells(List<MineSweeperGridCell> list, MineSweeperGridCell cell) {
         return list.stream().filter(
-                p -> (p.getX() - 1 == cell.getX() && p.getY() - 1 == cell.getY()) ||
-                        (p.getX() == cell.getX() && p.getY() - 1 == cell.getY()) ||
-                        (p.getX() + 1 == cell.getX() && p.getY() - 1 == cell.getY()) ||
-                        (p.getX() + 1 == cell.getX() && p.getY() == cell.getY()) ||
-                        (p.getX() + 1 == cell.getX() && p.getY() + 1 == cell.getY()) ||
-                        (p.getX() == cell.getX() && p.getY() + 1 == cell.getY()) ||
-                        (p.getX() - 1 == cell.getX() && p.getY() + 1 == cell.getY()) ||
-                        (p.getX() - 1 == cell.getX() && p.getY() == cell.getY()))
+                p -> (p.positionInGridX - 1 == cell.positionInGridX && p.positionInGridY - 1 == cell.positionInGridY) ||
+                        (p.positionInGridX == cell.positionInGridX && p.positionInGridY - 1 == cell.positionInGridY) ||
+                        (p.positionInGridX + 1 == cell.positionInGridX && p.positionInGridY - 1 == cell.positionInGridY) ||
+                        (p.positionInGridX + 1 == cell.positionInGridX && p.positionInGridY == cell.positionInGridY) ||
+                        (p.positionInGridX + 1 == cell.positionInGridX && p.positionInGridY + 1 == cell.positionInGridY) ||
+                        (p.positionInGridX == cell.positionInGridX && p.positionInGridY + 1 == cell.positionInGridY) ||
+                        (p.positionInGridX - 1 == cell.positionInGridX && p.positionInGridY + 1 == cell.positionInGridY) ||
+                        (p.positionInGridX - 1 == cell.positionInGridX && p.positionInGridY == cell.positionInGridY))
                 .collect(Collectors.toList());
     }
 
