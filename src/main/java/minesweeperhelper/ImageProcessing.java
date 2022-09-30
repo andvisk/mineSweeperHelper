@@ -231,18 +231,15 @@ public class ImageProcessing {
         return list;
     }
 
-    private void detectBlue(Mat screenShot) {
-        Scalar lowerBlue = new Scalar(100, 150, 0);
-        Scalar upperBlue = new Scalar(140, 255, 255);
+    public static Mat detectColor(Mat mat, HsvColor color) {
 
         Mat hsv = new Mat();
-        Imgproc.cvtColor(screenShot, hsv, Imgproc.COLOR_BGR2HSV);
+        Imgproc.cvtColor(mat, hsv, Imgproc.COLOR_BGR2HSV);
         Mat mask = new Mat();
-        Core.inRange(hsv, lowerBlue, upperBlue, mask);
+        Core.inRange(hsv, color.lower, color.upper, mask);
         Mat dest = new Mat();
-        Core.bitwise_and(screenShot, screenShot, dest, mask);
+        Core.bitwise_and(mat, mat, dest, mask);
 
-        Imgcodecs.imwrite("c:/andrius/test.jpg", dest);
+        return dest;
     }
-
 }
