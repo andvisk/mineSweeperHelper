@@ -131,11 +131,12 @@ public class ImageProcessing {
                                                 RoundingMode.HALF_EVEN);
 
                                         return bdX.subtract(bdBX).abs().compareTo(
-                                                bdWidth.divide(BigDecimal.valueOf(100),2, RoundingMode.HALF_EVEN)
+                                                bdWidth.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN)
                                                         .multiply(tolleranceInPercent)) <= 0
                                                 &&
                                                 bdY.subtract(bdBY).abs().compareTo(
-                                                        bdHeight.divide(BigDecimal.valueOf(100),2, RoundingMode.HALF_EVEN)
+                                                        bdHeight.divide(BigDecimal.valueOf(100), 2,
+                                                                RoundingMode.HALF_EVEN)
                                                                 .multiply(tolleranceInPercent)) <= 0;
 
                                     }).findAny().orElse(null);
@@ -145,10 +146,12 @@ public class ImageProcessing {
                                 boardCell.positionInGridY = gridCell.positionInGridY;
                             }
                         }
-                        int maxXpos = boardCells.stream().max((a, b) -> Integer.compare(a.positionInGridX, b.positionInGridX)).get()
-                                .positionInGridX;
-                        int maxYpos = boardCells.stream().max((a, b) -> Integer.compare(a.positionInGridY, b.positionInGridY)).get()
-                                .positionInGridY;
+                        int maxXpos = boardCells.stream()
+                                .max((a, b) -> Integer.compare(a.positionInGridX, b.positionInGridX))
+                                .get().positionInGridX;
+                        int maxYpos = boardCells.stream()
+                                .max((a, b) -> Integer.compare(a.positionInGridY, b.positionInGridY))
+                                .get().positionInGridY;
                         Board board = new Board(maxXpos + 1, maxYpos + 1, gridLocation);
 
                         for (MineSweeperGridCell boardCell : boardCells) {
@@ -226,6 +229,20 @@ public class ImageProcessing {
         }
 
         return list;
+    }
+
+    private void detectBlue(Mat screenShot) {
+        Scalar lowerBlue = new Scalar(100, 150, 0);
+        Scalar upperBlue = new Scalar(140, 255, 255);
+
+        Mat hsv = new Mat();
+        Imgproc.cvtColor(screenShot, hsv, Imgproc.COLOR_BGR2HSV);
+        Mat mask = new Mat();
+        Core.inRange(hsv, lowerBlue, upperBlue, mask);
+        Mat dest = new Mat();
+        Core.bitwise_and(screenShot, screenShot, dest, mask);
+
+        Imgcodecs.imwrite("c:/andrius/test.jpg", dest);
     }
 
 }
