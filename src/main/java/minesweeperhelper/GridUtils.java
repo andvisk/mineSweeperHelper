@@ -34,19 +34,33 @@ public class GridUtils {
 
         Map<BigDecimal, Map<BigDecimal, List<Grid>>> mapGridsByWidthAndHeight = new HashMap<>();
 
-        Mat grayMat = new Mat();
+        Mat blueColors = ImageProcessing.detectColor(screenShot, new HsvBlue());
+        Mat yellowColors = ImageProcessing.detectColor(screenShot, new HsvYellow());
+        Mat whiteColors = ImageProcessing.detectColor(screenShot, new HsvWhite());
+
+        /* Mat grayMat = new Mat();
         Imgproc.cvtColor(screenShot, grayMat, Imgproc.COLOR_BGR2GRAY);
 
         Mat thresholdMat = new Mat();
-        Imgproc.threshold(grayMat, thresholdMat, ControllerMain.THRESH, 255, Imgproc.THRESH_BINARY);
+        Imgproc.threshold(grayMat, thresholdMat, ControllerMain.THRESH, 255, Imgproc.THRESH_BINARY); */
 
-        Mat hierarchy = new Mat();
+        List<MatOfPoint> contoursAll = new ArrayList<>();
+
         List<MatOfPoint> contours = new ArrayList<>();
-        Imgproc.findContours(thresholdMat, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(blueColors, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+        contoursAll.addAll(contours);
+
+        contours = new ArrayList<>();
+        Imgproc.findContours(yellowColors, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+        contoursAll.addAll(contours);
+
+        contours = new ArrayList<>();
+        Imgproc.findContours(whiteColors, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+        contoursAll.addAll(contours);
 
         Map<BigDecimal, Map<BigDecimal, ListReactArea>> mapByWidthAndHeight = GridUtils.groupByWidthThenByHeight(
                 screenShot,
-                contours,
+                contoursAll,
                 minGridHorizontalMembers, minGridVerticalMembers, gridPositionAndSizeTolleranceInPercent);
 
         for (Map.Entry<BigDecimal, Map<BigDecimal, ListReactArea>> entry : mapByWidthAndHeight.entrySet()) {

@@ -240,6 +240,11 @@ public class ImageProcessing {
         Mat dest = new Mat();
         Core.bitwise_and(mat, mat, dest, mask);
 
-        return dest;
+        Mat dest2gray = new Mat();
+        Imgproc.cvtColor(dest, dest2gray, Imgproc.COLOR_BGR2GRAY);
+
+        Imgproc.threshold(dest2gray, mask, 10, 255, Imgproc.THRESH_BINARY);
+
+        return dest2gray;
     }
 }
