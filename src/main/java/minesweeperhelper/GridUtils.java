@@ -70,6 +70,13 @@ public class GridUtils {
                 BigDecimal height = entryByHeight.getKey(); // cell height
                 List<RectArea> points = entryByHeight.getValue().list;
 
+if(width.compareTo(BigDecimal.valueOf(30).setScale(2,RoundingMode.HALF_EVEN))==0 &&
+height.compareTo(BigDecimal.valueOf(26).setScale(2,RoundingMode.HALF_EVEN))==0
+
+){
+int stop = 0;
+}
+
                 Map<BigDecimal, ListReactArea> mapByX = groupByInCollecting(points, p -> p.x, p -> p.xDecreased);
                 Map<BigDecimal, ListReactArea> mapByY = groupByInCollecting(points, p -> p.y, p -> p.yDecreased);
 
@@ -389,7 +396,7 @@ public class GridUtils {
         mapByX = mapByX.entrySet().stream().collect(Collectors.toMap(k -> k.getKey(), v -> {
             List<RectArea> list = v.getValue().list.stream().filter(i -> mapByYIDs.contains(i.id))
                     .collect(Collectors.toList());
-            list = removeCellsToConformSequency(list, p -> p.x, p -> p.width, minGridHorizontalMembers,
+            list = removeCellsToConformSequency(list, p -> p.y, p -> p.height, minGridVerticalMembers,
                     tolleranceInPercent);
             v.getValue().list = list;
             return v.getValue();
@@ -402,14 +409,14 @@ public class GridUtils {
 
         long beforeByYCount = mapByY.entrySet().stream().flatMap(p -> p.getValue().list.stream()).count();
 
-        // romeve if absent in mapByY
+        // romove if absent in mapByY
         Set<UUID> mapByXIDs = mapByX.entrySet().stream().flatMap(p -> p.getValue().list.stream()).map(p -> p.id)
                 .collect(Collectors.toSet());
 
         mapByY = mapByY.entrySet().stream().collect(Collectors.toMap(k -> k.getKey(), v -> {
             List<RectArea> list = v.getValue().list.stream().filter(i -> mapByXIDs.contains(i.id))
                     .collect(Collectors.toList());
-            list = removeCellsToConformSequency(list, p -> p.y, p -> p.height, minGridVerticalMembers,
+            list = removeCellsToConformSequency(list, p -> p.x, p -> p.width, minGridHorizontalMembers,
                     tolleranceInPercent);
             v.getValue().list = list;
             return v.getValue();
@@ -459,7 +466,7 @@ public class GridUtils {
 
                 if (prevWidthOrHeight.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN)
                         .multiply(tolleranceInPercent)
-                        .compareTo(prevPos.add(prevWidthOrHeight).subtract(thisPos).abs()) <= 0) {
+                        .compareTo(prevPos.add(prevWidthOrHeight).subtract(thisPos).abs()) >= 0 ) {
                     ++counter;
                 } else {
                     if (counter < minWidthOrHeightCount)
