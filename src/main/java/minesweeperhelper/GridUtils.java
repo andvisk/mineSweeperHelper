@@ -44,19 +44,19 @@ public class GridUtils {
         Mat thresholdMat = new Mat();
         Imgproc.threshold(grayMat, thresholdMat, ControllerMain.THRESH, 255, Imgproc.THRESH_BINARY); */
 
-        List<MatOfPoint> contoursAll = new ArrayList<>();
+        List<ContourArea> contoursAll = new ArrayList<>();
 
         List<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(blueColors, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
-        contoursAll.addAll(contours);
+        contoursAll.addAll(contours.stream().map(p->new ContourArea(p, ColorsEnum.BLUE)).toList());
 
         contours = new ArrayList<>();
         Imgproc.findContours(yellowColors, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
-        contoursAll.addAll(contours);
+        contoursAll.addAll(contours.stream().map(p->new ContourArea(p, ColorsEnum.YELLOW)).toList());
 
         contours = new ArrayList<>();
         Imgproc.findContours(whiteColors, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
-        contoursAll.addAll(contours);
+        contoursAll.addAll(contours.stream().map(p->new ContourArea(p, ColorsEnum.WHITE)).toList());
 
         Map<BigDecimal, Map<BigDecimal, ListReactArea>> mapByWidthAndHeight = GridUtils.groupByWidthThenByHeight(
                 screenShot,
@@ -304,10 +304,10 @@ public class GridUtils {
      */
 
     public static Map<BigDecimal, Map<BigDecimal, ListReactArea>> groupByWidthThenByHeight(Mat screenShot,
-            List<MatOfPoint> contours,
+            List<ContourArea> contours,
             int minimumHorizontalCount, int minimumVerticalCout, BigDecimal tolleranceInPercent) {
 
-        List<RectArea> rectAreaList = contours.stream().map(p -> new RectArea(p, tolleranceInPercent))
+        List<RectArea> rectAreaList = contours.stream().map(p -> new RectArea(p.contour, tolleranceInPercent, p.color))
                 .collect(Collectors.toList());
 
         Map<BigDecimal, ListReactArea> mapByW = groupByInCollecting(rectAreaList, p -> p.width, p -> p.widthDecreased);

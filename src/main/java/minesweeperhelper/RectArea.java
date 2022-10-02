@@ -28,15 +28,19 @@ public class RectArea {
     public int positionInGridX = -1;
     public int positionInGridY = -1;
 
+    public ColorsEnum color;
+
     public RectArea(){
         
     }
 
-    public RectArea(MatOfPoint contour, BigDecimal tollerance){
+    public RectArea(MatOfPoint contour, BigDecimal tollerance, ColorsEnum color){
 
         this.id = UUID.randomUUID();
 
         rectangle = Imgproc.boundingRect(contour);
+        
+        this.color = color;
 
         width = BigDecimal.valueOf(rectangle.width).setScale(2, RoundingMode.HALF_EVEN);
         widthIncreased = width.add(width.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN).multiply(tollerance));
