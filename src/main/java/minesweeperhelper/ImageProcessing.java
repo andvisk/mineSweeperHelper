@@ -9,6 +9,7 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
@@ -246,5 +247,28 @@ public class ImageProcessing {
         Imgproc.threshold(dest2gray, mask, 10, 255, Imgproc.THRESH_BINARY);
 
         return dest2gray;
+    }
+
+    public static Mat gammaCorrection(Mat matImgSrc, double gammaValue){
+        Mat lookUpTable = new Mat(1, 256, CvType.CV_8U);
+        byte[] lookUpTableData = new byte[(int) (lookUpTable.total()*lookUpTable.channels())];
+        for (int i = 0; i < lookUpTable.cols(); i++) {
+            lookUpTableData[i] = saturate(Math.pow(i / 255.0, gammaValue) * 255.0);
+        }
+        lookUpTable.put(0, 0, lookUpTableData);
+        Mat img = new Mat();
+        Core.LUT(matImgSrc, lookUpTable, img);
+        return img;
+    }
+
+    public static Mat contrastAndBrightnessCorrection(Mat matImgSrc, double contrast, int brightness){
+        matImgSrc.convertTo(matImgSrc, -1, contrast, brightness);
+        return matImgSrc;
+    }
+
+    public static byte saturate(double val) {
+        int iVal = (int) Math.round(val);
+        iVal = iVal > 255 ? 255 : (iVal < 0 ? 0 : iVal);
+        return (byte) iVal;
     }
 }
