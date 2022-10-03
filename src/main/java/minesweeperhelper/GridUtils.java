@@ -298,45 +298,6 @@ public class GridUtils {
 
     }
 
-    /*
-     * public static Map<BigDecimal, Map<BigDecimal, List<GridCell>>>
-     * groupByWidthThenByHeight(List<MatOfPoint> contours,
-     * int minimumHorizontalCount, int minimumVerticalCout, BigDecimal
-     * tolleranceInPercent) {
-     * Map<BigDecimal, Map<BigDecimal, List<GridCell>>> map = new HashMap<>();
-     * // map by width
-     * Map<BigDecimal, List<GridCell>> mapByWidth =
-     * convertToGridCells(GroupingBy.approximate(contours,
-     * p -> {
-     * Rect rect = Imgproc.boundingRect(p);
-     * return rect.width;
-     * },
-     * tolleranceInPercent));
-     * 
-     * List<Map.Entry<BigDecimal, List<GridCell>>> filteredByWidth =
-     * mapByWidth.entrySet().stream()
-     * .filter(p -> p.getValue().size() >= minimumHorizontalCount *
-     * minimumVerticalCout)
-     * .collect(Collectors.toList());
-     * 
-     * for (Map.Entry<BigDecimal, List<GridCell>> listByWidth : filteredByWidth) {
-     * // map by height
-     * Map<BigDecimal, List<GridCell>> mapByHeight =
-     * GroupingBy.approximate(listByWidth.getValue(),
-     * p -> p.getRect().height,
-     * tolleranceInPercent);
-     * Map<BigDecimal, List<GridCell>> filteredByHeight =
-     * mapByHeight.entrySet().stream()
-     * .filter(p -> p.getValue().size() >= minimumHorizontalCount *
-     * minimumVerticalCout)
-     * .collect(Collectors.toMap(p -> p.getKey(), v -> v.getValue()));
-     * 
-     * map.put(listByWidth.getKey(), filteredByHeight);
-     * }
-     * return map;
-     * }
-     */
-
     public static Map<BigDecimal, Map<BigDecimal, ListReactArea>> groupByWidthThenByHeight(Mat screenShot,
             List<ContourArea> contours,
             int minimumHorizontalCount, int minimumVerticalCout, BigDecimal tolleranceInPercent) {
