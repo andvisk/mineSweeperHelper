@@ -305,7 +305,7 @@ public class GridUtils {
         return removeInnerRectangles(mapByWH);
     }
 
-    private static Map<BigDecimal, ListReactArea> groupByInCollecting(List<RectArea> rectAreaList,
+    public static Map<BigDecimal, ListReactArea> groupByInCollecting(List<RectArea> rectAreaList,
             Function<RectArea, BigDecimal> funcGetDimensionBy,
             Function<RectArea, BigDecimal> funcGetDimensionByDecreased) {
         Map<BigDecimal, ListReactArea> mapByDimension = rectAreaList.stream()
@@ -364,20 +364,6 @@ public class GridUtils {
             }
         }
         return mapByWH;
-    }
-
-    private static Map<BigDecimal, List<GridCell>> convertToGridCells(Map<BigDecimal, List<MatOfPoint>> map) {
-        Map<BigDecimal, List<GridCell>> mapR = map.entrySet().stream()
-                .collect(Collectors.toMap(k -> k.getKey(),
-                        v -> {
-                            List<GridCell> list = v.getValue().stream().map(p -> {
-                                Rect rect = Imgproc.boundingRect(p);
-                                return new GridCell(rect);
-                            }).collect(Collectors.toList());
-                            return list;
-                        }));
-        return mapR;
-
     }
 
     /*
@@ -491,25 +477,5 @@ public class GridUtils {
             return new ArrayList<>();
         }
     }
-
-    private List<GridCell> getNeighbourCells(List<GridCell> list, GridCell cell) {
-        return list.stream().filter(
-                p -> (p.getX() - 1 == cell.getX() && p.getY() - 1 == cell.getY()) ||
-                        (p.getX() == cell.getX() && p.getY() - 1 == cell.getY()) ||
-                        (p.getX() + 1 == cell.getX() && p.getY() - 1 == cell.getY()) ||
-                        (p.getX() + 1 == cell.getX() && p.getY() == cell.getY()) ||
-                        (p.getX() + 1 == cell.getX() && p.getY() + 1 == cell.getY()) ||
-                        (p.getX() == cell.getX() && p.getY() + 1 == cell.getY()) ||
-                        (p.getX() - 1 == cell.getX() && p.getY() + 1 == cell.getY()) ||
-                        (p.getX() - 1 == cell.getX() && p.getY() == cell.getY()))
-                .collect(Collectors.toList());
-    }
-
-    /*
-     * public <T,N,K,L> Map<T,List<N>> removeByCondition(Map<T,List<N>> list,
-     * Function<K, L> conditionToRemove){
-     * 
-     * }
-     */
 
 }
