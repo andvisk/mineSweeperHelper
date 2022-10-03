@@ -78,4 +78,13 @@ public class ImageUtils {
         return mat;
     }
 
+    static BufferedImage Mat2BufferedImage(Mat matrix) throws Exception {
+        MatOfByte mob = new MatOfByte();
+        Imgcodecs.imencode(".jpg", matrix, mob);
+        byte ba[] = mob.toArray();
+    
+        BufferedImage bi = ImageIO.read(new ByteArrayInputStream(ba));
+        return bi;
+    }
+
 }
