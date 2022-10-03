@@ -35,7 +35,7 @@ public class GridUtils {
 
         Map<BigDecimal, Map<BigDecimal, List<Grid>>> mapGridsByWidthAndHeight = new HashMap<>();
 
-        Mat screenShotGamaCorr = ImageProcessing.gammaCorrection(screenShot, 4.5);
+        Mat screenShotGamaCorr = ImageUtils.gammaCorrection(screenShot, 4.5);
 
         Mat blueColors = ImageProcessing.detectColor(screenShotGamaCorr, new HsvBlue());
         Mat yellowColors = ImageProcessing.detectColor(screenShot, new HsvYellow());
@@ -441,7 +441,7 @@ public class GridUtils {
             Function<RectArea, BigDecimal> functionPosition, Function<RectArea, BigDecimal> functionWidthOrHeight,
             int minWidthOrHeightCount, BigDecimal tolleranceInPercent) {
 
-        if (list.size() > minWidthOrHeightCount) {
+        if (list.size() >= minWidthOrHeightCount) {
 
             List<RectArea> listToRemove = new ArrayList<>();
 

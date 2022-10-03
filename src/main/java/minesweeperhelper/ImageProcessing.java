@@ -9,7 +9,6 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencv.core.Core;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
@@ -167,71 +166,6 @@ public class ImageProcessing {
         return listBoards;
     }
 
-    private List<MineSweeperGridCell> findCells(Mat srcImage) {
-        List<MineSweeperGridCell> list = new ArrayList<>();
-
-        int machMethod = Imgproc.TM_CCOEFF_NORMED;
-
-        Mat srcForOutput = srcImage.clone();
-
-        for (int i = 10; i >= 0; i--) {
-
-            List<Rect> numbersLocations = new ArrayList<>();
-
-            Mat numberImage = Imgcodecs.imread("src/main/resources/" + i + ".png");
-
-            Imgproc.cvtColor(numberImage, numberImage, Imgproc.COLOR_BGR2BGRA);
-
-            Mat outputImage = new Mat();
-            Imgproc.matchTemplate(srcImage, numberImage, outputImage, machMethod);
-
-            logger.debug("match finish for " + i);
-
-            Core.MinMaxLocResult mmr = null;
-
-            while (true) {
-                mmr = Core.minMaxLoc(outputImage);
-                if (mmr.maxVal >= 0.8) {
-                    Rect rect = new Rect(mmr.maxLoc,
-                            new Point(mmr.maxLoc.x + numberImage.cols(), mmr.maxLoc.y + numberImage.rows()));
-                    numbersLocations.add(rect);
-
-                    Imgproc.rectangle(srcForOutput, mmr.maxLoc,
-                            new Point(mmr.maxLoc.x + numberImage.cols(), mmr.maxLoc.y + numberImage.rows()),
-                            new Scalar(0, 255, 0, 255));
-
-                    Imgproc.circle(outputImage, new Point(mmr.maxLoc.x, mmr.maxLoc.y),
-                            (numberImage.width() + numberImage.height()) / 4,
-                            new Scalar(0, 0, 0), -1);
-
-                    CellTypeEnum cellTypeEnum = null;
-
-                    if (i > 0 && i < 9)
-                        cellTypeEnum = CellTypeEnum.NUMBER;
-                    if (i == 0)
-                        cellTypeEnum = CellTypeEnum.EMPTY;
-                    if (i == 9)
-                        cellTypeEnum = CellTypeEnum.FLAG;
-                    if (i == 10)
-                        cellTypeEnum = CellTypeEnum.UNCHECKED;
-
-                    MineSweeperGridCell gridCell = new MineSweeperGridCell(cellTypeEnum, rect,
-                            (i >= 0 && i < 9) ? i : -1);
-
-                    list.add(gridCell);
-
-                } else {
-                    break;
-                }
-            }
-
-            logger.debug(i + " " + numbersLocations.size());
-
-        }
-
-        return list;
-    }
-
     public static Mat detectColor(Mat mat, HsvColor color) {
 
         Mat hsv = new Mat();
@@ -249,26 +183,4 @@ public class ImageProcessing {
         return dest2gray;
     }
 
-    public static Mat gammaCorrection(Mat matImgSrc, double gammaValue){
-        Mat lookUpTable = new Mat(1, 256, CvType.CV_8U);
-        byte[] lookUpTableData = new byte[(int) (lookUpTable.total()*lookUpTable.channels())];
-        for (int i = 0; i < lookUpTable.cols(); i++) {
-            lookUpTableData[i] = saturate(Math.pow(i / 255.0, gammaValue) * 255.0);
-        }
-        lookUpTable.put(0, 0, lookUpTableData);
-        Mat img = new Mat();
-        Core.LUT(matImgSrc, lookUpTable, img);
-        return img;
-    }
-
-    public static Mat contrastAndBrightnessCorrection(Mat matImgSrc, double contrast, int brightness){
-        matImgSrc.convertTo(matImgSrc, -1, contrast, brightness);
-        return matImgSrc;
-    }
-
-    public static byte saturate(double val) {
-        int iVal = (int) Math.round(val);
-        iVal = iVal > 255 ? 255 : (iVal < 0 ? 0 : iVal);
-        return (byte) iVal;
-    }
 }
