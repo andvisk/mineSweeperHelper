@@ -1,14 +1,11 @@
 package minesweeperhelper;
 
 import javafx.geometry.Bounds;
-import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.image.WritableImage;
-import javafx.scene.input.MouseButton;
 import javafx.scene.robot.Robot;
 import javafx.stage.Screen;
 
-import java.awt.image.BufferedImage;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;

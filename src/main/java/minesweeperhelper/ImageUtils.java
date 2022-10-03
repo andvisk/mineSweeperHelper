@@ -8,6 +8,7 @@ import java.nio.ByteBuffer;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
@@ -78,13 +79,37 @@ public class ImageUtils {
         return mat;
     }
 
-    static BufferedImage Mat2BufferedImage(Mat matrix) throws Exception {
-        MatOfByte mob = new MatOfByte();
-        Imgcodecs.imencode(".jpg", matrix, mob);
-        byte ba[] = mob.toArray();
-    
-        BufferedImage bi = ImageIO.read(new ByteArrayInputStream(ba));
-        return bi;
+    public static byte[] Mat2Bytes(Mat mat){
+        byte[] b = new byte[mat.channels() * mat.cols() * mat.rows()];
+        mat.data().get(b);
+        return b;
+    }
+
+    public static Mat Bytes2Mat(byte[] b){
+        return new Mat(b);
+    }
+
+    public static Mat gammaCorrection(Mat matImgSrc, double gammaValue){
+        Mat lookUpTable = new Mat(1, 256, CvType.CV_8U);
+        byte[] lookUpTableData = new byte[(int) (lookUpTable.total()*lookUpTable.channels())];
+        for (int i = 0; i < lookUpTable.cols(); i++) {
+            lookUpTableData[i] = saturate(Math.pow(i / 255.0, gammaValue) * 255.0);
+        }
+        lookUpTable.put(0, 0, lookUpTableData);
+        Mat img = new Mat();
+        Core.LUT(matImgSrc, lookUpTable, img);
+        return img;
+    }
+
+    public static Mat contrastAndBrightnessCorrection(Mat matImgSrc, double contrast, int brightness){
+        matImgSrc.convertTo(matImgSrc, -1, contrast, brightness);
+        return matImgSrc;
+    }
+
+    public static byte saturate(double val) {
+        int iVal = (int) Math.round(val);
+        iVal = iVal > 255 ? 255 : (iVal < 0 ? 0 : iVal);
+        return (byte) iVal;
     }
 
 }

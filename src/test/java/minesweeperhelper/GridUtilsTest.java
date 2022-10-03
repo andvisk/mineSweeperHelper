@@ -75,7 +75,7 @@ public class GridUtilsTest {
     }
 
     @Test
-    void removeSquaresToConformMinWidthAndHeight() {
+    void removeSquaresToConformMinWidthAndHeight_emptyRes() {
         List listX = getMappedByX();
         Map<BigDecimal, ListReactArea> mapByX = (Map<BigDecimal, ListReactArea>) listX.get(0);
         List<UUID> listIdsToRemove = (List<UUID>) listX.get(1);
@@ -92,8 +92,21 @@ public class GridUtilsTest {
         assertEquals(0, value.get(0).size());
         assertEquals(0, value.get(1).size());
 
+    }
+
+    @Test
+    void removeSquaresToConformMinWidthAndHeight_fullRes() {
+        List listX = getMappedByX();
+        Map<BigDecimal, ListReactArea> mapByX = (Map<BigDecimal, ListReactArea>) listX.get(0);
+        List<UUID> listIdsToRemove = (List<UUID>) listX.get(1);
+
+        List listY = getMappedByY(mapByX, listIdsToRemove);
+        mapByX = (Map<BigDecimal, ListReactArea>) listY.get(0);
+        Map<BigDecimal, ListReactArea> mapByY = (Map<BigDecimal, ListReactArea>) listY.get(1);
+        listIdsToRemove = (List<UUID>) listY.get(2);
+
         // expecting grid size 10x10
-        value = GridUtils.removeSquaresToConformMinWidthAndHeight(mapByX,
+        List<Map<BigDecimal, ListReactArea>> value = GridUtils.removeSquaresToConformMinWidthAndHeight(mapByX,
                 mapByY, 10, 10, tolleranceInPercent);
 
         assertEquals(10, value.get(0).size());
