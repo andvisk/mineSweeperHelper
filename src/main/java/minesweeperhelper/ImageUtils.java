@@ -79,16 +79,6 @@ public class ImageUtils {
         return mat;
     }
 
-    public static byte[] Mat2Bytes(Mat mat){
-        byte[] b = new byte[mat.channels() * mat.cols() * mat.rows()];
-        mat.data().get(b);
-        return b;
-    }
-
-    public static Mat Bytes2Mat(byte[] b){
-        return new Mat(b);
-    }
-
     public static Mat gammaCorrection(Mat matImgSrc, double gammaValue){
         Mat lookUpTable = new Mat(1, 256, CvType.CV_8U);
         byte[] lookUpTableData = new byte[(int) (lookUpTable.total()*lookUpTable.channels())];
