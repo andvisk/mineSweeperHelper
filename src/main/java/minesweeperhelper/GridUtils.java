@@ -1,5 +1,6 @@
 package minesweeperhelper;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -34,34 +35,42 @@ public class GridUtils {
 
         Map<BigDecimal, Map<BigDecimal, List<Grid>>> mapGridsByWidthAndHeight = new HashMap<>();
 
-        Mat blueColors = ImageProcessing.detectColor(screenShot, new HsvBlue());
+        Mat screenShotGamaCorr = ImageProcessing.gammaCorrection(screenShot, 4.5);
+
+        Mat blueColors = ImageProcessing.detectColor(screenShotGamaCorr, new HsvBlue());
         Mat yellowColors = ImageProcessing.detectColor(screenShot, new HsvYellow());
         Mat whiteColors = ImageProcessing.detectColor(screenShot, new HsvWhite());
 
-        /* Mat grayMat = new Mat();
-        Imgproc.cvtColor(screenShot, grayMat, Imgproc.COLOR_BGR2GRAY);
-
-        Mat thresholdMat = new Mat();
-        Imgproc.threshold(grayMat, thresholdMat, ControllerMain.THRESH, 255, Imgproc.THRESH_BINARY); */
+        /*
+         * Mat grayMat = new Mat();
+         * Imgproc.cvtColor(screenShot, grayMat, Imgproc.COLOR_BGR2GRAY);
+         * 
+         * Mat thresholdMat = new Mat();
+         * Imgproc.threshold(grayMat, thresholdMat, ControllerMain.THRESH, 255,
+         * Imgproc.THRESH_BINARY);
+         */
 
         List<ContourArea> contoursAll = new ArrayList<>();
 
         List<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(blueColors, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
-        contoursAll.addAll(contours.stream().map(p->new ContourArea(p, ColorsEnum.BLUE)).toList());
+        contoursAll.addAll(contours.stream().map(p -> new ContourArea(p, ColorsEnum.BLUE)).toList());
 
         contours = new ArrayList<>();
         Imgproc.findContours(yellowColors, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
-        contoursAll.addAll(contours.stream().map(p->new ContourArea(p, ColorsEnum.YELLOW)).toList());
+        contoursAll.addAll(contours.stream().map(p -> new ContourArea(p, ColorsEnum.YELLOW)).toList());
 
         contours = new ArrayList<>();
         Imgproc.findContours(whiteColors, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
-        contoursAll.addAll(contours.stream().map(p->new ContourArea(p, ColorsEnum.WHITE)).toList());
+        contoursAll.addAll(contours.stream().map(p -> new ContourArea(p, ColorsEnum.WHITE)).toList());
 
         Map<BigDecimal, Map<BigDecimal, ListReactArea>> mapByWidthAndHeight = GridUtils.groupByWidthThenByHeight(
                 screenShot,
                 contoursAll,
                 minGridHorizontalMembers, minGridVerticalMembers, gridPositionAndSizeTolleranceInPercent);
+
+        if (App.debug)
+            printContBoundBoxs(screenShot, mapByWidthAndHeight);
 
         for (Map.Entry<BigDecimal, Map<BigDecimal, ListReactArea>> entry : mapByWidthAndHeight.entrySet()) {
             BigDecimal width = entry.getKey(); // cell width
@@ -69,13 +78,6 @@ public class GridUtils {
             for (Map.Entry<BigDecimal, ListReactArea> entryByHeight : mapByHeight.entrySet()) {
                 BigDecimal height = entryByHeight.getKey(); // cell height
                 List<RectArea> points = entryByHeight.getValue().list;
-
-if(width.compareTo(BigDecimal.valueOf(30).setScale(2,RoundingMode.HALF_EVEN))==0 &&
-height.compareTo(BigDecimal.valueOf(26).setScale(2,RoundingMode.HALF_EVEN))==0
-
-){
-int stop = 0;
-}
 
                 Map<BigDecimal, ListReactArea> mapByX = groupByInCollecting(points, p -> p.x, p -> p.xDecreased);
                 Map<BigDecimal, ListReactArea> mapByY = groupByInCollecting(points, p -> p.y, p -> p.yDecreased);
@@ -107,6 +109,31 @@ int stop = 0;
 
         return mapGridsByWidthAndHeight;
 
+    }
+
+    private static void printContBoundBoxs(Mat screenShot,
+            Map<BigDecimal, Map<BigDecimal, ListReactArea>> mapByWidthAndHeight) {
+        String dirName = "contours";
+        File dir = new File(dirName);
+        if (!dir.exists())
+            dir.mkdirs();
+        else {
+            Arrays.asList(dir.listFiles()).stream().forEach(p -> p.delete());
+        }
+
+        for (Map.Entry<BigDecimal, Map<BigDecimal, ListReactArea>> entry : mapByWidthAndHeight.entrySet()) {
+            BigDecimal width = entry.getKey();
+            Map<BigDecimal, ListReactArea> mapByHeight = entry.getValue();
+            mapByHeight.entrySet().stream().forEach(
+                    h -> {
+                        Mat img = screenShot.clone();
+                        h.getValue().list.stream().forEach(p -> {
+                            GridUtils.drawLocation(img, p, new Scalar(0, 0, 255));
+                        });
+                        Imgcodecs.imwrite(dirName + "/con_" + width.toString() + "_" + h.getKey().toString() + ".jpg",
+                                img);
+                    });
+        }
     }
 
     private static List<Grid> collectGridsFromCells(Map<BigDecimal, ListReactArea> mapByX,
@@ -323,7 +350,7 @@ int stop = 0;
                 .collect(Collectors.toMap(k -> k.getKey(),
                         v -> groupByInCollecting(v.getValue().list, p -> p.height, p -> p.heightDecreased)));
 
-        return mapByWH;
+        return removeInnerRectangles(mapByWH);
     }
 
     private static Map<BigDecimal, ListReactArea> groupByInCollecting(List<RectArea> rectAreaList,
@@ -361,6 +388,30 @@ int stop = 0;
         mapByDimension = mapByDimension.entrySet().stream().filter(p -> p.getValue().list.size() > 0)
                 .collect(Collectors.toMap(k -> k.getKey(), v -> v.getValue()));
         return mapByDimension;
+    }
+
+    private static Map<BigDecimal, Map<BigDecimal, ListReactArea>> removeInnerRectangles(
+            Map<BigDecimal, Map<BigDecimal, ListReactArea>> mapByWH) {
+        for (Map.Entry<BigDecimal, Map<BigDecimal, ListReactArea>> entryW : mapByWH.entrySet()) {
+            for (Map.Entry<BigDecimal, ListReactArea> entryH : entryW.getValue().entrySet()) {
+                Iterator<RectArea> iter = entryH.getValue().list.iterator();
+                while (iter.hasNext()) {
+                    RectArea rectArea = iter.next();
+                    boolean remove = entryH.getValue().list.stream().filter(p -> {
+                        return p.rectangle.x < rectArea.rectangle.x &&
+                                p.rectangle.y < rectArea.rectangle.y &&
+                                rectArea.rectangle.x < p.rectangle.x + p.rectangle.width &&
+                                rectArea.rectangle.y < p.rectangle.y + p.rectangle.height &&
+                                p.rectangle.width > rectArea.rectangle.width &&
+                                p.rectangle.height > rectArea.rectangle.height &&
+                                p.id.compareTo(rectArea.id) != 0;
+                    }).findAny().isPresent();
+                    if (remove)
+                        iter.remove();
+                }
+            }
+        }
+        return mapByWH;
     }
 
     private static Map<BigDecimal, List<GridCell>> convertToGridCells(Map<BigDecimal, List<MatOfPoint>> map) {
@@ -466,7 +517,7 @@ int stop = 0;
 
                 if (prevWidthOrHeight.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN)
                         .multiply(tolleranceInPercent)
-                        .compareTo(prevPos.add(prevWidthOrHeight).subtract(thisPos).abs()) >= 0 ) {
+                        .compareTo(prevPos.add(prevWidthOrHeight).subtract(thisPos).abs()) >= 0) {
                     ++counter;
                 } else {
                     if (counter < minWidthOrHeightCount)
