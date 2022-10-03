@@ -2,7 +2,6 @@ package minesweeperhelper;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -27,7 +26,8 @@ public class GridUtilsTest {
     private int gap = 2;
     private int minGridMembersHor = 9;
     private int minGridMembersVer = 9;
-    private BigDecimal tolleranceInPercent = BigDecimal.valueOf(25).setScale(2, RoundingMode.HALF_EVEN);
+    private BigDecimal tolleranceInPercent = BigDecimal.valueOf(65).setScale(2, RoundingMode.HALF_EVEN);
+    private int tolleranceInPercentInt = tolleranceInPercent.intValue();
 
     @Test
     void getIntervals() {
@@ -58,13 +58,13 @@ public class GridUtilsTest {
     void removeCellsToConformSequency() {
 
         List listTest = getThreeSequancesWithinList(tolleranceInPercent);
-        List<GridCell> listByX = (List<GridCell>) listTest.get(0);
+        List<RectArea> listByX = (List<RectArea>) listTest.get(0);
         List<UUID> listIdsToRemove = (List<UUID>) listTest.get(1);
 
-        List<GridCell> list = GridUtils.removeCellsToConformSequency(listByX, p -> p.getRect().x,
-                p -> p.getRect().width, minGridMembersHor, tolleranceInPercent);
+        List<RectArea> list = GridUtils.removeCellsToConformSequency(listByX, p -> p.y,
+                p -> p.height, minGridMembersHor, tolleranceInPercent);
 
-        Set<UUID> allCellsByX = list.stream().map(p -> p.getId())
+        Set<UUID> allCellsByX = list.stream().map(p -> p.id)
                 .collect(Collectors.toSet());
 
         Set<UUID> allCellsToBeRemoved = listIdsToRemove.stream().collect(Collectors.toSet());
@@ -77,16 +77,16 @@ public class GridUtilsTest {
     @Test
     void removeSquaresToConformMinWidthAndHeight() {
         List listX = getMappedByX();
-        Map<BigDecimal, List<GridCell>> mapByX = (Map<BigDecimal, List<GridCell>>) listX.get(0);
+        Map<BigDecimal, ListReactArea> mapByX = (Map<BigDecimal, ListReactArea>) listX.get(0);
         List<UUID> listIdsToRemove = (List<UUID>) listX.get(1);
 
         List listY = getMappedByY(mapByX, listIdsToRemove);
-        mapByX = (Map<BigDecimal, List<GridCell>>) listY.get(0);
-        Map<BigDecimal, List<GridCell>> mapByY = (Map<BigDecimal, List<GridCell>>) listY.get(1);
+        mapByX = (Map<BigDecimal, ListReactArea>) listY.get(0);
+        Map<BigDecimal, ListReactArea> mapByY = (Map<BigDecimal, ListReactArea>) listY.get(1);
         listIdsToRemove = (List<UUID>) listY.get(2);
 
         // seting min width and height higher than input data size
-        List<Map<BigDecimal, List<GridCell>>> value = GridUtils.removeSquaresToConformMinWidthAndHeight(mapByX,
+        List<Map<BigDecimal, ListReactArea>> value = GridUtils.removeSquaresToConformMinWidthAndHeight(mapByX,
                 mapByY, 11, 11, tolleranceInPercent);
 
         assertEquals(0, value.get(0).size());
@@ -94,14 +94,14 @@ public class GridUtilsTest {
 
         // expecting grid size 10x10
         value = GridUtils.removeSquaresToConformMinWidthAndHeight(mapByX,
-                mapByY, 5, 5, tolleranceInPercent);
+                mapByY, 10, 10, tolleranceInPercent);
 
         assertEquals(10, value.get(0).size());
         assertEquals(10, value.get(1).size());
 
-        Set<UUID> allCellsByX = value.get(0).entrySet().stream().flatMap(p -> p.getValue().stream()).map(p -> p.getId())
+        Set<UUID> allCellsByX = value.get(0).entrySet().stream().flatMap(p -> p.getValue().list.stream()).map(p -> p.id)
                 .collect(Collectors.toSet());
-        Set<UUID> allCellsByY = value.get(1).entrySet().stream().flatMap(p -> p.getValue().stream()).map(p -> p.getId())
+        Set<UUID> allCellsByY = value.get(1).entrySet().stream().flatMap(p -> p.getValue().list.stream()).map(p -> p.id)
                 .collect(Collectors.toSet());
         Set<UUID> allCellsToBeRemoved = listIdsToRemove.stream().collect(Collectors.toSet());
 
@@ -113,6 +113,45 @@ public class GridUtilsTest {
         intersectionY.retainAll(allCellsToBeRemoved);
         assertEquals(0, intersectionY.size());
 
+    }
+
+    @Test
+    void groupByInCollectingTest() {
+        int hCount = 10;
+        int vCount = 10;
+        List<RectArea> list = collectList(hCount, vCount);
+        Map<BigDecimal, ListReactArea> map = GridUtils.groupByInCollecting(list, p -> p.x,
+                p -> p.xDecreased);
+
+        assertEquals(hCount, map.keySet().size());
+
+        for (BigDecimal key : map.keySet()) {
+            assertEquals(vCount, map.get(key).list.size());
+        }
+
+    }
+
+    private List<RectArea> collectList(int hCount, int vCount) {
+        List<RectArea> list = new ArrayList<>();
+        int x = 10;
+        int y = 15;
+
+        int width = 10, height = 10;
+
+        int gapH = (int) Math.round((double) width / 100 * tolleranceInPercentInt - 1);
+        int gapV = (int) Math.round((double) height / 100 * tolleranceInPercentInt - 1);
+
+        for (int i = 0; i < hCount; i++) {
+            for (int k = 0; k < vCount; k++) {
+                Rect rect = new Rect(x, y, width, height);
+                RectArea cell = new RectArea(rect,tolleranceInPercent);
+                list.add(cell);
+                y += height + gapV;
+            }
+            x += width + gapH;
+            y = 15;
+        }
+        return list;
     }
 
     /*
@@ -172,9 +211,9 @@ public class GridUtilsTest {
      * index 0 - List<GridCell> list with 50 non removing members
      * index 1 - List<UUID> 21 GridCells ids to be removed
      */
-    private List<GridCell> getThreeSequancesWithinList(BigDecimal tolleranceInPercent) {
-        List<GridCell> listCreate = new ArrayList<>();
-        List<GridCell> listCellsToRemove = new ArrayList<>();
+    private List<RectArea> getThreeSequancesWithinList(BigDecimal tolleranceInPercent) {
+        List<RectArea> listCreate = new ArrayList<>();
+        List<RectArea> listCellsToRemove = new ArrayList<>();
 
         List listRet = Arrays.asList(listCreate, listCellsToRemove);
 
@@ -182,7 +221,7 @@ public class GridUtilsTest {
         BigDecimal y = BigDecimal.valueOf(20);
         for (int i = 1; i <= 50; i++) {
             Rect rect = new Rect(new Point(x.intValue(), y.intValue()), new Size(width, height));
-            GridCell gridCell = new GridCell(rect);
+            RectArea gridCell = new RectArea(rect, tolleranceInPercent);
             listCreate.add(gridCell);
             if (i == 13 || i == 24 || i == 36) {
                 for (int j = 1; j <= 7; j++) {
@@ -195,7 +234,7 @@ public class GridUtilsTest {
                             .add(BigDecimal.valueOf(gap));
 
                     rect = new Rect(new Point(x.intValue(), y.intValue()), new Size(width, height));
-                    gridCell = new GridCell(rect);
+                    gridCell = new RectArea(rect, tolleranceInPercent);
                     listCreate.add(gridCell);
                     listCellsToRemove.add(gridCell);
                 }
@@ -207,32 +246,32 @@ public class GridUtilsTest {
     }
 
     /*
-     * index 0 - Map<BigDecimal, List<GridCell>> list with 10 non removing members
+     * index 0 - Map<BigDecimal, ListReactArea> list with 10 non removing members
      * index 1 - List<UUID> GridCells ids to be removed
      */
     private List getMappedByX() {
-        Map<BigDecimal, List<GridCell>> map = new HashMap<>();
+        Map<BigDecimal, ListReactArea> map = new HashMap<>();
         List<UUID> listId = new ArrayList();
 
         List listRet = Arrays.asList(map, listId);
 
         int x = 20;
         for (int i = 1; i <= 10; i++) {
-            List<GridCell> list = new ArrayList<>();
+            List<RectArea> list = new ArrayList<>();
             int y = 20;
             for (int j = 1; j <= 10; j++) {
                 Rect rect = new Rect(new Point(x, y), new Size(width, height));
-                GridCell gridCell = new GridCell(rect);
+                RectArea gridCell = new RectArea(rect, tolleranceInPercent);
                 list.add(gridCell);
                 y += height + gap;
             }
-            if (i == 3 || i == 6 || i == 8) {
+            /* if (i == 3 || i == 6 || i == 8) {
                 Rect rect = new Rect(new Point(x, y + height + gap), new Size(width, height));
-                GridCell gridCell = new GridCell(rect);
+                RectArea gridCell = new RectArea(rect, tolleranceInPercent);
                 list.add(gridCell);
-                listId.add(gridCell.getId());
-            }
-            map.put(BigDecimal.valueOf(x), list);
+                listId.add(gridCell.id);
+            } */
+            map.put(BigDecimal.valueOf(x), new ListReactArea(list.get(0), list));
             x += width + gap;
         }
 
@@ -240,37 +279,37 @@ public class GridUtilsTest {
     }
 
     /*
-     * index 0 - Map<BigDecimal, List<GridCell>> xs list with 10 non removing
+     * index 0 - Map<BigDecimal, ListReactArea> xs list with 10 non removing
      * members
-     * index 1 - Map<BigDecimal, List<GridCell>> ys list with 10 non removing
+     * index 1 - Map<BigDecimal, ListReactArea> ys list with 10 non removing
      * members
      * index 2 - List<UUID> GridCells ids to be removed
      */
-    private List getMappedByY(Map<BigDecimal, List<GridCell>> mapByX, List<UUID> listUUIDtoRemove) {
+    private List getMappedByY(Map<BigDecimal, ListReactArea> mapByX, List<UUID> listUUIDtoRemove) {
 
-        Map<BigDecimal, List<GridCell>> map = GroupingBy.approximateInArea(
-                mapByX.entrySet().stream().flatMap(p -> p.getValue().stream())
+        Map<BigDecimal, ListReactArea> map = GridUtils.groupByInCollecting(
+                mapByX.entrySet().stream().flatMap(p -> p.getValue().list.stream())
                         .collect(Collectors.toList()),
-                p -> p.getRect().y,
-                p -> p.getRect().height, tolleranceInPercent);
+                p -> p.y,
+                p -> p.yDecreased);
 
         List<BigDecimal> ys = map.keySet().stream().collect(Collectors.toList());
         ys = ys.stream().sorted().collect(Collectors.toList());
-        for (int i = 1; i <= 7; i++) {
+        /* for (int i = 1; i <= 7; i++) {
             if (i == 2 || i == 5 || i == 7) {
 
-                List<GridCell> listByY = map.get(ys.get(i - 1));
-                Integer maxX = listByY.stream().map(p -> p.getRect().x).max((p, l) -> Integer.compare(p, l)).get();
+                List<RectArea> listByY = map.get(ys.get(i - 1)).list;
+                Integer maxX = listByY.stream().map(p -> p.rectangle.x).max((p, l) -> Integer.compare(p, l)).get();
                 BigDecimal y = ys.get(i - 1);
                 Integer x = maxX + width + gap;
                 Rect rect = new Rect(new Point(x, y.intValue()), new Size(width, height));
-                GridCell gridCell = new GridCell(rect);
+                RectArea gridCell = new RectArea(rect, tolleranceInPercent);
                 listByY.add(gridCell);
-                listUUIDtoRemove.add(gridCell.getId());
+                listUUIDtoRemove.add(gridCell.id);
 
-                mapByX.put(BigDecimal.valueOf(x), Arrays.asList(gridCell));
+                mapByX.put(BigDecimal.valueOf(x), new ListReactArea(gridCell, Arrays.asList(gridCell)));
             }
-        }
+        } */
 
         return Arrays.asList(mapByX, map, listUUIDtoRemove);
     }

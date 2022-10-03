@@ -13,4 +13,9 @@ public class ListReactArea {
         list = new ArrayList<>();
     }
 
+    public ListReactArea(RectArea mainMember, List<RectArea>lst){
+        this.mainMember = mainMember;
+        list = lst;
+    }
+
 }
