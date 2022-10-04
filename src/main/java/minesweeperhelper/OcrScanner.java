@@ -4,9 +4,11 @@ import java.io.IOException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.bytedeco.javacpp.BytePointer;
-import org.bytedeco.leptonica.PIX;
-import org.bytedeco.tesseract.TessBaseAPI;
+import org.bytedeco.javacpp.*;
+import org.bytedeco.leptonica.*;
+import org.bytedeco.tesseract.*;
+import static org.bytedeco.leptonica.global.lept.*;
+import static org.bytedeco.tesseract.global.tesseract.*;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
@@ -38,11 +40,19 @@ public class OcrScanner {
             api.SetImage(data, mat.cols(), mat.rows(), mat.channels(), (int) mat.step1());
 
             BytePointer outText = api.GetUTF8Text();
+
+            String text = outText.getString();
+
+            outText.deallocate();
             
-            return outText.getString();
+            return text;
         } catch (IOException e) {
 
         }
         return null;
+    }
+
+    public void destructor(){
+        api.End();
     }
 }
