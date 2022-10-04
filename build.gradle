@@ -52,22 +52,39 @@ sourceSets {
     }
 }
 
-test {
-    useJUnitPlatform()
-    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-        systemProperties['java.library.path'] = 'C:/opencv/build/java/x64' + ";" + "C:/Program_Files/Tesseract_OCR"
-    } else {
-        systemProperties['java.library.path'] = '/usr/local/share/java/opencv4'
-    }   
-}
 
 import org.apache.tools.ant.taskdefs.condition.Os
 
+def opencvPathWindows = 'C:/opencv/build/java/x64'
+def tesseractPathWindows = 'C:/Program_Files/Tesseract_OCR'
+def opencvPathLinux = '/usr/local/share/java/opencv4'
+def tesseractPathLinux = 'C:/Program_Files/Tesseract_OCR'
+
+def tesseractDataDir_windows = tesseractPathWindows + '/tessdata'
+def tesseractDataDir_linux = tesseractPathLinux + '/tessdata'
+
+test {
+    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        systemProperties['java.library.path'] = opencvPathWindows + ";" + tesseractPathWindows
+        systemProperties['tesseractDataDir'] = tesseractDataDir_windows
+    } else {
+        systemProperties['java.library.path'] = opencvPathLinux + ";" + tesseractPathLinux
+        systemProperties['tesseractDataDir'] = tesseractDataDir_linux
+    }   
+
+    filter {
+      includeTest "minesweeperhelper.OcrScannerTest" , "testOcr"
+   }
+    useJUnitPlatform()
+}
+
+
+
 run {
     if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-        systemProperties['java.library.path'] = 'C:/opencv/build/java/x64' + ";" + "C:/Program_Files/Tesseract_OCR"
+        systemProperties['java.library.path'] = opencvPathWindows + ";" + tesseractPathWindows
     } else {
-        systemProperties['java.library.path'] = '/usr/local/share/java/opencv4'
+        systemProperties['java.library.path'] = opencvPathLinux + ";" + tesseractPathLinux
     }    
 }
 
