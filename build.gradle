@@ -58,17 +58,23 @@ import org.apache.tools.ant.taskdefs.condition.Os
 def opencvPathWindows = 'C:/opencv/build/java/x64'
 def tesseractPathWindows = 'C:/Program_Files/Tesseract_OCR'
 def opencvPathLinux = '/usr/local/share/java/opencv4'
-def tesseractPathLinux = 'C:/Program_Files/Tesseract_OCR'
+def tesseractPathLinux = '/usr/local/Cellar/tesseract/5.2.0'
 
 def tesseractDataDir_windows = tesseractPathWindows + '/tessdata'
-def tesseractDataDir_linux = tesseractPathLinux + '/tessdata'
+def tesseractDataDir_linux = tesseractPathLinux + '/share/tessdata'
 
 test {
+
+    filter {
+    //specific test method
+      includeTestsMatching "minesweeperhelper.OcrScannerTest.testOcr"
+    }
+
     if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-        systemProperties['java.library.path'] = opencvPathWindows + ";" + tesseractPathWindows
+        systemProperties['java.library.path'] = opencvPathWindows + ":" + tesseractPathWindows
         systemProperties['tesseractDataDir'] = tesseractDataDir_windows
     } else {
-        systemProperties['java.library.path'] = opencvPathLinux + ";" + tesseractPathLinux
+        systemProperties['java.library.path'] = opencvPathLinux + ":" + tesseractPathLinux
         systemProperties['tesseractDataDir'] = tesseractDataDir_linux
     }   
 
