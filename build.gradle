@@ -58,10 +58,10 @@ import org.apache.tools.ant.taskdefs.condition.Os
 def opencvPathWindows = 'C:/opencv/build/java/x64'
 def tesseractPathWindows = 'C:/Program_Files/Tesseract_OCR'
 def opencvPathLinux = '/usr/local/share/java/opencv4'
-def tesseractPathLinux = '/usr/local/Cellar/tesseract/5.2.0'
+def tesseractPathLinux = '/Users/agnegv/Desktop/andrius/tesseract'
 
 def tesseractDataDir_windows = tesseractPathWindows + '/tessdata'
-def tesseractDataDir_linux = tesseractPathLinux + '/share/tessdata'
+def tesseractDataDir_linux = tesseractPathLinux + '/tessdata'
 
 test {
 
