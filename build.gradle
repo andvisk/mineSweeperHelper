@@ -72,19 +72,16 @@ test {
         systemProperties['tesseractDataDir'] = tesseractDataDir_linux
     }   
 
-    filter {
-      includeTest "minesweeperhelper.OcrScannerTest" , "testOcr"
-   }
     useJUnitPlatform()
 }
-
-
 
 run {
     if (Os.isFamily(Os.FAMILY_WINDOWS)) {
         systemProperties['java.library.path'] = opencvPathWindows + ";" + tesseractPathWindows
+        systemProperties['tesseractDataDir'] = tesseractDataDir_windows
     } else {
         systemProperties['java.library.path'] = opencvPathLinux + ";" + tesseractPathLinux
-    }    
+        systemProperties['tesseractDataDir'] = tesseractDataDir_linux
+    }       
 }
 
