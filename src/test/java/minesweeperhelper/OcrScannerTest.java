@@ -1,5 +1,7 @@
 package minesweeperhelper;
 
+import java.time.LocalTime;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.opencv.core.Core;
@@ -15,7 +17,14 @@ public class OcrScannerTest {
 
         OcrScanner ocrScanner = new OcrScanner(System.getProperty("tesseractDataDir"));
         Mat patternImage = Imgcodecs.imread("src/main/resources/" + 1 + ".png");
+
+
+        LocalTime start = LocalTime.now();
         String text = ocrScanner.getTextFromImage(patternImage);
+        LocalTime stop = LocalTime.now();
+
+        int time = stop.getNano() - start.getNano();
+
         ocrScanner.destructor();
 
         Assertions.assertNotNull(text);
