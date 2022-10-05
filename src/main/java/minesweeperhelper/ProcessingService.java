@@ -49,7 +49,7 @@ public class ProcessingService extends Service<Mat> {
                     Imgcodecs.imwrite("all_grids.jpg", screenShotCpy);
                 }
 
-                return HelpScreen.process(screenShot, whiteColors, mapGridsByWidthAndHeight, gridPositionAndSizeTolleranceInPercent);
+                return HelpScreen.process(screenShot, mapGridsByWidthAndHeight, gridPositionAndSizeTolleranceInPercent);
             }
 
         };

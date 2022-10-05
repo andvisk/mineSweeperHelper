@@ -6,8 +6,9 @@ public class MineSweeperGridCell extends RectArea {
     private CellTypeEnum cellTypeEnum;
     private int number = -1;
 
-    public MineSweeperGridCell(CellTypeEnum cellTypeEnum, Rect rect, int number) {
+    public MineSweeperGridCell(CellTypeEnum cellTypeEnum, Rect rect, int number, ColorsEnum colorsEnum) {
         super.rectangle = rect;
+        super.color = colorsEnum;
         this.cellTypeEnum = cellTypeEnum;
         this.number = number;
     }

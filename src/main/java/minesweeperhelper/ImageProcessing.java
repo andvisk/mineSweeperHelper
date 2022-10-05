@@ -10,11 +10,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Rect;
-import org.opencv.core.Scalar;
-import org.opencv.core.Size;
-import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 public class ImageProcessing {
@@ -29,11 +24,6 @@ public class ImageProcessing {
 
                 OcrScanner ocrScanner = new OcrScanner(System.getProperty("tesseractDataDir"));
 
-                Mat ocrImage = srcImg.clone();
-                Imgproc.cvtColor(ocrImage, ocrImage, Imgproc.COLOR_BGR2GRAY);
-                Imgproc.GaussianBlur(ocrImage, ocrImage, new Size(3, 3), 0);
-                Imgproc.threshold(ocrImage, ocrImage, 0, 255, Imgproc.THRESH_OTSU);
-
                 for (BigDecimal width : mapGridsByWidthAndHeight.keySet()) {
                         for (BigDecimal height : mapGridsByWidthAndHeight.get(width).keySet()) {
                                 for (Grid grid : mapGridsByWidthAndHeight.get(width).get(height)) {
@@ -41,115 +31,34 @@ public class ImageProcessing {
                                         GridLocation gridLocation = new GridLocation(grid.getGrid());
                                         List<MineSweeperGridCell> boardCells = new ArrayList<>();
 
-                                        Rect rectCrop = new Rect(gridLocation.minX, gridLocation.minY,
-                                                        gridLocation.maxX + gridLocation.cellWidth - gridLocation.minX,
-                                                        gridLocation.maxY + gridLocation.cellHeight
-                                                                        - gridLocation.minY);
+                                        for (RectArea rectArea : grid.getGridCells()) {
 
-                                        for (int i = 0; i <= grid.getGrid().length; i++) {
-                                                for (int k = 0; k <= grid.getGrid()[i].length; k++) {
-                                                        RectArea rectArea = grid.getGrid()[i][k];
-                                                        if (rectArea.color.equals(ColorsEnum.WHITE)) {
-                                                                Mat imageToOcr = ocrImage.submat(rectArea.rectangle);
-                                                                String text = ocrScanner.getTextFromImage(imageToOcr);
+                                                CellTypeEnum cellTypeEnum = null;
 
-                                                                if(text != null && text.length() > 0){
-
-                                                                }else{
-                                                                        rectArea.
-                                                                }
-                                                        }
-                                                }
-                                        }
-
-                                        Mat srcForOutput = srcImg.clone();
-
-                                        for (int i = 10; i >= 0; i--) {
-
-                                                Mat resizedPatternImage = new Mat();
-                                                double scaleWidthFasctor = width.doubleValue() / patternImageWidth;
-                                                Imgproc.resize(numberImgInit, resizedPatternImage, new Size(),
-                                                                scaleWidthFasctor,
-                                                                scaleWidthFasctor,
-                                                                Imgproc.INTER_AREA);
-
-                                                Imgproc.cvtColor(resizedPatternImage, resizedPatternImage,
-                                                                Imgproc.COLOR_BGR2BGRA);
-
-                                                Mat contoursMat = new Mat();
-                                                Imgproc.matchTemplate(imageToMatchTemplate, resizedPatternImage,
-                                                                contoursMat, machMethod);
-
-                                                logger.debug("match finish for " + i);
-
-                                                Core.MinMaxLocResult mmr = null;
-
-                                                while (true) {
-                                                        mmr = Core.minMaxLoc(contoursMat);
-                                                        if (mmr.maxVal >= 0.65) {
-                                                                Rect rect = new Rect(
-                                                                                new Point(mmr.maxLoc.x
-                                                                                                + gridLocation.minX,
-                                                                                                mmr.maxLoc.y + gridLocation.minY),
-                                                                                new Point(mmr.maxLoc.x
-                                                                                                + resizedPatternImage
-                                                                                                                .cols()
-                                                                                                + gridLocation.minX,
-                                                                                                mmr.maxLoc.y + resizedPatternImage
-                                                                                                                .rows()
-                                                                                                                + gridLocation.minY));
-                                                                numbersLocations.add(rect);
-
-                                                                Imgproc.rectangle(srcForOutput,
-                                                                                new Point(mmr.maxLoc.x
-                                                                                                + gridLocation.minX,
-                                                                                                mmr.maxLoc.y + gridLocation.minY),
-                                                                                new Point(mmr.maxLoc.x
-                                                                                                + resizedPatternImage
-                                                                                                                .cols()
-                                                                                                + gridLocation.minX,
-                                                                                                mmr.maxLoc.y + resizedPatternImage
-                                                                                                                .rows()
-                                                                                                                + gridLocation.minY),
-                                                                                new Scalar(0, 255, 0, 255));
-
-                                                                Imgproc.circle(contoursMat,
-                                                                                new Point(mmr.maxLoc.x, mmr.maxLoc.y),
-                                                                                (resizedPatternImage.width()
-                                                                                                + resizedPatternImage
-                                                                                                                .height())
-                                                                                                / 4,
-                                                                                new Scalar(0, 0, 0), -1);
-
-                                                                CellTypeEnum cellTypeEnum = null;
-
-                                                                if (i > 0 && i < 9)
-                                                                        cellTypeEnum = CellTypeEnum.NUMBER;
-                                                                if (i == 0)
-                                                                        cellTypeEnum = CellTypeEnum.EMPTY;
-                                                                if (i == 9)
-                                                                        cellTypeEnum = CellTypeEnum.FLAG;
-                                                                if (i == 10)
-                                                                        cellTypeEnum = CellTypeEnum.UNCHECKED;
-
-                                                                MineSweeperGridCell gridCell = new MineSweeperGridCell(
-                                                                                cellTypeEnum, rect,
-                                                                                (i >= 0 && i < 9) ? i : -1);
-                                                                boardCells.add(gridCell);
-
-                                                        } else {
+                                                switch (rectArea.color) {
+                                                        case BLUE:
+                                                                cellTypeEnum = CellTypeEnum.UNCHECKED;
                                                                 break;
-                                                        }
+                                                        case YELLOW:
+                                                                cellTypeEnum = CellTypeEnum.FLAG;
+                                                                break;
+                                                        case WHITE:
+                                                                cellTypeEnum = CellTypeEnum.NUMBER;
+                                                                break;
+
                                                 }
 
-                                                logger.debug(i + " " + numbersLocations.size());
+                                                MineSweeperGridCell gridCell = new MineSweeperGridCell(
+                                                                cellTypeEnum, rectArea.rectangle, 0, rectArea.color);
 
+                                                boardCells.add(gridCell);
                                         }
 
                                         List<RectArea> gridCells = grid.getGridCells();
 
                                         if (boardCells.size() == gridCells.size()) {
                                                 for (MineSweeperGridCell boardCell : boardCells) {
+
                                                         RectArea gridCell = gridCells.stream().filter(
                                                                         p -> {
                                                                                 BigDecimal bdX = BigDecimal
@@ -212,6 +121,20 @@ public class ImageProcessing {
                                                 Board board = new Board(maxXpos + 1, maxYpos + 1, gridLocation);
 
                                                 for (MineSweeperGridCell boardCell : boardCells) {
+
+                                                        if (boardCell.color.equals(ColorsEnum.WHITE)) {
+                                                                Mat imageToOcr = srcImg.submat(boardCell.rectangle);
+                                                                String text = ocrScanner.getTextFromImage(imageToOcr);
+
+                                                                if (text != null && text.length() > 0) {
+                                                                        boardCell.setNumber(Integer.parseInt(text));
+                                                                        boardCell.setCellTypeEnum(CellTypeEnum.NUMBER);
+                                                                } else {
+                                                                        boardCell.setNumber(0);
+                                                                        boardCell.setCellTypeEnum(CellTypeEnum.EMPTY);
+                                                                }
+                                                        }
+
                                                         board.setCell(boardCell.positionInGridX,
                                                                         boardCell.positionInGridY, boardCell);
                                                 }
@@ -221,6 +144,7 @@ public class ImageProcessing {
                                 }
                         }
                 }
+                ocrScanner.destructor();
                 return listBoards;
         }
 
