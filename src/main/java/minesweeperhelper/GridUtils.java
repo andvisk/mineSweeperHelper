@@ -41,15 +41,6 @@ public class GridUtils {
         Mat yellowColors = ImageProcessing.detectColor(screenShot, new HsvYellow());
         Mat whiteColors = ImageProcessing.detectColor(screenShot, new HsvWhite());
 
-        /*
-         * Mat grayMat = new Mat();
-         * Imgproc.cvtColor(screenShot, grayMat, Imgproc.COLOR_BGR2GRAY);
-         * 
-         * Mat thresholdMat = new Mat();
-         * Imgproc.threshold(grayMat, thresholdMat, ControllerMain.THRESH, 255,
-         * Imgproc.THRESH_BINARY);
-         */
-
         List<ContourArea> contoursAll = new ArrayList<>();
 
         List<MatOfPoint> contours = new ArrayList<>();
@@ -65,7 +56,6 @@ public class GridUtils {
         contoursAll.addAll(contours.stream().map(p -> new ContourArea(p, ColorsEnum.WHITE)).toList());
 
         Map<BigDecimal, Map<BigDecimal, ListReactArea>> mapByWidthAndHeight = GridUtils.groupByWidthThenByHeight(
-                screenShot,
                 contoursAll,
                 minGridHorizontalMembers, minGridVerticalMembers, gridPositionAndSizeTolleranceInPercent);
 
@@ -298,8 +288,7 @@ public class GridUtils {
 
     }
 
-    public static Map<BigDecimal, Map<BigDecimal, ListReactArea>> groupByWidthThenByHeight(Mat screenShot,
-            List<ContourArea> contours,
+    public static Map<BigDecimal, Map<BigDecimal, ListReactArea>> groupByWidthThenByHeight(List<ContourArea> contours,
             int minimumHorizontalCount, int minimumVerticalCout, BigDecimal tolleranceInPercent) {
 
         List<RectArea> rectAreaList = contours.stream().map(p -> new RectArea(p.contour, tolleranceInPercent, p.color))

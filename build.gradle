@@ -64,14 +64,12 @@ def tesseractDataDir_windows = tesseractPathWindows + '/tessdata'
 def tesseractDataDir_linux = tesseractPathLinux + '/tessdata'
 
 test {
-
     filter {
-    //specific test method
       includeTestsMatching "minesweeperhelper.OcrScannerTest.testOcr"
     }
 
     if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-        systemProperties['java.library.path'] = opencvPathWindows + ":" + tesseractPathWindows
+        systemProperties['java.library.path'] = opencvPathWindows + ";" + tesseractPathWindows
         systemProperties['tesseractDataDir'] = tesseractDataDir_windows
     } else {
         systemProperties['java.library.path'] = opencvPathLinux + ":" + tesseractPathLinux

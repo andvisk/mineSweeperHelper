@@ -42,13 +42,15 @@ public class HelpScreen {
                 return ImageUtils.writableImageToMat(writableImage);
         }
 
-        public static Mat process(Mat screenShot, Map<BigDecimal, Map<BigDecimal, List<Grid>>> mapGridsByWidthAndHeight,
+        public static Mat process(Mat screenShot, Mat whiteColors,
+                        Map<BigDecimal, Map<BigDecimal, List<Grid>>> mapGridsByWidthAndHeight,
                         BigDecimal tolleranceInPercent) {
 
                 List<Board> boards = new ImageProcessing().collectBoards(screenShot, mapGridsByWidthAndHeight,
                                 tolleranceInPercent);
 
                 if (boards.size() > 0) {
+
                         for (Board board : boards) {
                                 Mat screenShotBlured = screenShot.clone();
 
