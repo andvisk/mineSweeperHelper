@@ -4,6 +4,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -13,6 +15,7 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -27,7 +30,7 @@ import org.apache.logging.log4j.Logger;
 public class ImageUtils {
 
     private static final Logger logger = LogManager.getLogger(ImageUtils.class);
-    
+
     public static Mat bufferedImage2Mat(BufferedImage image) throws IOException {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         ImageIO.write(image, "jpg", byteArrayOutputStream);
@@ -35,8 +38,8 @@ public class ImageUtils {
         return Imgcodecs.imdecode(new MatOfByte(byteArrayOutputStream.toByteArray()), Imgcodecs.IMREAD_UNCHANGED);
     }
 
-    public static BufferedImage mat2BufferedImage(Mat matrix)throws IOException {
-        MatOfByte mob=new MatOfByte();
+    public static BufferedImage mat2BufferedImage(Mat matrix) throws IOException {
+        MatOfByte mob = new MatOfByte();
         Imgcodecs.imencode(".jpg", matrix, mob);
         return ImageIO.read(new ByteArrayInputStream(mob.toArray()));
     }
@@ -69,19 +72,19 @@ public class ImageUtils {
         int width = (int) image.getWidth();
         int height = (int) image.getHeight();
         byte[] buffer = new byte[width * height * 4];
-    
+
         PixelReader reader = image.getPixelReader();
         WritablePixelFormat<ByteBuffer> format = WritablePixelFormat.getByteBgraInstance();
         reader.getPixels(0, 0, width, height, format, buffer, 0, width * 4);
-    
+
         Mat mat = new Mat(height, width, CvType.CV_8UC4);
         mat.put(0, 0, buffer);
         return mat;
     }
 
-    public static Mat gammaCorrection(Mat matImgSrc, double gammaValue){
+    public static Mat gammaCorrection(Mat matImgSrc, double gammaValue) {
         Mat lookUpTable = new Mat(1, 256, CvType.CV_8U);
-        byte[] lookUpTableData = new byte[(int) (lookUpTable.total()*lookUpTable.channels())];
+        byte[] lookUpTableData = new byte[(int) (lookUpTable.total() * lookUpTable.channels())];
         for (int i = 0; i < lookUpTable.cols(); i++) {
             lookUpTableData[i] = saturate(Math.pow(i / 255.0, gammaValue) * 255.0);
         }
@@ -91,7 +94,7 @@ public class ImageUtils {
         return img;
     }
 
-    public static Mat contrastAndBrightnessCorrection(Mat matImgSrc, double contrast, int brightness){
+    public static Mat contrastAndBrightnessCorrection(Mat matImgSrc, double contrast, int brightness) {
         matImgSrc.convertTo(matImgSrc, -1, contrast, brightness);
         return matImgSrc;
     }
@@ -100,6 +103,22 @@ public class ImageUtils {
         int iVal = (int) Math.round(val);
         iVal = iVal > 255 ? 255 : (iVal < 0 ? 0 : iVal);
         return (byte) iVal;
+    }
+
+    public static Mat equalizeHistForColorImg(Mat srcImage) {
+        Mat ycrcb = srcImage.clone();
+        Imgproc.cvtColor(srcImage, ycrcb, Imgproc.COLOR_BGR2YCrCb);
+
+        List<Mat> channels = new ArrayList<>();
+        Core.split(ycrcb, channels);
+
+        Imgproc.equalizeHist(channels.get(0), channels.get(0));
+
+        Core.merge(channels, ycrcb);
+
+        Imgproc.cvtColor(ycrcb, srcImage, Imgproc.COLOR_YCrCb2BGR);
+
+        return srcImage;
     }
 
 }
