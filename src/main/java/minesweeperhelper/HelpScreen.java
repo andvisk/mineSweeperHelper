@@ -54,42 +54,43 @@ public class HelpScreen {
                         Mat screenShotBlured = screenShot.clone();
                         Imgproc.GaussianBlur(screenShotBlured, screenShotBlured, new Size(21, 21), 0);
 
-                        for (Board board : boards) {
-                                
-                                GridLocation gridLocation = new GridLocation(board.getGrid());
+                        // get only first board
+                        Board board = boards.get(0);
 
-                                board.processGrid(screenShot);
+                        GridLocation gridLocation = new GridLocation(board.getGrid());
 
-                                Mat squareMat = new Mat(screenShotBlured.height(), screenShotBlured.width(),
-                                                CvType.CV_8UC4, new Scalar(0, 0, 0, 0));
-                                Imgproc.rectangle(squareMat,
-                                                new Point(gridLocation.minX - gridLocation.cellWidth / 2,
-                                                                gridLocation.minY - gridLocation.cellHeight / 2),
-                                                new Point(gridLocation.maxX + gridLocation.cellWidth * 1.5,
-                                                                gridLocation.maxY + gridLocation.cellHeight * 1.5),
-                                                new Scalar(255, 0, 0, 0), -1);
+                        board.processGrid(screenShot);
 
-                                Mat drawing2gray = new Mat();
-                                Imgproc.cvtColor(squareMat, drawing2gray, Imgproc.COLOR_BGR2GRAY);
+                        Mat squareMat = new Mat(screenShotBlured.height(), screenShotBlured.width(),
+                                        CvType.CV_8UC4, new Scalar(0, 0, 0, 0));
+                        Imgproc.rectangle(squareMat,
+                                        new Point(gridLocation.minX - gridLocation.cellWidth / 2,
+                                                        gridLocation.minY - gridLocation.cellHeight / 2),
+                                        new Point(gridLocation.maxX + gridLocation.cellWidth * 1.5,
+                                                        gridLocation.maxY + gridLocation.cellHeight * 1.5),
+                                        new Scalar(255, 0, 0, 0), -1);
 
-                                Mat mask = new Mat();
-                                Imgproc.threshold(drawing2gray, mask, 10, 255, Imgproc.THRESH_BINARY);
+                        Mat drawing2gray = new Mat();
+                        Imgproc.cvtColor(squareMat, drawing2gray, Imgproc.COLOR_BGR2GRAY);
 
-                                Mat maskInverted = new Mat();
-                                Core.bitwise_not(mask, maskInverted);
+                        Mat mask = new Mat();
+                        Imgproc.threshold(drawing2gray, mask, 10, 255, Imgproc.THRESH_BINARY);
 
-                                Mat screenShotBackground = new Mat();
-                                Core.bitwise_and(screenShotBlured, screenShotBlured, screenShotBackground,
-                                                maskInverted);
+                        Mat maskInverted = new Mat();
+                        Core.bitwise_not(mask, maskInverted);
 
-                                Mat screenShotForeground = new Mat();
-                                Core.bitwise_and(screenShot, screenShot, screenShotForeground, mask);
+                        Mat screenShotBackground = new Mat();
+                        Core.bitwise_and(screenShotBlured, screenShotBlured, screenShotBackground,
+                                        maskInverted);
 
-                                Mat dstImg = new Mat();
-                                Core.add(screenShotBackground, screenShotForeground, dstImg);
+                        Mat screenShotForeground = new Mat();
+                        Core.bitwise_and(screenShot, screenShot, screenShotForeground, mask);
 
-                                return dstImg;
-                        }
+                        Mat dstImg = new Mat();
+                        Core.add(screenShotBackground, screenShotForeground, dstImg);
+
+                        return dstImg;
+
                 }
                 return null;
         }
