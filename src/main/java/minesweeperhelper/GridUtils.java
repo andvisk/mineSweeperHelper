@@ -35,14 +35,11 @@ public class GridUtils {
 
         Map<BigDecimal, Map<BigDecimal, List<Grid>>> mapGridsByWidthAndHeight = new HashMap<>();
 
-        //Mat screenShotGamaCorr = ImageUtils.gammaCorrection(screenShot, 4.5);
-        Mat screenShotEqualizedHist = new Mat();
-        Imgproc.cvtColor(screenShot, screenShotEqualizedHist, Imgproc.COLOR_BGR2YCrCb);
-        Imgproc.equalizeHist(screenShotEqualizedHist, screenShotEqualizedHist);
-
+        Mat screenShotGamaCorr = ImageUtils.gammaCorrection(screenShot, 4.5);
+        
         Mat blueColors = ImageProcessing.detectColor(screenShotGamaCorr, new HsvBlue());
-        Mat yellowColors = ImageProcessing.detectColor(screenShotGamaCorr, new HsvYellow());
-        Mat whiteColors = ImageProcessing.detectColor(screenShotGamaCorr, new HsvWhite());
+        Mat yellowColors = ImageProcessing.detectColor(screenShot, new HsvYellow());
+        Mat whiteColors = ImageProcessing.detectColor(screenShot, new HsvWhite());
 
         List<ContourArea> contoursAll = new ArrayList<>();
 
