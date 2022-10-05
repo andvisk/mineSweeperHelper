@@ -42,7 +42,7 @@ public class HelpScreen {
                 return ImageUtils.writableImageToMat(writableImage);
         }
 
-        public static Mat process(Mat screenShot, Mat whiteColors,
+        public static Mat process(Mat screenShot,
                         Map<BigDecimal, Map<BigDecimal, List<Grid>>> mapGridsByWidthAndHeight,
                         BigDecimal tolleranceInPercent) {
 
@@ -51,14 +51,14 @@ public class HelpScreen {
 
                 if (boards.size() > 0) {
 
-                        for (Board board : boards) {
-                                Mat screenShotBlured = screenShot.clone();
+                        Mat screenShotBlured = screenShot.clone();
+                        Imgproc.GaussianBlur(screenShotBlured, screenShotBlured, new Size(21, 21), 0);
 
+                        for (Board board : boards) {
+                                
                                 GridLocation gridLocation = new GridLocation(board.getGrid());
 
                                 board.processGrid(screenShot);
-
-                                Imgproc.GaussianBlur(screenShotBlured, screenShotBlured, new Size(21, 21), 0);
 
                                 Mat squareMat = new Mat(screenShotBlured.height(), screenShotBlured.width(),
                                                 CvType.CV_8UC4, new Scalar(0, 0, 0, 0));

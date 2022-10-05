@@ -1,16 +1,10 @@
 package minesweeperhelper;
 
-import java.io.IOException;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bytedeco.javacpp.*;
-import org.bytedeco.leptonica.*;
 import org.bytedeco.tesseract.*;
-import static org.bytedeco.leptonica.global.lept.*;
-import static org.bytedeco.tesseract.global.tesseract.*;
 
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
@@ -42,7 +36,7 @@ public class OcrScanner {
 
         BytePointer outText = api.GetUTF8Text();
 
-        String text = outText.getString().trim();
+        String text = outText.getString().trim().replaceAll("[^\\d.]", "");;
 
         outText.deallocate();
 
