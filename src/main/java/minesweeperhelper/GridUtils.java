@@ -56,7 +56,6 @@ public class GridUtils {
         contoursAll.addAll(contours.stream().map(p -> new ContourArea(p, ColorsEnum.WHITE)).toList());
 
         Map<BigDecimal, Map<BigDecimal, ListReactArea>> mapByWidthAndHeight = GridUtils.groupByWidthThenByHeight(
-                screenShot,
                 contoursAll,
                 minGridHorizontalMembers, minGridVerticalMembers, gridPositionAndSizeTolleranceInPercent);
 
@@ -289,8 +288,7 @@ public class GridUtils {
 
     }
 
-    public static Map<BigDecimal, Map<BigDecimal, ListReactArea>> groupByWidthThenByHeight(Mat screenShot,
-            List<ContourArea> contours,
+    public static Map<BigDecimal, Map<BigDecimal, ListReactArea>> groupByWidthThenByHeight(List<ContourArea> contours,
             int minimumHorizontalCount, int minimumVerticalCout, BigDecimal tolleranceInPercent) {
 
         List<RectArea> rectAreaList = contours.stream().map(p -> new RectArea(p.contour, tolleranceInPercent, p.color))
