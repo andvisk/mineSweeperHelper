@@ -138,7 +138,6 @@ public class ImageProcessing {
                                                         board.setCell(boardCell.positionInGridX,
                                                                         boardCell.positionInGridY, boardCell);
                                                 }
-
                                                 listBoards.add(board);
                                         }
                                 }
