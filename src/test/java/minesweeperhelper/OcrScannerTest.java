@@ -18,12 +18,7 @@ public class OcrScannerTest {
         OcrScanner ocrScanner = new OcrScanner(System.getProperty("tesseractDataDir"));
         Mat patternImage = Imgcodecs.imread("src/main/resources/" + 1 + ".png");
 
-
-        LocalTime start = LocalTime.now();
-        String text = ocrScanner.getTextFromImage(patternImage);
-        LocalTime stop = LocalTime.now();
-
-        int time = stop.getNano() - start.getNano();
+        String text = ocrScanner.getNumberFromImage(patternImage);
 
         ocrScanner.destructor();
 

@@ -95,8 +95,9 @@ public class ImageUtils {
     }
 
     public static Mat contrastAndBrightnessCorrection(Mat matImgSrc, double contrast, int brightness) {
-        matImgSrc.convertTo(matImgSrc, -1, contrast, brightness);
-        return matImgSrc;
+        Mat imgClone = matImgSrc.clone();
+        matImgSrc.convertTo(imgClone, -1, contrast, brightness);
+        return imgClone;
     }
 
     public static byte saturate(double val) {
@@ -106,7 +107,8 @@ public class ImageUtils {
     }
 
     public static Mat equalizeHistForColorImg(Mat srcImage) {
-        Mat ycrcb = srcImage.clone();
+
+        Mat ycrcb = new Mat();
         Imgproc.cvtColor(srcImage, ycrcb, Imgproc.COLOR_BGR2YCrCb);
 
         List<Mat> channels = new ArrayList<>();
@@ -116,9 +118,10 @@ public class ImageUtils {
 
         Core.merge(channels, ycrcb);
 
-        Imgproc.cvtColor(ycrcb, srcImage, Imgproc.COLOR_YCrCb2BGR);
+        Mat imgClone = srcImage.clone();
+        Imgproc.cvtColor(ycrcb, imgClone, Imgproc.COLOR_YCrCb2BGR);
 
-        return srcImage;
+        return imgClone;
     }
 
 }
