@@ -20,10 +20,10 @@ public class OcrScanner {
             log.error("Could not initialize tesseract.");
             System.exit(1);
         }
-        //api.SetVariable("tessedit_char_whitelist", "12345678");
+        api.SetVariable("tessedit_char_whitelist", "12345678");
     }
 
-    public String getTextFromImage(Mat srcImg) {
+    public String getNumberFromImage(Mat srcImg) {
 
         Mat mat = srcImg.clone();
         Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2GRAY);

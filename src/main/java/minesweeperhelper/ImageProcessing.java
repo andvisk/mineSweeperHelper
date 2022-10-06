@@ -124,7 +124,7 @@ public class ImageProcessing {
 
                                                         if (boardCell.color.equals(ColorsEnum.WHITE)) {
                                                                 Mat imageToOcr = srcImg.submat(boardCell.rectangle);
-                                                                String text = ocrScanner.getTextFromImage(imageToOcr);
+                                                                String text = ocrScanner.getNumberFromImage(imageToOcr);
 
                                                                 if (text != null && text.length() > 0) {
                                                                         boardCell.setNumber(Integer.parseInt(text));
