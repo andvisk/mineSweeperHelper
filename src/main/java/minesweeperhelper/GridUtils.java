@@ -38,13 +38,9 @@ public class GridUtils {
         Mat screenShotContrastAndBrightnessCorr = ImageUtils.contrastAndBrightnessCorrection(screenShot, 1.0, 30);
         Mat screenShotGamaCorr = ImageUtils.gammaCorrection(screenShotContrastAndBrightnessCorr, 1.5);
 
-        Mat screenShotGray = new Mat();
-        Imgproc.cvtColor(screenShot, screenShotGray, Imgproc.COLOR_BGR2GRAY);
-        Imgproc.threshold(screenShotGray, screenShotGray, 0, 255, Imgproc.THRESH_OTSU);
-        
         Mat blueColors = ImageProcessing.detectColor(screenShotGamaCorr, new HsvBlue());
         Mat yellowColors = ImageProcessing.detectColor(screenShot, new HsvYellow()); //including green question marks
-        Mat whiteColors = ImageProcessing.detectColor(screenShot, new HsvWhite());
+        Mat grayColors = ImageProcessing.detectColor(screenShot, new HsvGray());
 
         List<ContourArea> contoursAll = new ArrayList<>();
 
@@ -57,7 +53,7 @@ public class GridUtils {
         contoursAll.addAll(contours.stream().map(p -> new ContourArea(p, ColorsEnum.YELLOW)).toList());
 
         contours = new ArrayList<>();
-        Imgproc.findContours(whiteColors, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(grayColors, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
         contoursAll.addAll(contours.stream().map(p -> new ContourArea(p, ColorsEnum.WHITE)).toList());
 
         Map<BigDecimal, Map<BigDecimal, ListReactArea>> mapByWidthAndHeight = GridUtils.groupByWidthThenByHeight(

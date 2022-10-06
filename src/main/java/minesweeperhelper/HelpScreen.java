@@ -57,6 +57,9 @@ public class HelpScreen {
                         // get only first board
                         Board board = boards.get(0);
 
+                        if (App.debug)
+                                board.printDebugInfo(screenShot);
+
                         GridLocation gridLocation = new GridLocation(board.getGrid());
 
                         board.processGrid(screenShot);
