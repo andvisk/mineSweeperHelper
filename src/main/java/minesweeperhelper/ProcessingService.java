@@ -33,14 +33,18 @@ public class ProcessingService extends Service<Mat> {
             @Override
             protected Mat call() throws Exception {
 
-                Map<BigDecimal, Map<BigDecimal, List<Grid>>> mapGridsByWidthAndHeight = GridUtils.collectGrids(
-                        screenShot,
-                        minGridHorizontalMembers, minGridVerticalMembers, gridPositionAndSizeTolleranceInPercent);
+                Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, List<Grid>>>> mapGridsByAreaWidthHeight = GridUtils
+                        .collectGrids(
+                                screenShot,
+                                minGridHorizontalMembers, minGridVerticalMembers,
+                                gridPositionAndSizeTolleranceInPercent);
 
                 if (App.debug) {
                     Mat screenShotCpy = screenShot.clone();
                     Random rng = new Random(12345);
-                    mapGridsByWidthAndHeight.entrySet().stream().flatMap(p -> p.getValue().entrySet().stream())
+                    mapGridsByAreaWidthHeight.entrySet().stream()
+                            .flatMap(p -> p.getValue().entrySet().stream())
+                            .flatMap(p -> p.getValue().entrySet().stream())
                             .flatMap(p -> p.getValue().stream()).forEach(p -> {
                                 Scalar color = new Scalar(rng.nextInt(256), rng.nextInt(256), rng.nextInt(256));
                                 GridUtils.drawLocations(screenShotCpy, p, color);
@@ -49,7 +53,7 @@ public class ProcessingService extends Service<Mat> {
                     Imgcodecs.imwrite("debug_all_grids.jpg", screenShotCpy);
                 }
 
-                return HelpScreen.process(screenShot, mapGridsByWidthAndHeight, gridPositionAndSizeTolleranceInPercent);
+                return HelpScreen.process(screenShot, mapGridsByAreaWidthHeight, gridPositionAndSizeTolleranceInPercent);
             }
 
         };
