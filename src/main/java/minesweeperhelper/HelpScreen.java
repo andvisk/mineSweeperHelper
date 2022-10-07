@@ -43,10 +43,10 @@ public class HelpScreen {
         }
 
         public static Mat process(Mat screenShot,
-                        Map<BigDecimal, Map<BigDecimal, List<Grid>>> mapGridsByWidthAndHeight,
+                        Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, List<Grid>>>> mapGridsByAreaWidthHeight,
                         BigDecimal tolleranceInPercent) {
 
-                List<Board> boards = Board.collectBoards(screenShot, mapGridsByWidthAndHeight,
+                List<Board> boards = Board.collectBoards(screenShot, mapGridsByAreaWidthHeight,
                                 tolleranceInPercent);
 
                 if (boards.size() > 0) {
