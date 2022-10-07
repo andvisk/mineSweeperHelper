@@ -124,4 +124,21 @@ public class ImageUtils {
         return imgClone;
     }
 
+    public static Mat detectColor(Mat mat, HsvColor color) {
+
+        Mat hsv = new Mat();
+        Imgproc.cvtColor(mat, hsv, Imgproc.COLOR_BGR2HSV);
+        Mat mask = new Mat();
+        Core.inRange(hsv, color.lower, color.upper, mask);
+        Mat dest = new Mat();
+        Core.bitwise_and(mat, mat, dest, mask);
+
+        Mat dest2gray = new Mat();
+        Imgproc.cvtColor(dest, dest2gray, Imgproc.COLOR_BGR2GRAY);
+
+        Imgproc.threshold(dest2gray, mask, 10, 255, Imgproc.THRESH_BINARY);
+
+        return dest2gray;
+}
+
 }
