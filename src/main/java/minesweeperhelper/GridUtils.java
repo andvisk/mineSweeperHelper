@@ -38,9 +38,24 @@ public class GridUtils {
         Mat screenShotContrastAndBrightnessCorr = ImageUtils.contrastAndBrightnessCorrection(screenShot, 1.0, 30);
         Mat screenShotGamaCorr = ImageUtils.gammaCorrection(screenShotContrastAndBrightnessCorr, 1.5);
 
-        Mat blueColors = ImageProcessing.detectColor(screenShotGamaCorr, new HsvBlue());
-        Mat yellowColors = ImageProcessing.detectColor(screenShot, new HsvYellow()); //including green question marks
-        Mat grayColors = ImageProcessing.detectColor(screenShot, new HsvGray());
+        Mat blueColors = ImageUtils.detectColor(screenShotGamaCorr, new HsvBlue());
+
+        if (App.debug) {
+            Imgcodecs.imwrite("debug_blue_colors.jpg", blueColors);
+        }
+
+        Mat yellowColors = ImageUtils.detectColor(screenShot, new HsvYellow()); // including green question marks
+
+        if (App.debug) {
+            Imgcodecs.imwrite("debug_yellow_colors.jpg", yellowColors);
+        }
+
+        Mat grayColors = ImageUtils.detectColor(screenShot, new HsvGray());
+
+        if (App.debug) {
+            Imgcodecs.imwrite("debug_gray_and_white_colors.jpg", grayColors);
+        }
+        // Mat whiteColors = ImageUtils.detectColor(screenShot, new HsvGray());
 
         List<ContourArea> contoursAll = new ArrayList<>();
 
@@ -48,20 +63,49 @@ public class GridUtils {
         Imgproc.findContours(blueColors, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
         contoursAll.addAll(contours.stream().map(p -> new ContourArea(p, ColorsEnum.BLUE)).toList());
 
+        if (App.debug) {
+            List<RectArea> rectAreaList = contours.stream()
+                    .map(p -> new RectArea(p, BigDecimal.valueOf(10), ColorsEnum.BLUE))
+                    .collect(Collectors.toList());
+            Mat copyMat = screenShot.clone();
+            rectAreaList.stream().forEach(p -> GridUtils.drawLocation(copyMat, p, new Scalar(0, 0, 255)));
+            Imgcodecs.imwrite("debug_blue_contours.jpg", copyMat);
+        }
+
         contours = new ArrayList<>();
         Imgproc.findContours(yellowColors, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
         contoursAll.addAll(contours.stream().map(p -> new ContourArea(p, ColorsEnum.YELLOW)).toList());
+
+        if (App.debug) {
+            List<RectArea> rectAreaList = contours.stream()
+                    .map(p -> new RectArea(p, BigDecimal.valueOf(10), ColorsEnum.YELLOW))
+                    .collect(Collectors.toList());
+            Mat copyMat = screenShot.clone();
+            rectAreaList.stream().forEach(p -> GridUtils.drawLocation(copyMat, p, new Scalar(0, 0, 255)));
+            Imgcodecs.imwrite("debug_yellow_contours.jpg", copyMat);
+        }
 
         contours = new ArrayList<>();
         Imgproc.findContours(grayColors, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
         contoursAll.addAll(contours.stream().map(p -> new ContourArea(p, ColorsEnum.WHITE)).toList());
 
+        if (App.debug) {
+            List<RectArea> rectAreaList = contours.stream()
+                    .map(p -> new RectArea(p, BigDecimal.valueOf(10), ColorsEnum.WHITE))
+                    .collect(Collectors.toList());
+            Mat copyMat = screenShot.clone();
+            rectAreaList.stream().forEach(p -> GridUtils.drawLocation(copyMat, p, new Scalar(0, 0, 255)));
+            Imgcodecs.imwrite("debug_gray_white_contours.jpg", copyMat);
+        }
+
         Map<BigDecimal, Map<BigDecimal, ListReactArea>> mapByWidthAndHeight = GridUtils.groupByWidthThenByHeight(
                 contoursAll,
                 minGridHorizontalMembers, minGridVerticalMembers, gridPositionAndSizeTolleranceInPercent);
 
-        if (App.debug)
+        if (App.debug) {
             printContBoundBoxs(screenShot, mapByWidthAndHeight);
+            Imgcodecs.imwrite("debug_screenshot.jpg", screenShot);
+        }
 
         for (Map.Entry<BigDecimal, Map<BigDecimal, ListReactArea>> entry : mapByWidthAndHeight.entrySet()) {
             BigDecimal width = entry.getKey(); // cell width
@@ -74,7 +118,7 @@ public class GridUtils {
                 Map<BigDecimal, ListReactArea> mapByY = groupByInCollecting(points, p -> p.y, p -> p.yDecreased);
 
                 List<Map<BigDecimal, ListReactArea>> listOfxyMaps = GridUtils
-                        .removeSquaresToConformMinWidthAndHeight(mapByX, mapByY, minGridHorizontalMembers,
+                        .removeSquaresToConformMinWidthAndHeight(screenShot, mapByX, mapByY, minGridHorizontalMembers,
                                 minGridVerticalMembers,
                                 gridPositionAndSizeTolleranceInPercent);
 
@@ -104,13 +148,8 @@ public class GridUtils {
 
     private static void printContBoundBoxs(Mat screenShot,
             Map<BigDecimal, Map<BigDecimal, ListReactArea>> mapByWidthAndHeight) {
-        String dirName = "contours";
-        File dir = new File(dirName);
-        if (!dir.exists())
-            dir.mkdirs();
-        else {
-            Arrays.asList(dir.listFiles()).stream().forEach(p -> p.delete());
-        }
+        String dirName = "debug_contours";
+        FileUtils.checkDirExistsAndEmpty(dirName);
 
         for (Map.Entry<BigDecimal, Map<BigDecimal, ListReactArea>> entry : mapByWidthAndHeight.entrySet()) {
             BigDecimal width = entry.getKey();
@@ -370,7 +409,7 @@ public class GridUtils {
      * 0 - mapByX
      * 1 - mapByY
      */
-    public static List<Map<BigDecimal, ListReactArea>> removeSquaresToConformMinWidthAndHeight(
+    public static List<Map<BigDecimal, ListReactArea>> removeSquaresToConformMinWidthAndHeight(Mat screenShot,
             Map<BigDecimal, ListReactArea> mapByX, Map<BigDecimal, ListReactArea> mapByY, int minGridHorizontalMembers,
             int minGridVerticalMembers,
             BigDecimal tolleranceInPercent) {
@@ -384,7 +423,7 @@ public class GridUtils {
         mapByX = mapByX.entrySet().stream().collect(Collectors.toMap(k -> k.getKey(), v -> {
             List<RectArea> list = v.getValue().list.stream().filter(i -> mapByYIDs.contains(i.id))
                     .collect(Collectors.toList());
-            list = removeCellsToConformSequency(list, p -> p.y, p -> p.height, minGridVerticalMembers,
+            list = removeCellsToConformSequency(screenShot, list, p -> p.y, p -> p.height, minGridVerticalMembers,
                     tolleranceInPercent);
             v.getValue().list = list;
             return v.getValue();
@@ -404,7 +443,7 @@ public class GridUtils {
         mapByY = mapByY.entrySet().stream().collect(Collectors.toMap(k -> k.getKey(), v -> {
             List<RectArea> list = v.getValue().list.stream().filter(i -> mapByXIDs.contains(i.id))
                     .collect(Collectors.toList());
-            list = removeCellsToConformSequency(list, p -> p.x, p -> p.width, minGridHorizontalMembers,
+            list = removeCellsToConformSequency(screenShot, list, p -> p.x, p -> p.width, minGridHorizontalMembers,
                     tolleranceInPercent);
             v.getValue().list = list;
             return v.getValue();
@@ -417,7 +456,7 @@ public class GridUtils {
 
         if (mapByX.size() > 0 && mapByY.size() > 0
                 && (beforeByXCount != afterByXCount || beforeByYCount != afterByYCount)) {
-            return removeSquaresToConformMinWidthAndHeight(mapByX, mapByY, minGridHorizontalMembers,
+            return removeSquaresToConformMinWidthAndHeight(screenShot, mapByX, mapByY, minGridHorizontalMembers,
                     minGridVerticalMembers, tolleranceInPercent);
         }
 
@@ -427,7 +466,7 @@ public class GridUtils {
             return Arrays.asList(new HashMap<>(), new HashMap<>());
     }
 
-    public static List<RectArea> removeCellsToConformSequency(List<RectArea> list,
+    public static List<RectArea> removeCellsToConformSequency(Mat screenShot, List<RectArea> list,
             Function<RectArea, BigDecimal> functionPosition, Function<RectArea, BigDecimal> functionWidthOrHeight,
             int minWidthOrHeightCount, BigDecimal tolleranceInPercent) {
 
@@ -467,6 +506,24 @@ public class GridUtils {
                 }
             }
             if (list.size() - listToRemove.size() >= minWidthOrHeightCount) {
+                if (App.debug && listToRemove.size() > 0) {
+                    String dirName = "debug_remove_conform_seq";
+                    FileUtils.checkDirExistsAndEmpty(dirName);
+
+                    String uuid = UUID.randomUUID().toString();
+
+                    final Mat debugMat = screenShot.clone();
+                    listToRemove.stream().forEach(p -> GridUtils.drawLocation(debugMat, p, new Scalar(0, 0, 255)));
+                    Imgcodecs
+                            .imwrite(dirName + "_LIST_TO_REMOVE" + File.separatorChar + System.currentTimeMillis() + "_"
+                                    + uuid + ".jpg", debugMat);
+
+                    final Mat debugMatLst = screenShot.clone();
+                    list.stream().forEach(p -> GridUtils.drawLocation(debugMatLst, p, new Scalar(0, 0, 255)));
+                    Imgcodecs
+                            .imwrite(dirName + "_SOURCE_LIST" + File.separatorChar + System.currentTimeMillis() + "_"
+                                    + uuid + ".jpg", debugMatLst);
+                }
                 list.removeAll(listToRemove);
                 return list;
             } else {

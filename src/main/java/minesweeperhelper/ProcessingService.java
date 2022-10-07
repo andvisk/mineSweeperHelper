@@ -46,7 +46,7 @@ public class ProcessingService extends Service<Mat> {
                                 GridUtils.drawLocations(screenShotCpy, p, color);
                             });
 
-                    Imgcodecs.imwrite("all_grids.jpg", screenShotCpy);
+                    Imgcodecs.imwrite("debug_all_grids.jpg", screenShotCpy);
                 }
 
                 return HelpScreen.process(screenShot, mapGridsByWidthAndHeight, gridPositionAndSizeTolleranceInPercent);
