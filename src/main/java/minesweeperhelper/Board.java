@@ -1,7 +1,11 @@
 package minesweeperhelper;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -28,7 +32,7 @@ public class Board {
         return grid;
     }
 
-    public GridLocation getGridLocation(){
+    public GridLocation getGridLocation() {
         return gridLocation;
     }
 
@@ -108,15 +112,17 @@ public class Board {
         // two neighbour numbers and their unchecked cells intersection can have only
         // one flag
         for (MineSweeperGridCell number : numbers) {
-            Set<MineSweeperGridCell> numberFlags = new HashSet<MineSweeperGridCell>(getNeighbourCells(list, number).stream()
-                    .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.FLAG)).toList());
+            Set<MineSweeperGridCell> numberFlags = new HashSet<MineSweeperGridCell>(
+                    getNeighbourCells(list, number).stream()
+                            .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.FLAG)).toList());
             if (number.getNumber() > numberFlags.size()) {
                 List<MineSweeperGridCell> neighbours = getNeighbourCells(list, number);
                 List<MineSweeperGridCell> neighboursNumbers = neighbours.stream()
                         .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.NUMBER)).toList();
 
-                Set<MineSweeperGridCell> numberUnchecked = new HashSet<MineSweeperGridCell>(getNeighbourCells(list, number).stream()
-                        .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.UNCHECKED)).toList());
+                Set<MineSweeperGridCell> numberUnchecked = new HashSet<MineSweeperGridCell>(
+                        getNeighbourCells(list, number).stream()
+                                .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.UNCHECKED)).toList());
 
                 for (MineSweeperGridCell neighbourNumber : neighboursNumbers) {
                     Set<MineSweeperGridCell> neighboursFlags = new HashSet<MineSweeperGridCell>(
@@ -136,7 +142,8 @@ public class Board {
                                 numberCellsToFlag.stream().forEach(p -> p.setCellTypeEnum(CellTypeEnum.FLAG));
                                 anyChanges = true;
                             }
-                            Set<MineSweeperGridCell> neighboursOnlyUnchecked = new HashSet<MineSweeperGridCell>(neighboursUnchecked);
+                            Set<MineSweeperGridCell> neighboursOnlyUnchecked = new HashSet<MineSweeperGridCell>(
+                                    neighboursUnchecked);
                             neighboursOnlyUnchecked.removeAll(uncheckedInCommon);
                             if (neighboursOnlyUnchecked.size() > 0) {
                                 neighboursOnlyUnchecked.stream()
@@ -155,15 +162,149 @@ public class Board {
             markFlagsAndEmptyCells(list);
     }
 
+    public static List<Board> collectBoards(Mat srcImg,
+            Map<BigDecimal, Map<BigDecimal, List<Grid>>> mapGridsByWidthAndHeight,
+            BigDecimal tolleranceInPercent) {
+
+        List<Board> listBoards = new ArrayList<>();
+
+        OcrScanner ocrScanner = new OcrScanner(System.getProperty("tesseractDataDir"));
+
+        for (BigDecimal width : mapGridsByWidthAndHeight.keySet()) {
+            for (BigDecimal height : mapGridsByWidthAndHeight.get(width).keySet()) {
+                for (Grid grid : mapGridsByWidthAndHeight.get(width).get(height)) {
+
+                    GridLocation gridLocation = new GridLocation(grid.getGrid());
+                    List<MineSweeperGridCell> boardCells = new ArrayList<>();
+
+                    for (RectArea rectArea : grid.getGridCells()) {
+
+                        CellTypeEnum cellTypeEnum = null;
+
+                        switch (rectArea.color) {
+                            case BLUE:
+                                cellTypeEnum = CellTypeEnum.UNCHECKED;
+                                break;
+                            case YELLOW:
+                                cellTypeEnum = CellTypeEnum.FLAG;
+                                break;
+                            case WHITE:
+                                cellTypeEnum = CellTypeEnum.NUMBER;
+                                break;
+
+                        }
+
+                        MineSweeperGridCell gridCell = new MineSweeperGridCell(
+                                cellTypeEnum, rectArea.rectangle, 0, rectArea.color);
+
+                        boardCells.add(gridCell);
+                    }
+
+                    List<RectArea> gridCells = grid.getGridCells();
+
+                    if (boardCells.size() == gridCells.size()) {
+                        for (MineSweeperGridCell boardCell : boardCells) {
+
+                            RectArea gridCell = gridCells.stream().filter(
+                                    p -> {
+                                        BigDecimal bdX = BigDecimal
+                                                .valueOf(p.rectangle.x)
+                                                .setScale(2,
+                                                        RoundingMode.HALF_EVEN);
+                                        BigDecimal bdY = BigDecimal
+                                                .valueOf(p.rectangle.y)
+                                                .setScale(2,
+                                                        RoundingMode.HALF_EVEN);
+                                        BigDecimal bdWidth = BigDecimal.valueOf(
+                                                p.rectangle.width)
+                                                .setScale(2,
+                                                        RoundingMode.HALF_EVEN);
+                                        BigDecimal bdHeight = BigDecimal
+                                                .valueOf(p.rectangle.height)
+                                                .setScale(2,
+                                                        RoundingMode.HALF_EVEN);
+
+                                        BigDecimal bdBX = BigDecimal.valueOf(
+                                                boardCell.rectangle.x)
+                                                .setScale(2,
+                                                        RoundingMode.HALF_EVEN);
+                                        BigDecimal bdBY = BigDecimal.valueOf(
+                                                boardCell.rectangle.y)
+                                                .setScale(2,
+                                                        RoundingMode.HALF_EVEN);
+
+                                        return bdX.subtract(bdBX).abs()
+                                                .compareTo(
+                                                        bdWidth.divide(BigDecimal
+                                                                .valueOf(100),
+                                                                2,
+                                                                RoundingMode.HALF_EVEN)
+                                                                .multiply(tolleranceInPercent)) <= 0
+                                                &&
+                                                bdY.subtract(bdBY).abs()
+                                                        .compareTo(
+                                                                bdHeight.divide(BigDecimal
+                                                                        .valueOf(100),
+                                                                        2,
+                                                                        RoundingMode.HALF_EVEN)
+                                                                        .multiply(tolleranceInPercent)) <= 0;
+
+                                    }).findAny().orElse(null);
+
+                            if (gridCell != null) {
+                                boardCell.positionInGridX = gridCell.positionInGridX;
+                                boardCell.positionInGridY = gridCell.positionInGridY;
+                            }
+                        }
+                        int maxXpos = boardCells.stream()
+                                .max((a, b) -> Integer.compare(a.positionInGridX,
+                                        b.positionInGridX))
+                                .get().positionInGridX;
+                        int maxYpos = boardCells.stream()
+                                .max((a, b) -> Integer.compare(a.positionInGridY,
+                                        b.positionInGridY))
+                                .get().positionInGridY;
+                        Board board = new Board(maxXpos + 1, maxYpos + 1, gridLocation);
+
+                        for (MineSweeperGridCell boardCell : boardCells) {
+
+                            if (boardCell.color.equals(ColorsEnum.WHITE)) {
+                                Mat imageToOcr = srcImg.submat(boardCell.rectangle);
+                                String text = ocrScanner.getNumberFromImage(imageToOcr);
+
+                                if (text != null && text.length() > 0) {
+                                    boardCell.setNumber(Integer.parseInt(text));
+                                    boardCell.setCellTypeEnum(CellTypeEnum.NUMBER);
+                                } else {
+                                    boardCell.setNumber(0);
+                                    boardCell.setCellTypeEnum(CellTypeEnum.EMPTY);
+                                }
+                            }
+
+                            board.setCell(boardCell.positionInGridX,
+                                    boardCell.positionInGridY, boardCell);
+                        }
+                        listBoards.add(board);
+                    }
+                }
+            }
+        }
+        ocrScanner.destructor();
+        return listBoards;
+    }
+
     private List<MineSweeperGridCell> getNeighbourCells(List<MineSweeperGridCell> list, MineSweeperGridCell cell) {
         return list.stream().filter(
                 p -> (p.positionInGridX - 1 == cell.positionInGridX && p.positionInGridY - 1 == cell.positionInGridY) ||
                         (p.positionInGridX == cell.positionInGridX && p.positionInGridY - 1 == cell.positionInGridY) ||
-                        (p.positionInGridX + 1 == cell.positionInGridX && p.positionInGridY - 1 == cell.positionInGridY) ||
+                        (p.positionInGridX + 1 == cell.positionInGridX && p.positionInGridY - 1 == cell.positionInGridY)
+                        ||
                         (p.positionInGridX + 1 == cell.positionInGridX && p.positionInGridY == cell.positionInGridY) ||
-                        (p.positionInGridX + 1 == cell.positionInGridX && p.positionInGridY + 1 == cell.positionInGridY) ||
+                        (p.positionInGridX + 1 == cell.positionInGridX && p.positionInGridY + 1 == cell.positionInGridY)
+                        ||
                         (p.positionInGridX == cell.positionInGridX && p.positionInGridY + 1 == cell.positionInGridY) ||
-                        (p.positionInGridX - 1 == cell.positionInGridX && p.positionInGridY + 1 == cell.positionInGridY) ||
+                        (p.positionInGridX - 1 == cell.positionInGridX && p.positionInGridY + 1 == cell.positionInGridY)
+                        ||
                         (p.positionInGridX - 1 == cell.positionInGridX && p.positionInGridY == cell.positionInGridY))
                 .collect(Collectors.toList());
     }
@@ -176,5 +317,17 @@ public class Board {
 
         }
         return mat;
+    }
+
+    public List<MineSweeperGridCell> getGridCells() {
+        List<MineSweeperGridCell> list = new ArrayList<>();
+        for (int i = 0; i < grid.length; i++) {
+            for (int k = 0; k < grid[i].length; k++) {
+                if (grid[i][k] != null) {
+                    list.add(grid[i][k]);
+                }
+            }
+        }
+        return list;
     }
 }

@@ -46,7 +46,7 @@ public class HelpScreen {
                         Map<BigDecimal, Map<BigDecimal, List<Grid>>> mapGridsByWidthAndHeight,
                         BigDecimal tolleranceInPercent) {
 
-                List<Board> boards = new ImageProcessing().collectBoards(screenShot, mapGridsByWidthAndHeight,
+                List<Board> boards = Board.collectBoards(screenShot, mapGridsByWidthAndHeight,
                                 tolleranceInPercent);
 
                 if (boards.size() > 0) {
