@@ -108,36 +108,52 @@ public class GridUtils {
             Imgcodecs.imwrite("debug_screenshot.jpg", screenShot);
         }
 
-        for (Map.Entry<BigDecimal, Map<BigDecimal, ListReactArea>> entry : mapByWidthAndHeight.entrySet()) {
-            BigDecimal width = entry.getKey(); // cell width
-            Map<BigDecimal, ListReactArea> mapByHeight = entry.getValue();
-            for (Map.Entry<BigDecimal, ListReactArea> entryByHeight : mapByHeight.entrySet()) {
-                BigDecimal height = entryByHeight.getKey(); // cell height
-                List<RectArea> points = entryByHeight.getValue().list;
+        for (Map.Entry<BigDecimal, Map<BigDecimal, Map<BigDecimal, ListReactArea>>> entryArea : mapByAreaWidthHeight
+                .entrySet()) {
+            BigDecimal area = entryArea.getKey(); // cell area
+            for (Map.Entry<BigDecimal, Map<BigDecimal, ListReactArea>> entryWidth : entryArea.getValue().entrySet()) {
+                BigDecimal width = entryWidth.getKey(); // cell width
+                Map<BigDecimal, ListReactArea> mapByHeight = entryWidth.getValue();
+                for (Map.Entry<BigDecimal, ListReactArea> entryByHeight : mapByHeight.entrySet()) {
+                    BigDecimal height = entryByHeight.getKey(); // cell height
+                    List<RectArea> points = entryByHeight.getValue().list;
 
-                Map<BigDecimal, ListReactArea> mapByX = groupByInCollecting(points, p -> p.x, p -> p.xDecreased);
-                Map<BigDecimal, ListReactArea> mapByY = groupByInCollecting(points, p -> p.y, p -> p.yDecreased);
+                    Map<BigDecimal, ListReactArea> mapByX = groupByInCollecting(points, p -> p.x, p -> p.xDecreased);
+                    Map<BigDecimal, ListReactArea> mapByY = groupByInCollecting(points, p -> p.y, p -> p.yDecreased);
 
-                List<Map<BigDecimal, ListReactArea>> listOfxyMaps = GridUtils
-                        .removeSquaresToConformMinWidthAndHeight(screenShot, mapByX, mapByY, minGridHorizontalMembers,
-                                minGridVerticalMembers,
+                    List<Map<BigDecimal, ListReactArea>> listOfxyMaps = GridUtils
+                            .removeSquaresToConformMinWidthAndHeight(screenShot, mapByX, mapByY,
+                                    minGridHorizontalMembers,
+                                    minGridVerticalMembers,
+                                    gridPositionAndSizeTolleranceInPercent);
+
+                    mapByX = listOfxyMaps.get(0);
+                    mapByY = listOfxyMaps.get(1);
+
+                    if (mapByX.size() > 0 && mapByY.size() > 0) {
+                        List<Grid> gridList = collectGridsFromCells(mapByX, mapByY, width, height,
                                 gridPositionAndSizeTolleranceInPercent);
 
-                mapByX = listOfxyMaps.get(0);
-                mapByY = listOfxyMaps.get(1);
+                        if (gridList.size() > 0) {
+                            Map<BigDecimal, Map<BigDecimal, List<Grid>>> returnMapByWidth = mapGridsByAreaWidthHeight
+                                    .get(area);
 
-                if (mapByX.size() > 0 && mapByY.size() > 0) {
-                    List<Grid> gridList = collectGridsFromCells(mapByX, mapByY, width, height,
-                            gridPositionAndSizeTolleranceInPercent);
+                            if (returnMapByWidth == null) {
+                                returnMapByWidth = new HashMap<>();
+                                mapGridsByAreaWidthHeight.put(area, returnMapByWidth);
 
-                    if (gridList.size() > 0) {
-                        Map<BigDecimal, List<Grid>> returnMapByHeight = mapGridsByWidthAndHeight.get(width);
-                        if (returnMapByHeight == null)
-                            returnMapByHeight = new HashMap<>();
+                            }
 
-                        returnMapByHeight.put(height, gridList);
+                            Map<BigDecimal, List<Grid>> returnMapByHeight = mapGridsByAreaWidthHeight.get(area)
+                                    .get(width);
 
-                        mapGridsByWidthAndHeight.put(width, returnMapByHeight);
+                            if (returnMapByHeight == null)
+                                returnMapByHeight = new HashMap<>();
+
+                            returnMapByHeight.put(height, gridList);
+
+                            mapGridsByAreaWidthHeight.get(area).put(width, returnMapByHeight);
+                        }
                     }
                 }
             }
