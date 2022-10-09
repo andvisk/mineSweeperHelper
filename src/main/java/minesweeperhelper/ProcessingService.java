@@ -33,31 +33,35 @@ public class ProcessingService extends Service<Mat> {
             @Override
             protected Mat call() throws Exception {
 
-                Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, List<Grid>>>> mapGridsByAreaWidthHeight = GridUtils
-                        .collectGrids(
-                                screenShot,
-                                minGridHorizontalMembers, minGridVerticalMembers,
-                                gridPositionAndSizeTolleranceInPercent);
-
-                if (App.debug) {
-                    Mat screenShotCpy = screenShot.clone();
-                    Random rng = new Random(12345);
-                    mapGridsByAreaWidthHeight.entrySet().stream()
-                            .flatMap(p -> p.getValue().entrySet().stream())
-                            .flatMap(p -> p.getValue().entrySet().stream())
-                            .flatMap(p -> p.getValue().stream()).forEach(p -> {
-                                Scalar color = new Scalar(rng.nextInt(256), rng.nextInt(256), rng.nextInt(256));
-                                GridUtils.drawLocations(screenShotCpy, p, color);
-                            });
-
-                    Imgcodecs.imwrite("debug_all_grids.jpg", screenShotCpy);
-                }
-
-                return HelpScreen.process(screenShot, mapGridsByAreaWidthHeight, gridPositionAndSizeTolleranceInPercent);
+                return HelpScreen.process(screenShot, prepareData(),
+                        gridPositionAndSizeTolleranceInPercent);
             }
 
         };
 
         return task;
+    }
+
+    public Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, List<Grid>>>> prepareData() {
+        Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, List<Grid>>>> mapGridsByAreaWidthHeight = GridUtils
+                .collectGrids(
+                        screenShot,
+                        minGridHorizontalMembers, minGridVerticalMembers,
+                        gridPositionAndSizeTolleranceInPercent);
+
+        if (App.debug) {
+            Mat screenShotCpy = screenShot.clone();
+            Random rng = new Random(12345);
+            mapGridsByAreaWidthHeight.entrySet().stream()
+                    .flatMap(p -> p.getValue().entrySet().stream())
+                    .flatMap(p -> p.getValue().entrySet().stream())
+                    .flatMap(p -> p.getValue().stream()).forEach(p -> {
+                        Scalar color = new Scalar(rng.nextInt(256), rng.nextInt(256), rng.nextInt(256));
+                        GridUtils.drawLocations(screenShotCpy, p, color);
+                    });
+
+            Imgcodecs.imwrite("debug_all_grids.jpg", screenShotCpy);
+        }
+        return mapGridsByAreaWidthHeight;
     }
 }
