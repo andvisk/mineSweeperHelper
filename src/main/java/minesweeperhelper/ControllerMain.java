@@ -32,7 +32,7 @@ public class ControllerMain {
     // GRID
     public static final int MIN_WIDTH = 9;
     public static final int MIN_HEIGHT = 9;
-    public static final BigDecimal TOLLERANCE_IN_PERCENT = BigDecimal.valueOf(65);
+    public static final BigDecimal TOLLERANCE_IN_PERCENT = BigDecimal.valueOf(35);
     public static final int THRESH = 80; 
 
     private Stage stage;

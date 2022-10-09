@@ -65,7 +65,7 @@ def tesseractDataDir_linux = tesseractPathLinux + '/tessdata'
 
 test {
     filter {
-      includeTestsMatching "minesweeperhelper.TestTest.runTest"
+      includeTestsMatching "minesweeperhelper.ProcessingServiceTest.runTest"
     }
 
     if (Os.isFamily(Os.FAMILY_WINDOWS)) {
