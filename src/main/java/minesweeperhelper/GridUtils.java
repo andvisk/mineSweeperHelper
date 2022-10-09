@@ -105,7 +105,7 @@ public class GridUtils {
 
         if (App.debug) {
             printContBoundBoxs(screenShot, mapByAreaWidthHeight);
-            Imgcodecs.imwrite("debug_screenshot.jpg", screenShot);
+            Imgcodecs.imwrite("debug_screenshot.png", screenShot);
         }
 
         for (Map.Entry<BigDecimal, Map<BigDecimal, Map<BigDecimal, ListReactArea>>> entryArea : mapByAreaWidthHeight

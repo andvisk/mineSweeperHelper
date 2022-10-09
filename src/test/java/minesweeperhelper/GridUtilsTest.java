@@ -57,11 +57,13 @@ public class GridUtilsTest {
     @Test
     void removeCellsToConformSequency() {
 
+        App.debug = false;
+
         List listTest = getThreeSequancesWithinList(tolleranceInPercent);
         List<RectArea> listByX = (List<RectArea>) listTest.get(0);
         List<UUID> listIdsToRemove = (List<UUID>) listTest.get(1);
 
-        List<RectArea> list = GridUtils.removeCellsToConformSequency(listByX, p -> p.y,
+        List<RectArea> list = GridUtils.removeCellsToConformSequency(null, listByX, p -> p.y,
                 p -> p.height, minGridMembersHor, tolleranceInPercent);
 
         Set<UUID> allCellsByX = list.stream().map(p -> p.id)
@@ -76,6 +78,9 @@ public class GridUtilsTest {
 
     @Test
     void removeSquaresToConformMinWidthAndHeight_emptyRes() {
+
+        App.debug = false;
+
         List listX = getMappedByX();
         Map<BigDecimal, ListReactArea> mapByX = (Map<BigDecimal, ListReactArea>) listX.get(0);
         List<UUID> listIdsToRemove = (List<UUID>) listX.get(1);
@@ -86,7 +91,7 @@ public class GridUtilsTest {
         listIdsToRemove = (List<UUID>) listY.get(2);
 
         // seting min width and height higher than input data size
-        List<Map<BigDecimal, ListReactArea>> value = GridUtils.removeSquaresToConformMinWidthAndHeight(mapByX,
+        List<Map<BigDecimal, ListReactArea>> value = GridUtils.removeSquaresToConformMinWidthAndHeight(null, mapByX,
                 mapByY, 11, 11, tolleranceInPercent);
 
         assertEquals(0, value.get(0).size());
@@ -96,6 +101,9 @@ public class GridUtilsTest {
 
     @Test
     void removeSquaresToConformMinWidthAndHeight_fullRes() {
+
+        App.debug = false;
+
         List listX = getMappedByX();
         Map<BigDecimal, ListReactArea> mapByX = (Map<BigDecimal, ListReactArea>) listX.get(0);
         List<UUID> listIdsToRemove = (List<UUID>) listX.get(1);
@@ -106,7 +114,7 @@ public class GridUtilsTest {
         listIdsToRemove = (List<UUID>) listY.get(2);
 
         // expecting grid size 10x10
-        List<Map<BigDecimal, ListReactArea>> value = GridUtils.removeSquaresToConformMinWidthAndHeight(mapByX,
+        List<Map<BigDecimal, ListReactArea>> value = GridUtils.removeSquaresToConformMinWidthAndHeight(null, mapByX,
                 mapByY, 10, 10, tolleranceInPercent);
 
         assertEquals(10, value.get(0).size());
