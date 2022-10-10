@@ -1,6 +1,8 @@
 package minesweeperhelper;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -25,21 +27,22 @@ public class ProcessingServiceTest {
 
         Mat cdst = new Mat();
         Imgproc.cvtColor(gray, cdst, Imgproc.COLOR_GRAY2BGR);
-        Mat linesMat = new Mat(); 
-        Imgproc.HoughLinesP(gray, linesMat, 1, Math.PI/180, 50, 50, 10); 
-        
+        Mat linesMat = new Mat();
+        Imgproc.HoughLinesP(gray, linesMat, 1, Math.PI / 180, 50, 50, 10);
+
         List<double[]> lines = new ArrayList<>();
 
         for (int i = 0; i < linesMat.rows(); i++) {
             double[] coord = linesMat.get(i, 0);
             lines.add(coord);
-            Imgproc.line(cdst, new Point(coord[0], coord[1]), new Point(coord[2], coord[3]), new Scalar(0, 0, 255), 3, Imgproc.LINE_AA, 0);
+            Imgproc.line(cdst, new Point(coord[0], coord[1]), new Point(coord[2], coord[3]), new Scalar(0, 0, 255), 3,
+                    Imgproc.LINE_AA, 0);
         }
 
-        
+        List<LineArea> lineAreas = lines.stream()
+                .map(p -> new LineArea(p, BigDecimal.valueOf(5).setScale(2))).toList();
 
         Imgcodecs.imwrite("debug_lines.png", cdst);
-
 
         /*
          * Mat screenShot = Imgcodecs.imread("debug_aaa1_screenshot.png");

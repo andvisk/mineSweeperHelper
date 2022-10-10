@@ -82,16 +82,16 @@ public class GridUtilsTest {
         App.debug = false;
 
         List listX = getMappedByX();
-        Map<BigDecimal, ListArea> mapByX = (Map<BigDecimal, ListArea>) listX.get(0);
+        Map<BigDecimal, ListArea<RectArea>> mapByX = (Map<BigDecimal, ListArea<RectArea>>) listX.get(0);
         List<UUID> listIdsToRemove = (List<UUID>) listX.get(1);
 
         List listY = getMappedByY(mapByX, listIdsToRemove);
-        mapByX = (Map<BigDecimal, ListArea>) listY.get(0);
-        Map<BigDecimal, ListArea> mapByY = (Map<BigDecimal, ListArea>) listY.get(1);
+        mapByX = (Map<BigDecimal, ListArea<RectArea>>) listY.get(0);
+        Map<BigDecimal, ListArea<RectArea>> mapByY = (Map<BigDecimal, ListArea<RectArea>>) listY.get(1);
         listIdsToRemove = (List<UUID>) listY.get(2);
 
         // seting min width and height higher than input data size
-        List<Map<BigDecimal, ListArea>> value = GridUtils.removeSquaresToConformMinWidthAndHeight(null, mapByX,
+        List<Map<BigDecimal, ListArea<RectArea>>> value = GridUtils.removeSquaresToConformMinWidthAndHeight(null, mapByX,
                 mapByY, 11, 11, tolleranceInPercent);
 
         assertEquals(0, value.get(0).size());
@@ -105,16 +105,16 @@ public class GridUtilsTest {
         App.debug = false;
 
         List listX = getMappedByX();
-        Map<BigDecimal, ListArea> mapByX = (Map<BigDecimal, ListArea>) listX.get(0);
+        Map<BigDecimal, ListArea<RectArea>> mapByX = (Map<BigDecimal, ListArea<RectArea>>) listX.get(0);
         List<UUID> listIdsToRemove = (List<UUID>) listX.get(1);
 
         List listY = getMappedByY(mapByX, listIdsToRemove);
-        mapByX = (Map<BigDecimal, ListArea>) listY.get(0);
-        Map<BigDecimal, ListArea> mapByY = (Map<BigDecimal, ListArea>) listY.get(1);
+        mapByX = (Map<BigDecimal, ListArea<RectArea>>) listY.get(0);
+        Map<BigDecimal, ListArea<RectArea>> mapByY = (Map<BigDecimal, ListArea<RectArea>>) listY.get(1);
         listIdsToRemove = (List<UUID>) listY.get(2);
 
         // expecting grid size 10x10
-        List<Map<BigDecimal, ListArea>> value = GridUtils.removeSquaresToConformMinWidthAndHeight(null, mapByX,
+        List<Map<BigDecimal, ListArea<RectArea>>> value = GridUtils.removeSquaresToConformMinWidthAndHeight(null, mapByX,
                 mapByY, 10, 10, tolleranceInPercent);
 
         assertEquals(10, value.get(0).size());
@@ -141,7 +141,7 @@ public class GridUtilsTest {
         int hCount = 10;
         int vCount = 10;
         List<RectArea> list = collectList(hCount, vCount);
-        Map<BigDecimal, ListArea> map = GridUtils.groupByInCollecting(list, p -> p.x,
+        Map<BigDecimal, ListArea<RectArea>> map = GridUtils.groupByInCollecting(list, p -> p.x,
                 p -> p.xDecreased);
 
         assertEquals(hCount, map.keySet().size());
@@ -306,9 +306,9 @@ public class GridUtilsTest {
      * members
      * index 2 - List<UUID> GridCells ids to be removed
      */
-    private List getMappedByY(Map<BigDecimal, ListArea> mapByX, List<UUID> listUUIDtoRemove) {
+    private List getMappedByY(Map<BigDecimal, ListArea<RectArea>> mapByX, List<UUID> listUUIDtoRemove) {
 
-        Map<BigDecimal, ListArea> map = GridUtils.groupByInCollecting(
+        Map<BigDecimal, ListArea<RectArea>> map = GridUtils.groupByInCollecting(
                 mapByX.entrySet().stream().flatMap(p -> p.getValue().list.stream())
                         .collect(Collectors.toList()),
                 p -> p.y,

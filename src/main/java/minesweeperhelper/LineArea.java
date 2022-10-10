@@ -4,10 +4,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.UUID;
 
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.Rect;
-import org.opencv.imgproc.Imgproc;
-
 public class LineArea {
 
     public UUID id;
@@ -30,42 +26,24 @@ public class LineArea {
 
     }
 
-    // for tests
-    public LineArea(Rect rectangle, BigDecimal tolleranceInPercent) {
-        this(null, tolleranceInPercent, ColorsEnum.YELLOW, rectangle);
-    }
-
-    public LineArea(MatOfPoint contour, BigDecimal tollerance, ColorsEnum color) {
-        this(contour, tollerance, color, null);
-    }
-
-    public LineArea(MatOfPoint contour, BigDecimal tollerance, ColorsEnum color, Rect rect) {
+    public LineArea(double[] coord, BigDecimal tollerance) {
 
         this.id = UUID.randomUUID();
+        this.coord = coord;
 
-        if (contour != null)
-            rectangle = Imgproc.boundingRect(contour);
-        else
-            rectangle = rect;
-
-        this.color = color;
-
-        width = BigDecimal.valueOf(rectangle.width).setScale(2, RoundingMode.HALF_EVEN);
+        width = BigDecimal.valueOf(Math.abs(coord[0] - coord[2])).setScale(2, RoundingMode.HALF_EVEN);
         widthDecreased = width
                 .subtract(width.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN).multiply(tollerance));
 
-        height = BigDecimal.valueOf(rectangle.height).setScale(2, RoundingMode.HALF_EVEN);
+        height = BigDecimal.valueOf(Math.abs(coord[1] - coord[3])).setScale(2, RoundingMode.HALF_EVEN);
         heightDecreased = height
                 .subtract(height.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN).multiply(tollerance));
 
-        x = BigDecimal.valueOf(rectangle.x).setScale(2, RoundingMode.HALF_EVEN);
+        x = BigDecimal.valueOf((coord[0] < coord[2]) ? coord[0] : coord[2]).setScale(2, RoundingMode.HALF_EVEN);
         xDecreased = x.subtract(width.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN).multiply(tollerance));
 
-        y = BigDecimal.valueOf(rectangle.y).setScale(2, RoundingMode.HALF_EVEN);
+        y = BigDecimal.valueOf((coord[1] < coord[3]) ? coord[1] : coord[3]).setScale(2, RoundingMode.HALF_EVEN);
         yDecreased = y.subtract(height.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN).multiply(tollerance));
-
-        areaSize = width.multiply(height);
-        decreasedAreaSize = widthDecreased.multiply(heightDecreased);
 
     }
 
