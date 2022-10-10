@@ -4,6 +4,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.UUID;
 
+import org.opencv.core.Core;
+import org.opencv.core.Point;
+
 public class LineArea {
 
     public UUID id;
@@ -12,6 +15,8 @@ public class LineArea {
     public BigDecimal widthDecreased;
     public BigDecimal height;
     public BigDecimal heightDecreased;
+    public BigDecimal length;
+    public BigDecimal lengthDecreased;
     public BigDecimal x;
     public BigDecimal xDecreased;
     public BigDecimal y;
@@ -38,6 +43,10 @@ public class LineArea {
         height = BigDecimal.valueOf(Math.abs(coord[1] - coord[3])).setScale(2, RoundingMode.HALF_EVEN);
         heightDecreased = height
                 .subtract(height.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN).multiply(tollerance));
+
+        length = BigDecimal.valueOf(Math.sqrt(Math.pow(coord[3]-coord[1], 2)+Math.pow(coord[2]-coord[0], 2))).setScale(2);
+
+        aaa
 
         x = BigDecimal.valueOf((coord[0] < coord[2]) ? coord[0] : coord[2]).setScale(2, RoundingMode.HALF_EVEN);
         xDecreased = x.subtract(width.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN).multiply(tollerance));
