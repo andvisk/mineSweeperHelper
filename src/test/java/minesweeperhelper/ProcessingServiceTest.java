@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.opencv.core.Core;
@@ -41,6 +42,9 @@ public class ProcessingServiceTest {
 
         List<LineArea> lineAreas = lines.stream()
                 .map(p -> new LineArea(p, BigDecimal.valueOf(5).setScale(2))).toList();
+
+        Map<BigDecimal, ListArea<LineArea>> mapByLength = GridUtils.groupByInCollecting(lineAreas, p -> p.x,
+                p -> p.xDecreased);
 
         Imgcodecs.imwrite("debug_lines.png", cdst);
 
