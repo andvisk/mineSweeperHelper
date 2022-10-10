@@ -11,19 +11,9 @@ public class LineArea {
 
     public UUID id;
     public double[] coord;
-    public BigDecimal width;
-    public BigDecimal widthDecreased;
-    public BigDecimal height;
-    public BigDecimal heightDecreased;
+    public BigDecimal leftAngle;
     public BigDecimal length;
     public BigDecimal lengthDecreased;
-    public BigDecimal x;
-    public BigDecimal xDecreased;
-    public BigDecimal y;
-    public BigDecimal yDecreased;
-
-    public int positionInGridX = -1;
-    public int positionInGridY = -1;
 
     public ColorsEnum color;
 
@@ -36,23 +26,12 @@ public class LineArea {
         this.id = UUID.randomUUID();
         this.coord = coord;
 
-        width = BigDecimal.valueOf(Math.abs(coord[0] - coord[2])).setScale(2, RoundingMode.HALF_EVEN);
-        widthDecreased = width
-                .subtract(width.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN).multiply(tollerance));
+        length = BigDecimal.valueOf(Math.sqrt(Math.pow(coord[3] - coord[1], 2) + Math.pow(coord[2] - coord[0], 2)))
+                .setScale(2);
 
-        height = BigDecimal.valueOf(Math.abs(coord[1] - coord[3])).setScale(2, RoundingMode.HALF_EVEN);
-        heightDecreased = height
-                .subtract(height.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN).multiply(tollerance));
+        Point topPoint = (coord[1] < coord[3]) ? new Point(coord[0], coord[1]) : new Point(coord[2], coord[3]);
+        Point steepAnglePoint = (coord[1] < coord[3]) ? new Point(coord[0], coord[1]) : new Point(coord[2], coord[3])
 
-        length = BigDecimal.valueOf(Math.sqrt(Math.pow(coord[3]-coord[1], 2)+Math.pow(coord[2]-coord[0], 2))).setScale(2);
-
-        aaa
-
-        x = BigDecimal.valueOf((coord[0] < coord[2]) ? coord[0] : coord[2]).setScale(2, RoundingMode.HALF_EVEN);
-        xDecreased = x.subtract(width.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN).multiply(tollerance));
-
-        y = BigDecimal.valueOf((coord[1] < coord[3]) ? coord[1] : coord[3]).setScale(2, RoundingMode.HALF_EVEN);
-        yDecreased = y.subtract(height.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN).multiply(tollerance));
 
     }
 
