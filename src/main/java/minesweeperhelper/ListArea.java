@@ -4,16 +4,16 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ListReactArea {
-    public RectArea mainMember;
-    public List<RectArea> list;
+public class ListArea<T> {
+    public T mainMember;
+    public List<T> list;
 
-    public ListReactArea(RectArea mainMember){
+    public ListArea(T mainMember){
         this.mainMember = mainMember;
         list = new ArrayList<>();
     }
 
-    public ListReactArea(RectArea mainMember, List<RectArea>lst){
+    public ListArea(T mainMember, List<T>lst){
         this.mainMember = mainMember;
         list = lst;
     }

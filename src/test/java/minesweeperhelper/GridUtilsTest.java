@@ -82,16 +82,16 @@ public class GridUtilsTest {
         App.debug = false;
 
         List listX = getMappedByX();
-        Map<BigDecimal, ListReactArea> mapByX = (Map<BigDecimal, ListReactArea>) listX.get(0);
+        Map<BigDecimal, ListArea> mapByX = (Map<BigDecimal, ListArea>) listX.get(0);
         List<UUID> listIdsToRemove = (List<UUID>) listX.get(1);
 
         List listY = getMappedByY(mapByX, listIdsToRemove);
-        mapByX = (Map<BigDecimal, ListReactArea>) listY.get(0);
-        Map<BigDecimal, ListReactArea> mapByY = (Map<BigDecimal, ListReactArea>) listY.get(1);
+        mapByX = (Map<BigDecimal, ListArea>) listY.get(0);
+        Map<BigDecimal, ListArea> mapByY = (Map<BigDecimal, ListArea>) listY.get(1);
         listIdsToRemove = (List<UUID>) listY.get(2);
 
         // seting min width and height higher than input data size
-        List<Map<BigDecimal, ListReactArea>> value = GridUtils.removeSquaresToConformMinWidthAndHeight(null, mapByX,
+        List<Map<BigDecimal, ListArea>> value = GridUtils.removeSquaresToConformMinWidthAndHeight(null, mapByX,
                 mapByY, 11, 11, tolleranceInPercent);
 
         assertEquals(0, value.get(0).size());
@@ -105,16 +105,16 @@ public class GridUtilsTest {
         App.debug = false;
 
         List listX = getMappedByX();
-        Map<BigDecimal, ListReactArea> mapByX = (Map<BigDecimal, ListReactArea>) listX.get(0);
+        Map<BigDecimal, ListArea> mapByX = (Map<BigDecimal, ListArea>) listX.get(0);
         List<UUID> listIdsToRemove = (List<UUID>) listX.get(1);
 
         List listY = getMappedByY(mapByX, listIdsToRemove);
-        mapByX = (Map<BigDecimal, ListReactArea>) listY.get(0);
-        Map<BigDecimal, ListReactArea> mapByY = (Map<BigDecimal, ListReactArea>) listY.get(1);
+        mapByX = (Map<BigDecimal, ListArea>) listY.get(0);
+        Map<BigDecimal, ListArea> mapByY = (Map<BigDecimal, ListArea>) listY.get(1);
         listIdsToRemove = (List<UUID>) listY.get(2);
 
         // expecting grid size 10x10
-        List<Map<BigDecimal, ListReactArea>> value = GridUtils.removeSquaresToConformMinWidthAndHeight(null, mapByX,
+        List<Map<BigDecimal, ListArea>> value = GridUtils.removeSquaresToConformMinWidthAndHeight(null, mapByX,
                 mapByY, 10, 10, tolleranceInPercent);
 
         assertEquals(10, value.get(0).size());
@@ -141,7 +141,7 @@ public class GridUtilsTest {
         int hCount = 10;
         int vCount = 10;
         List<RectArea> list = collectList(hCount, vCount);
-        Map<BigDecimal, ListReactArea> map = GridUtils.groupByInCollecting(list, p -> p.x,
+        Map<BigDecimal, ListArea> map = GridUtils.groupByInCollecting(list, p -> p.x,
                 p -> p.xDecreased);
 
         assertEquals(hCount, map.keySet().size());
@@ -271,7 +271,7 @@ public class GridUtilsTest {
      * index 1 - List<UUID> GridCells ids to be removed
      */
     private List getMappedByX() {
-        Map<BigDecimal, ListReactArea> map = new HashMap<>();
+        Map<BigDecimal, ListArea> map = new HashMap<>();
         List<UUID> listId = new ArrayList();
 
         List listRet = Arrays.asList(map, listId);
@@ -292,7 +292,7 @@ public class GridUtilsTest {
                 list.add(gridCell);
                 listId.add(gridCell.id);
             } */
-            map.put(BigDecimal.valueOf(x), new ListReactArea(list.get(0), list));
+            map.put(BigDecimal.valueOf(x), new ListArea(list.get(0), list));
             x += width + gap;
         }
 
@@ -306,9 +306,9 @@ public class GridUtilsTest {
      * members
      * index 2 - List<UUID> GridCells ids to be removed
      */
-    private List getMappedByY(Map<BigDecimal, ListReactArea> mapByX, List<UUID> listUUIDtoRemove) {
+    private List getMappedByY(Map<BigDecimal, ListArea> mapByX, List<UUID> listUUIDtoRemove) {
 
-        Map<BigDecimal, ListReactArea> map = GridUtils.groupByInCollecting(
+        Map<BigDecimal, ListArea> map = GridUtils.groupByInCollecting(
                 mapByX.entrySet().stream().flatMap(p -> p.getValue().list.stream())
                         .collect(Collectors.toList()),
                 p -> p.y,
