@@ -1,9 +1,15 @@
 package minesweeperhelper;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
 import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 
 public class ProcessingServiceTest {
     @Test
@@ -13,7 +19,35 @@ public class ProcessingServiceTest {
 
         Mat screenShot = Imgcodecs.imread("debug_aaa1_screenshot.png");
 
-        ProcessingService service = new ProcessingService(screenShot, ControllerMain.MIN_WIDTH, ControllerMain.MIN_HEIGHT, ControllerMain.TOLLERANCE_IN_PERCENT);
-        service.prepareData();
+        Mat gray = new Mat();
+        Imgproc.cvtColor(screenShot, gray, Imgproc.COLOR_BGR2GRAY);
+        Imgproc.Canny(gray, gray, 50, 200, 3, false);
+
+        Mat cdst = new Mat();
+        Imgproc.cvtColor(gray, cdst, Imgproc.COLOR_GRAY2BGR);
+        Mat linesMat = new Mat(); 
+        Imgproc.HoughLinesP(gray, linesMat, 1, Math.PI/180, 50, 50, 10); 
+        
+        List<double[]> lines = new ArrayList<>();
+
+        for (int i = 0; i < linesMat.rows(); i++) {
+            double[] coord = linesMat.get(i, 0);
+            lines.add(coord);
+            Imgproc.line(cdst, new Point(coord[0], coord[1]), new Point(coord[2], coord[3]), new Scalar(0, 0, 255), 3, Imgproc.LINE_AA, 0);
+        }
+
+        
+
+        Imgcodecs.imwrite("debug_lines.png", cdst);
+
+
+        /*
+         * Mat screenShot = Imgcodecs.imread("debug_aaa1_screenshot.png");
+         * 
+         * ProcessingService service = new ProcessingService(screenShot,
+         * ControllerMain.MIN_WIDTH, ControllerMain.MIN_HEIGHT,
+         * ControllerMain.TOLLERANCE_IN_PERCENT);
+         * service.prepareData();
+         */
     }
 }
