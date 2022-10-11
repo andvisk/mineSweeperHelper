@@ -15,12 +15,6 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
-import org.apache.commons.math3.linear.ArrayRealVector;
-import org.apache.commons.math3.linear.DecompositionSolver;
-import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.RealVector;
-import org.apache.commons.math3.linear.SingularValueDecomposition;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencv.core.Mat;
@@ -30,6 +24,7 @@ import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+import java.awt.geom.Line2D;
 
 public class GridUtils {
 
@@ -580,7 +575,8 @@ public class GridUtils {
         }
     }
 
-    public static Point getLinesItersection(Point line1_1, Point line1_2, Point line2_1, Point line2_2) {
+    public static Point getLinesItersection(Point line1_1, Point line1_2, Point line2_1,
+            Point line2_2) {
         double x1 = line1_1.x;
         double x2 = line1_2.x;
         double x3 = line2_1.x;
@@ -589,12 +585,32 @@ public class GridUtils {
         double y2 = line1_2.y;
         double y3 = line2_1.y;
         double y4 = line2_2.y;
-        double x = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4))
-                / ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
-        double y = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4))
-                / ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
 
-        return new Point(x, y);
+        Line2D line1 = new Line2D.Float(1, 1, 1, 1);
+        line1.setLine(x1, y1, x2, y2);
+
+        Line2D line2 = new Line2D.Float(1, 1, 1, 1);
+        line2.setLine(x3, y3, x4, y4);
+        
+        boolean intersectsSegments = line2.intersectsLine(line1);
+
+        if (intersectsSegments) {
+
+            double denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+
+            if (BigDecimal.valueOf(Math.abs(denominator)).setScale(2, RoundingMode.HALF_EVEN)
+                    .equals(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_EVEN)))
+                return null;
+
+            double x = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4))
+                    / denominator;
+            double y = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4))
+                    / denominator;
+
+            return new Point(x, y);
+        }
+
+        return null;
     }
 
 }
