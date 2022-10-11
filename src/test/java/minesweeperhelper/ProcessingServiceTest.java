@@ -1,6 +1,7 @@
 package minesweeperhelper;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -29,6 +30,8 @@ public class ProcessingServiceTest {
                 Mat cdst = new Mat();
                 Imgproc.cvtColor(gray, cdst, Imgproc.COLOR_GRAY2BGR);
 
+                Mat intersectionsMat = cdst.clone();
+
                 Mat linesMat = new Mat();
                 Imgproc.HoughLinesP(gray, linesMat, 1, Math.PI / 180, 50, 50, 10);
 
@@ -47,21 +50,23 @@ public class ProcessingServiceTest {
                 List<LineArea> lineAreas = lines.stream()
                                 .map(p -> new LineArea(p, BigDecimal.valueOf(5).setScale(2))).toList();
 
-
-                                for(){
-                                        for(){
-                                                Point intersectionPoint = GridUtils.getLinesItersection(point1, point2);
-                                        }
-                                }
-
                 List<LineArea> lineAreasHorizontal = lineAreas.stream().filter(p -> p.isHorizontal()).toList();
                 List<LineArea> lineAreasVertical = lineAreas.stream().filter(p -> p.isVertical()).toList();
 
-                Map<BigDecimal, ListArea<LineArea>> mapByLength = GridUtils.groupByInCollecting(lineAreas,
-                                p -> p.length,
-                                p -> p.lengthDecreased);
+                List<Intersection> intersections = new ArrayList<>();
+                for (LineArea lineH : lineAreasHorizontal) {
+                        for (LineArea lineV : lineAreasVertical) {
+                                Point intersectionPoint = GridUtils.getLinesItersection(lineH.point1, lineH.point2,
+                                                lineV.point1, lineV.point2);
+                                if (intersectionPoint != null) {
+                                        intersections.add(new Intersection(lineH, lineV, intersectionPoint));
+                                        Imgproc.circle(intersectionsMat, intersectionPoint, 2, new Scalar(0, 255, 0), -1);
+                                } 
+                        }
+                }
 
                 Imgcodecs.imwrite("debug_lines.png", cdst);
+                Imgcodecs.imwrite("debug_lines_intersections.png", intersectionsMat);
 
                 /*
                  * Mat screenShot = Imgcodecs.imread("debug_aaa1_screenshot.png");
