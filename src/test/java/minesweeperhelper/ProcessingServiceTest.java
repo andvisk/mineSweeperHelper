@@ -37,7 +37,9 @@ public class ProcessingServiceTest {
                 for (int i = 0; i < linesMat.rows(); i++) {
                         double[] coord = linesMat.get(i, 0);
                         lines.add(coord);
-                        Imgproc.line(cdst, new Point(coord[0], coord[1]), new Point(coord[2], coord[3]),
+                        Point point1 = new Point(coord[0], coord[1]);
+                        Point point2 = new Point(coord[2], coord[3]);
+                        Imgproc.line(cdst, point1, point2,
                                         new Scalar(0, 0, 255), 3,
                                         Imgproc.LINE_AA, 0);
                 }
@@ -45,9 +47,16 @@ public class ProcessingServiceTest {
                 List<LineArea> lineAreas = lines.stream()
                                 .map(p -> new LineArea(p, BigDecimal.valueOf(5).setScale(2))).toList();
 
+
+                                for(){
+                                        for(){
+                                                Point intersectionPoint = GridUtils.getLinesItersection(point1, point2);
+                                        }
+                                }
+
                 List<LineArea> lineAreasHorizontal = lineAreas.stream().filter(p -> p.isHorizontal()).toList();
                 List<LineArea> lineAreasVertical = lineAreas.stream().filter(p -> p.isVertical()).toList();
-asdf
+
                 Map<BigDecimal, ListArea<LineArea>> mapByLength = GridUtils.groupByInCollecting(lineAreas,
                                 p -> p.length,
                                 p -> p.lengthDecreased);
