@@ -15,6 +15,12 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.DecompositionSolver;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
+import org.apache.commons.math3.linear.SingularValueDecomposition;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencv.core.Mat;
@@ -111,15 +117,18 @@ public class GridUtils {
         for (Map.Entry<BigDecimal, Map<BigDecimal, Map<BigDecimal, ListArea<RectArea>>>> entryArea : mapByAreaWidthHeight
                 .entrySet()) {
             BigDecimal area = entryArea.getKey(); // cell area
-            for (Map.Entry<BigDecimal, Map<BigDecimal, ListArea<RectArea>>> entryWidth : entryArea.getValue().entrySet()) {
+            for (Map.Entry<BigDecimal, Map<BigDecimal, ListArea<RectArea>>> entryWidth : entryArea.getValue()
+                    .entrySet()) {
                 BigDecimal width = entryWidth.getKey(); // cell width
                 Map<BigDecimal, ListArea<RectArea>> mapByHeight = entryWidth.getValue();
                 for (Map.Entry<BigDecimal, ListArea<RectArea>> entryByHeight : mapByHeight.entrySet()) {
                     BigDecimal height = entryByHeight.getKey(); // cell height
                     List<RectArea> points = entryByHeight.getValue().list;
 
-                    Map<BigDecimal, ListArea<RectArea>> mapByX = groupByInCollecting(points, p -> p.x, p -> p.xDecreased);
-                    Map<BigDecimal, ListArea<RectArea>> mapByY = groupByInCollecting(points, p -> p.y, p -> p.yDecreased);
+                    Map<BigDecimal, ListArea<RectArea>> mapByX = groupByInCollecting(points, p -> p.x,
+                            p -> p.xDecreased);
+                    Map<BigDecimal, ListArea<RectArea>> mapByY = groupByInCollecting(points, p -> p.y,
+                            p -> p.yDecreased);
 
                     List<Map<BigDecimal, ListArea<RectArea>>> listOfxyMaps = GridUtils
                             .removeSquaresToConformMinWidthAndHeight(screenShot, mapByX, mapByY,
@@ -364,7 +373,8 @@ public class GridUtils {
         Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, ListArea<RectArea>>>> mapByAWH = mapByA.entrySet().stream()
                 .collect(Collectors.toMap(k -> k.getKey(),
                         v -> {
-                            Map<BigDecimal, ListArea<RectArea>> mapAW = groupByInCollecting(v.getValue().list, p -> p.width,
+                            Map<BigDecimal, ListArea<RectArea>> mapAW = groupByInCollecting(v.getValue().list,
+                                    p -> p.width,
                                     p -> p.widthDecreased);
                             Map<BigDecimal, Map<BigDecimal, ListArea<RectArea>>> mapAWH = mapAW.entrySet().stream()
                                     .collect(Collectors.toMap(hk -> hk.getKey(),
@@ -445,7 +455,8 @@ public class GridUtils {
      * 1 - mapByY
      */
     public static List<Map<BigDecimal, ListArea<RectArea>>> removeSquaresToConformMinWidthAndHeight(Mat screenShot,
-            Map<BigDecimal, ListArea<RectArea>> mapByX, Map<BigDecimal, ListArea<RectArea>> mapByY, int minGridHorizontalMembers,
+            Map<BigDecimal, ListArea<RectArea>> mapByX, Map<BigDecimal, ListArea<RectArea>> mapByY,
+            int minGridHorizontalMembers,
             int minGridVerticalMembers,
             BigDecimal tolleranceInPercent) {
 
@@ -567,6 +578,23 @@ public class GridUtils {
         } else {
             return new ArrayList<>();
         }
+    }
+
+    public static Point getLinesItersection(Point line1_1, Point line1_2, Point line2_1, Point line2_2) {
+        double x1 = line1_1.x;
+        double x2 = line1_2.x;
+        double x3 = line2_1.x;
+        double x4 = line2_2.x;
+        double y1 = line1_1.y;
+        double y2 = line1_2.y;
+        double y3 = line2_1.y;
+        double y4 = line2_2.y;
+        double x = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4))
+                / ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
+        double y = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4))
+                / ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4));
+
+        return new Point(x, y);
     }
 
 }
