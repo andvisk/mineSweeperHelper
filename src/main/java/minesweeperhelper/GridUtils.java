@@ -642,7 +642,7 @@ public class GridUtils {
                     .stream().max((a, b) -> Double.compare(a, b)).get();
         }).max().getAsDouble();
 
-
+asdf
 
         return Arrays.asList();
     }
