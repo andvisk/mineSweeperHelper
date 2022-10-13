@@ -591,7 +591,7 @@ public class GridUtils {
 
         Line2D line2 = new Line2D.Float(1, 1, 1, 1);
         line2.setLine(x3, y3, x4, y4);
-        
+
         boolean intersectsSegments = line2.intersectsLine(line1);
 
         if (intersectsSegments) {
@@ -611,6 +611,40 @@ public class GridUtils {
         }
 
         return null;
+    }
+
+    /*
+     * Index
+     * 0 - top left corner
+     * 1 - top right
+     * 2 - bottom right
+     * 3 - bottom left
+     */
+    public static List<Point> getAreaByIntersections(Set<Intersection> mapByIntersections) {
+
+        double minX = mapByIntersections.stream().mapToDouble(p -> {
+            return Arrays.asList(p.lineArea1.point1.x, p.lineArea1.point2.x, p.lineArea2.point1.x, p.lineArea2.point2.x)
+                    .stream().min((a, b) -> Double.compare(a, b)).get();
+        }).min().getAsDouble();
+
+        double minY = mapByIntersections.stream().mapToDouble(p -> {
+            return Arrays.asList(p.lineArea1.point1.y, p.lineArea1.point2.y, p.lineArea2.point1.y, p.lineArea2.point2.y)
+                    .stream().min((a, b) -> Double.compare(a, b)).get();
+        }).min().getAsDouble();
+
+        double maxX = mapByIntersections.stream().mapToDouble(p -> {
+            return Arrays.asList(p.lineArea1.point1.x, p.lineArea1.point2.x, p.lineArea2.point1.x, p.lineArea2.point2.x)
+                    .stream().max((a, b) -> Double.compare(a, b)).get();
+        }).max().getAsDouble();
+
+        double maxY = mapByIntersections.stream().mapToDouble(p -> {
+            return Arrays.asList(p.lineArea1.point1.y, p.lineArea1.point2.y, p.lineArea2.point1.y, p.lineArea2.point2.y)
+                    .stream().max((a, b) -> Double.compare(a, b)).get();
+        }).max().getAsDouble();
+
+
+
+        return Arrays.asList();
     }
 
 }
