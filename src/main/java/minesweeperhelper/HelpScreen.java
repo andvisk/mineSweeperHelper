@@ -7,8 +7,10 @@ import javafx.scene.robot.Robot;
 import javafx.stage.Screen;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,14 +44,29 @@ public class HelpScreen {
                 return ImageUtils.writableImageToMat(writableImage);
         }
 
-        public static Mat process(Mat screenShot,
-                        Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, List<Grid>>>> mapGridsByAreaWidthHeight,
+        public static Mat process(Mat mainScreenShot, Map<UUID, ScreenShotArea> screenShotList,
+                        Map<UUID, Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, List<Grid>>>>> mapGridsByAreaWidthHeight,
                         BigDecimal tolleranceInPercent) {
 
-                List<Board> boards = Board.collectBoards(screenShot, mapGridsByAreaWidthHeight,
-                                tolleranceInPercent);
+                Map<UUID, List<Board>> mapBoards = new HashMap<>();
 
-                if (boards.size() > 0) {
+                for (Map.Entry<UUID, ScreenShotArea> screenShotEntry : screenShotList.entrySet()) {
+                        Mat screenShot = screenShotEntry.getValue().mat();
+                        UUID id = screenShotEntry.getKey();
+                        List<Board> boards = Board.collectBoards(screenShot, mapGridsByAreaWidthHeight.get(id),
+                                        tolleranceInPercent);
+
+                        if (boards.size() > 0) {
+                                mapBoards.put(id, boards);
+                                for (Board board : boards) {
+                                        board.processGrid(mainScreenShot);
+                                }
+                        }
+                }
+
+                for (Map.Entry<UUID, List<Board>> boardsEntry : mapBoards.entrySet()) {
+                        List<Board> boards = boardsEntry.getValue();
+                        UUID id = boardsEntry.getKey();
 
                         Mat screenShotBlured = screenShot.clone();
                         Imgproc.GaussianBlur(screenShotBlured, screenShotBlured, new Size(21, 21), 0);
@@ -62,7 +79,7 @@ public class HelpScreen {
 
                         GridLocation gridLocation = new GridLocation(board.getGrid());
 
-                        board.processGrid(screenShot);
+                        
 
                         Mat squareMat = new Mat(screenShotBlured.height(), screenShotBlured.width(),
                                         CvType.CV_8UC4, new Scalar(0, 0, 0, 0));
