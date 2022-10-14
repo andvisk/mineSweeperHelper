@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
@@ -613,14 +614,120 @@ public class GridUtils {
         return null;
     }
 
-    /*
-     * Index
-     * 0 - top left corner
-     * 1 - top right
-     * 2 - bottom right
-     * 3 - bottom left
-     */
-    public static List<Point> getAreaByIntersections(Set<Intersection> mapByIntersections) {
+    public static Map<UUID, Set<Intersection>> getMapGroupedByIntersections(Mat screenShot){
+        Mat gray = new Mat();
+        Imgproc.cvtColor(screenShot, gray, Imgproc.COLOR_BGR2GRAY);
+        Imgproc.Canny(gray, gray, 50, 200, 3, false);
+
+        Mat cdst = new Mat();
+        Imgproc.cvtColor(gray, cdst, Imgproc.COLOR_GRAY2BGR);
+
+        Mat groupedIntersectionsMat = cdst.clone();
+
+        Mat intersectionsMat = cdst.clone();
+
+        Mat linesMat = new Mat();
+        Imgproc.HoughLinesP(gray, linesMat, 1, Math.PI / 180, 50, 50, 10);
+
+        List<double[]> lines = new ArrayList<>();
+
+        for (int i = 0; i < linesMat.rows(); i++) {
+                double[] coord = linesMat.get(i, 0);
+                lines.add(coord);
+                Point point1 = new Point(coord[0], coord[1]);
+                Point point2 = new Point(coord[2], coord[3]);
+
+                if (App.debug)
+                        Imgproc.line(cdst, point1, point2,
+                                        new Scalar(0, 0, 255), 1,
+                                        Imgproc.LINE_AA, 0);
+        }
+
+        List<LineArea> lineAreas = lines.stream()
+                        .map(p -> new LineArea(p, BigDecimal.valueOf(5).setScale(2))).toList();
+
+        List<LineArea> lineAreasHorizontal = lineAreas.stream().filter(p -> p.isHorizontal()).toList();
+        List<LineArea> lineAreasVertical = lineAreas.stream().filter(p -> p.isVertical()).toList();
+
+        List<Intersection> intersections = new ArrayList<>();
+        for (LineArea lineH : lineAreasHorizontal) {
+                for (LineArea lineV : lineAreasVertical) {
+                        Point intersectionPoint = GridUtils.getLinesItersection(lineH.point1, lineH.point2,
+                                        lineV.point1, lineV.point2);
+                        if (intersectionPoint != null) {
+                                intersections.add(new Intersection(lineH, lineV, intersectionPoint));
+
+                                if (App.debug)
+                                        Imgproc.circle(intersectionsMat, intersectionPoint, 2,
+                                                        new Scalar(0, 255, 0),
+                                                        -1);
+
+                        }
+                }
+        }
+
+        Map<UUID, Set<Intersection>> mapGroupedIntersections = new HashMap<>();
+        for (Intersection intersection : intersections) {
+                Map.Entry<UUID, Set<Intersection>> entryFromMap = mapGroupedIntersections.entrySet()
+                                .stream().filter(
+                                                i -> {
+                                                        Intersection inter = i
+                                                                        .getValue().stream().filter(
+                                                                                        p -> p.lineArea1.id
+                                                                                                        .compareTo(
+                                                                                                                        intersection.lineArea1.id) == 0
+
+                                                                                                        || p.lineArea1.id
+                                                                                                                        .compareTo(
+                                                                                                                                        intersection.lineArea2.id) == 0
+                                                                                                        || p.lineArea2.id
+                                                                                                                        .compareTo(
+                                                                                                                                        intersection.lineArea1.id) == 0
+                                                                                                        || p.lineArea2.id
+                                                                                                                        .compareTo(
+                                                                                                                                        intersection.lineArea2.id) == 0)
+                                                                        .findFirst().orElse(null);
+                                                        if (inter != null)
+                                                                return true;
+                                                        else
+                                                                return false;
+                                                })
+                                .findAny().orElse(null);
+                if (entryFromMap != null) {
+                        mapGroupedIntersections.get(entryFromMap.getKey()).add(intersection);
+                } else {
+                        mapGroupedIntersections.put(UUID.randomUUID(),
+                                        new HashSet<>(Arrays.asList(intersection)));
+                }
+
+        }
+
+        if (App.debug) {
+                Random rng = new Random(12345);
+
+                mapGroupedIntersections.entrySet().stream().forEach(p -> {
+                        Scalar color = new Scalar(rng.nextInt(256), rng.nextInt(256), rng.nextInt(256));
+                        p.getValue().forEach(i -> {
+                                Imgproc.line(groupedIntersectionsMat, i.lineArea1.point1, i.lineArea1.point2,
+                                                color, 1,
+                                                Imgproc.LINE_AA, 0);
+                                Imgproc.line(groupedIntersectionsMat, i.lineArea2.point1, i.lineArea2.point2,
+                                                color, 1,
+                                                Imgproc.LINE_AA, 0);
+                        });
+                });
+        }
+
+        if (App.debug) {
+                Imgcodecs.imwrite("debug_lines_intersections_grouped.png", groupedIntersectionsMat);
+                Imgcodecs.imwrite("debug_lines.png", cdst);
+                Imgcodecs.imwrite("debug_lines_intersections.png", intersectionsMat);
+        }
+
+        return mapGroupedIntersections;
+    }
+
+    public static Rect getAreaByIntersections(Set<Intersection> mapByIntersections) {
 
         double minX = mapByIntersections.stream().mapToDouble(p -> {
             return Arrays.asList(p.lineArea1.point1.x, p.lineArea1.point2.x, p.lineArea2.point1.x, p.lineArea2.point2.x)
@@ -642,9 +749,11 @@ public class GridUtils {
                     .stream().max((a, b) -> Double.compare(a, b)).get();
         }).max().getAsDouble();
 
-asdf
+        int width = (int) (maxX - minX);
+        int height = (int) (maxY - minY);
 
-        return Arrays.asList();
+        return new Rect((int) (minX + width * 1.05), (int) (minY + height * 1.05), (int) (width * 1.1),
+                (int) (height * 1.1)); //adding margins by 5%
     }
 
 }
