@@ -32,31 +32,40 @@ public class GridUtils {
     private static Logger log = LogManager.getLogger(GridUtils.class);
 
     // map by area, width and height
-    public static Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, List<Grid>>>> collectGrids(Mat screenShot,
+    public static Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, List<Grid>>>> collectGrids(
+            ScreenShotArea screenShotArea,
             int minGridHorizontalMembers,
             int minGridVerticalMembers, BigDecimal gridPositionAndSizeTolleranceInPercent) {
 
+        String dir = ProcessingService.debugDir + File.separatorChar + screenShotArea.id();
+
+        FileUtils.checkDirExistsAndEmpty(dir);
+
         Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, List<Grid>>>> mapGridsByAreaWidthHeight = new HashMap<>();
 
-        Mat screenShotContrastAndBrightnessCorr = ImageUtils.contrastAndBrightnessCorrection(screenShot, 1.0, 30);
+        Mat screenShotContrastAndBrightnessCorr = ImageUtils.contrastAndBrightnessCorrection(screenShotArea.mat(), 1.0,
+                30);
         Mat screenShotGamaCorr = ImageUtils.gammaCorrection(screenShotContrastAndBrightnessCorr, 1.5);
 
         Mat blueColors = ImageUtils.detectColor(screenShotGamaCorr, new HsvBlue());
 
         if (App.debug) {
-            Imgcodecs.imwrite("debug_blue_colors.jpg", blueColors);
+            Imgcodecs.imwrite(dir + File.separatorChar + "debug_blue_colors.jpg", blueColors);
         }
 
-        Mat yellowColors = ImageUtils.detectColor(screenShot, new HsvYellow()); // including green question marks
+        Mat yellowColors = ImageUtils.detectColor(screenShotArea.mat(), new HsvYellow()); // including green question
+                                                                                          // marks
 
         if (App.debug) {
-            Imgcodecs.imwrite("debug_yellow_colors.jpg", yellowColors);
+            Imgcodecs.imwrite(dir + File.separatorChar + "debug_yellow_colors.jpg",
+                    yellowColors);
         }
 
-        Mat grayColors = ImageUtils.detectColor(screenShot, new HsvGray());
+        Mat grayColors = ImageUtils.detectColor(screenShotArea.mat(), new HsvGray());
 
         if (App.debug) {
-            Imgcodecs.imwrite("debug_gray_and_white_colors.jpg", grayColors);
+            Imgcodecs.imwrite(dir + File.separatorChar + "debug_gray_and_white_colors.jpg",
+                    grayColors);
         }
 
         List<ContourArea> contoursAll = new ArrayList<>();
@@ -69,9 +78,9 @@ public class GridUtils {
             List<RectArea> rectAreaList = contours.stream()
                     .map(p -> new RectArea(p, BigDecimal.valueOf(10), ColorsEnum.BLUE))
                     .collect(Collectors.toList());
-            Mat copyMat = screenShot.clone();
+            Mat copyMat = screenShotArea.mat().clone();
             rectAreaList.stream().forEach(p -> GridUtils.drawLocation(copyMat, p, new Scalar(0, 0, 255)));
-            Imgcodecs.imwrite("debug_blue_contours.jpg", copyMat);
+            Imgcodecs.imwrite(dir + File.separatorChar + "debug_blue_contours.jpg", copyMat);
         }
 
         contours = new ArrayList<>();
@@ -82,9 +91,9 @@ public class GridUtils {
             List<RectArea> rectAreaList = contours.stream()
                     .map(p -> new RectArea(p, BigDecimal.valueOf(10), ColorsEnum.YELLOW))
                     .collect(Collectors.toList());
-            Mat copyMat = screenShot.clone();
+            Mat copyMat = screenShotArea.mat().clone();
             rectAreaList.stream().forEach(p -> GridUtils.drawLocation(copyMat, p, new Scalar(0, 0, 255)));
-            Imgcodecs.imwrite("debug_yellow_contours.jpg", copyMat);
+            Imgcodecs.imwrite(dir + File.separatorChar + "debug_yellow_contours.jpg", copyMat);
         }
 
         contours = new ArrayList<>();
@@ -95,9 +104,10 @@ public class GridUtils {
             List<RectArea> rectAreaList = contours.stream()
                     .map(p -> new RectArea(p, BigDecimal.valueOf(10), ColorsEnum.WHITE))
                     .collect(Collectors.toList());
-            Mat copyMat = screenShot.clone();
+            Mat copyMat = screenShotArea.mat().clone();
             rectAreaList.stream().forEach(p -> GridUtils.drawLocation(copyMat, p, new Scalar(0, 0, 255)));
-            Imgcodecs.imwrite("debug_gray_white_contours.jpg", copyMat);
+            Imgcodecs.imwrite(dir + File.separatorChar + "debug_gray_white_contours.jpg",
+                    copyMat);
         }
 
         Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, ListArea<RectArea>>>> mapByAreaWidthHeight = GridUtils
@@ -106,8 +116,9 @@ public class GridUtils {
                         minGridHorizontalMembers, minGridVerticalMembers, gridPositionAndSizeTolleranceInPercent);
 
         if (App.debug) {
-            printContBoundBoxs(screenShot, mapByAreaWidthHeight);
-            Imgcodecs.imwrite("debug_screenshot.png", screenShot);
+            printContBoundBoxs(screenShotArea, mapByAreaWidthHeight);
+            Imgcodecs.imwrite(dir + File.separatorChar + "debug_screenshot.png",
+                    screenShotArea.mat());
         }
 
         for (Map.Entry<BigDecimal, Map<BigDecimal, Map<BigDecimal, ListArea<RectArea>>>> entryArea : mapByAreaWidthHeight
@@ -127,7 +138,7 @@ public class GridUtils {
                             p -> p.yDecreased);
 
                     List<Map<BigDecimal, ListArea<RectArea>>> listOfxyMaps = GridUtils
-                            .removeSquaresToConformMinWidthAndHeight(screenShot, mapByX, mapByY,
+                            .removeSquaresToConformMinWidthAndHeight(screenShotArea.mat(), mapByX, mapByY,
                                     minGridHorizontalMembers,
                                     minGridVerticalMembers,
                                     gridPositionAndSizeTolleranceInPercent);
@@ -168,10 +179,12 @@ public class GridUtils {
 
     }
 
-    private static void printContBoundBoxs(Mat screenShot,
+    private static void printContBoundBoxs(ScreenShotArea screenShotArea,
             Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, ListArea<RectArea>>>> mapByAreaWidthHeight) {
         String dirName = "debug_contours";
         FileUtils.checkDirExistsAndEmpty(dirName);
+        final String dirNameFinal = dirName + File.separatorChar + screenShotArea.id();
+        FileUtils.checkDirExistsAndEmpty(dirNameFinal);
 
         for (Map.Entry<BigDecimal, Map<BigDecimal, Map<BigDecimal, ListArea<RectArea>>>> entryA : mapByAreaWidthHeight
                 .entrySet()) {
@@ -181,12 +194,12 @@ public class GridUtils {
                 BigDecimal width = entryW.getKey();
                 entryW.getValue().entrySet().stream().forEach(
                         h -> {
-                            Mat img = screenShot.clone();
+                            Mat img = screenShotArea.mat().clone();
                             h.getValue().list.stream().forEach(p -> {
                                 GridUtils.drawLocation(img, p, new Scalar(0, 0, 255));
                             });
                             Imgcodecs.imwrite(
-                                    dirName + "/con_A" + area.toString() + "_" + "_W" + width.toString() + "_H"
+                                    dirNameFinal + "/con_A" + area.toString() + "_" + "_W" + width.toString() + "_H"
                                             + h.getKey().toString() + ".jpg",
                                     img);
                         });
@@ -614,7 +627,7 @@ public class GridUtils {
         return null;
     }
 
-    public static Map<UUID, Set<Intersection>> getMapGroupedByIntersections(Mat screenShot){
+    public static Map<UUID, Set<Intersection>> getMapGroupedByIntersections(Mat screenShot) {
         Mat gray = new Mat();
         Imgproc.cvtColor(screenShot, gray, Imgproc.COLOR_BGR2GRAY);
         Imgproc.Canny(gray, gray, 50, 200, 3, false);
@@ -632,96 +645,98 @@ public class GridUtils {
         List<double[]> lines = new ArrayList<>();
 
         for (int i = 0; i < linesMat.rows(); i++) {
-                double[] coord = linesMat.get(i, 0);
-                lines.add(coord);
-                Point point1 = new Point(coord[0], coord[1]);
-                Point point2 = new Point(coord[2], coord[3]);
+            double[] coord = linesMat.get(i, 0);
+            lines.add(coord);
+            Point point1 = new Point(coord[0], coord[1]);
+            Point point2 = new Point(coord[2], coord[3]);
 
-                if (App.debug)
-                        Imgproc.line(cdst, point1, point2,
-                                        new Scalar(0, 0, 255), 1,
-                                        Imgproc.LINE_AA, 0);
+            if (App.debug)
+                Imgproc.line(cdst, point1, point2,
+                        new Scalar(0, 0, 255), 1,
+                        Imgproc.LINE_AA, 0);
         }
 
         List<LineArea> lineAreas = lines.stream()
-                        .map(p -> new LineArea(p, BigDecimal.valueOf(5).setScale(2))).toList();
+                .map(p -> new LineArea(p, BigDecimal.valueOf(5).setScale(2))).toList();
 
         List<LineArea> lineAreasHorizontal = lineAreas.stream().filter(p -> p.isHorizontal()).toList();
         List<LineArea> lineAreasVertical = lineAreas.stream().filter(p -> p.isVertical()).toList();
 
         List<Intersection> intersections = new ArrayList<>();
         for (LineArea lineH : lineAreasHorizontal) {
-                for (LineArea lineV : lineAreasVertical) {
-                        Point intersectionPoint = GridUtils.getLinesItersection(lineH.point1, lineH.point2,
-                                        lineV.point1, lineV.point2);
-                        if (intersectionPoint != null) {
-                                intersections.add(new Intersection(lineH, lineV, intersectionPoint));
+            for (LineArea lineV : lineAreasVertical) {
+                Point intersectionPoint = GridUtils.getLinesItersection(lineH.point1, lineH.point2,
+                        lineV.point1, lineV.point2);
+                if (intersectionPoint != null) {
+                    intersections.add(new Intersection(lineH, lineV, intersectionPoint));
 
-                                if (App.debug)
-                                        Imgproc.circle(intersectionsMat, intersectionPoint, 2,
-                                                        new Scalar(0, 255, 0),
-                                                        -1);
+                    if (App.debug)
+                        Imgproc.circle(intersectionsMat, intersectionPoint, 2,
+                                new Scalar(0, 255, 0),
+                                -1);
 
-                        }
                 }
+            }
         }
 
         Map<UUID, Set<Intersection>> mapGroupedIntersections = new HashMap<>();
         for (Intersection intersection : intersections) {
-                Map.Entry<UUID, Set<Intersection>> entryFromMap = mapGroupedIntersections.entrySet()
-                                .stream().filter(
-                                                i -> {
-                                                        Intersection inter = i
-                                                                        .getValue().stream().filter(
-                                                                                        p -> p.lineArea1.id
-                                                                                                        .compareTo(
-                                                                                                                        intersection.lineArea1.id) == 0
+            Map.Entry<UUID, Set<Intersection>> entryFromMap = mapGroupedIntersections.entrySet()
+                    .stream().filter(
+                            i -> {
+                                Intersection inter = i
+                                        .getValue().stream().filter(
+                                                p -> p.lineArea1.id
+                                                        .compareTo(
+                                                                intersection.lineArea1.id) == 0
 
-                                                                                                        || p.lineArea1.id
-                                                                                                                        .compareTo(
-                                                                                                                                        intersection.lineArea2.id) == 0
-                                                                                                        || p.lineArea2.id
-                                                                                                                        .compareTo(
-                                                                                                                                        intersection.lineArea1.id) == 0
-                                                                                                        || p.lineArea2.id
-                                                                                                                        .compareTo(
-                                                                                                                                        intersection.lineArea2.id) == 0)
-                                                                        .findFirst().orElse(null);
-                                                        if (inter != null)
-                                                                return true;
-                                                        else
-                                                                return false;
-                                                })
-                                .findAny().orElse(null);
-                if (entryFromMap != null) {
-                        mapGroupedIntersections.get(entryFromMap.getKey()).add(intersection);
-                } else {
-                        mapGroupedIntersections.put(UUID.randomUUID(),
-                                        new HashSet<>(Arrays.asList(intersection)));
-                }
+                                                        || p.lineArea1.id
+                                                                .compareTo(
+                                                                        intersection.lineArea2.id) == 0
+                                                        || p.lineArea2.id
+                                                                .compareTo(
+                                                                        intersection.lineArea1.id) == 0
+                                                        || p.lineArea2.id
+                                                                .compareTo(
+                                                                        intersection.lineArea2.id) == 0)
+                                        .findFirst().orElse(null);
+                                if (inter != null)
+                                    return true;
+                                else
+                                    return false;
+                            })
+                    .findAny().orElse(null);
+            if (entryFromMap != null) {
+                mapGroupedIntersections.get(entryFromMap.getKey()).add(intersection);
+            } else {
+                mapGroupedIntersections.put(UUID.randomUUID(),
+                        new HashSet<>(Arrays.asList(intersection)));
+            }
 
         }
 
         if (App.debug) {
-                Random rng = new Random(12345);
+            Random rng = new Random(12345);
 
-                mapGroupedIntersections.entrySet().stream().forEach(p -> {
-                        Scalar color = new Scalar(rng.nextInt(256), rng.nextInt(256), rng.nextInt(256));
-                        p.getValue().forEach(i -> {
-                                Imgproc.line(groupedIntersectionsMat, i.lineArea1.point1, i.lineArea1.point2,
-                                                color, 1,
-                                                Imgproc.LINE_AA, 0);
-                                Imgproc.line(groupedIntersectionsMat, i.lineArea2.point1, i.lineArea2.point2,
-                                                color, 1,
-                                                Imgproc.LINE_AA, 0);
-                        });
+            mapGroupedIntersections.entrySet().stream().forEach(p -> {
+                Scalar color = new Scalar(rng.nextInt(256), rng.nextInt(256), rng.nextInt(256));
+                p.getValue().forEach(i -> {
+                    Imgproc.line(groupedIntersectionsMat, i.lineArea1.point1, i.lineArea1.point2,
+                            color, 1,
+                            Imgproc.LINE_AA, 0);
+                    Imgproc.line(groupedIntersectionsMat, i.lineArea2.point1, i.lineArea2.point2,
+                            color, 1,
+                            Imgproc.LINE_AA, 0);
                 });
+            });
         }
 
         if (App.debug) {
-                Imgcodecs.imwrite("debug_lines_intersections_grouped.png", groupedIntersectionsMat);
-                Imgcodecs.imwrite("debug_lines.png", cdst);
-                Imgcodecs.imwrite("debug_lines_intersections.png", intersectionsMat);
+            Imgcodecs.imwrite(ProcessingService.debugDir + File.separatorChar + "debug_lines_intersections_grouped.png",
+                    groupedIntersectionsMat);
+            Imgcodecs.imwrite(ProcessingService.debugDir + File.separatorChar + "debug_lines.png", cdst);
+            Imgcodecs.imwrite(ProcessingService.debugDir + File.separatorChar + "debug_lines_intersections.png",
+                    intersectionsMat);
         }
 
         return mapGroupedIntersections;
@@ -752,8 +767,8 @@ public class GridUtils {
         int width = (int) (maxX - minX);
         int height = (int) (maxY - minY);
 
-        return new Rect((int) (minX + width * 1.05), (int) (minY + height * 1.05), (int) (width * 1.1),
-                (int) (height * 1.1)); //adding margins by 5%
+        return new Rect((int) minX, (int) minY, (int) width,
+                (int) height);
     }
 
 }
