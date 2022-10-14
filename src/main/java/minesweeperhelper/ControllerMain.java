@@ -20,10 +20,16 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.opencv.core.Mat;
+import org.opencv.core.Rect;
 
 public class ControllerMain {
 
@@ -33,7 +39,7 @@ public class ControllerMain {
     public static final int MIN_WIDTH = 9;
     public static final int MIN_HEIGHT = 9;
     public static final BigDecimal TOLLERANCE_IN_PERCENT = BigDecimal.valueOf(35);
-    public static final int THRESH = 80; 
+    public static final int THRESH = 80;
 
     private Stage stage;
 
@@ -111,7 +117,8 @@ public class ControllerMain {
 
                 Mat screenShot = HelpScreen.getScreenShot(controllerHelpScreen);
 
-                ProcessingService service = new ProcessingService(screenShot, MIN_WIDTH, MIN_HEIGHT, TOLLERANCE_IN_PERCENT);
+                ProcessingService service = new ProcessingService(screenShot, MIN_WIDTH,
+                        MIN_HEIGHT, TOLLERANCE_IN_PERCENT);
                 service.setOnScheduled(e -> progressIndicator.visibleProperty().set(true));
                 service.setOnSucceeded(e -> {
                     Mat helpScreenMat = service.getValue();
