@@ -1,5 +1,6 @@
 package minesweeperhelper;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +25,10 @@ public class ProcessingService extends Service<Mat> {
     private int minGridVerticalMembers;
     private BigDecimal gridPositionAndSizeTolleranceInPercent;
 
+    public static String debugDir = "debug";
+    public static String debugContoursDir = "debug_contours";
+    public static String debugRemoveConformSeqDir = "debug_remove_conform_seq";
+
     public ProcessingService(Mat mainScreenShot, int minGridHorizontalMembers,
             int minGridVerticalMembers,
             BigDecimal gridPositionAndSizeTolleranceInPercent) {
@@ -31,6 +36,10 @@ public class ProcessingService extends Service<Mat> {
         this.minGridHorizontalMembers = minGridHorizontalMembers;
         this.minGridVerticalMembers = minGridVerticalMembers;
         this.gridPositionAndSizeTolleranceInPercent = gridPositionAndSizeTolleranceInPercent;
+
+        FileUtils.checkDirExistsAndEmpty(debugDir);
+        FileUtils.checkDirExistsAndEmpty(debugContoursDir);
+        FileUtils.checkDirExistsAndEmpty(debugRemoveConformSeqDir);
     }
 
     protected Task<Mat> createTask() {
@@ -39,18 +48,9 @@ public class ProcessingService extends Service<Mat> {
             @Override
             protected Mat call() throws Exception {
 
-                Map<UUID, Set<Intersection>> mapGroupedIntersections = GridUtils
-                        .getMapGroupedByIntersections(mainScreenShot);
+                ProcessingData processingData = prepareData();
 
-                Map<UUID, Rect> gridAreas = mapGroupedIntersections.entrySet().stream()
-                        .collect(Collectors.toMap(k -> k.getKey(),
-                                p -> GridUtils.getAreaByIntersections(p.getValue())));
-
-                Map<UUID, ScreenShotArea> listScreenShotAreas = gridAreas.entrySet().stream()
-                        .collect(Collectors.toMap(k -> k.getKey(),
-                                p -> new ScreenShotArea(p.getValue(), mainScreenShot.submat(p.getValue()))));
-
-                return HelpScreen.process(mainScreenShot, listScreenShotAreas, prepareData(),
+                return HelpScreen.process(mainScreenShot, processingData.listScreenShotAreas(), processingData.map(),
                         gridPositionAndSizeTolleranceInPercent);
             }
 
@@ -59,20 +59,30 @@ public class ProcessingService extends Service<Mat> {
         return task;
     }
 
-    public Map<UUID, Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, List<Grid>>>>> prepareData() {
+    public ProcessingData prepareData() {
 
         Map<UUID, Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, List<Grid>>>>> ret = new HashMap<>();
 
-        for (Map.Entry<UUID, ScreenShotArea> screenShotEntry : screenShotList.entrySet()) {
+        Map<UUID, Set<Intersection>> mapGroupedIntersections = GridUtils
+                .getMapGroupedByIntersections(mainScreenShot);
+
+        Map<UUID, Rect> gridAreas = mapGroupedIntersections.entrySet().stream()
+                .collect(Collectors.toMap(k -> k.getKey(),
+                        p -> GridUtils.getAreaByIntersections(p.getValue())));
+
+        List<ScreenShotArea> listScreenShotAreas = gridAreas.entrySet().stream()
+                .map(p -> new ScreenShotArea(p.getValue(), mainScreenShot.submat(p.getValue()), p.getKey())).toList();
+
+        for (ScreenShotArea screenShotArea : listScreenShotAreas) {
 
             Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, List<Grid>>>> mapGridsByAreaWidthHeight = GridUtils
                     .collectGrids(
-                            screenShotEntry.getValue().mat(),
+                            screenShotArea,
                             minGridHorizontalMembers, minGridVerticalMembers,
                             gridPositionAndSizeTolleranceInPercent);
 
-            if (App.debug) {
-                Mat screenShotCpy = screenShotEntry.getValue().mat().clone();
+            if (mapGridsByAreaWidthHeight.entrySet().size() > 0 && App.debug) {
+                Mat screenShotCpy = screenShotArea.mat().clone();
                 Random rng = new Random(12345);
                 mapGridsByAreaWidthHeight.entrySet().stream()
                         .flatMap(p -> p.getValue().entrySet().stream())
@@ -82,12 +92,14 @@ public class ProcessingService extends Service<Mat> {
                             GridUtils.drawLocations(screenShotCpy, p, color);
                         });
 
-                Imgcodecs.imwrite("debug_all_grids_" + screenShotEntry.getKey() + ".jpg", screenShotCpy);
+                Imgcodecs.imwrite(debugDir + File.separatorChar + "debug_all_grids_"
+                        + screenShotArea.id() + ".jpg", screenShotCpy);
             }
 
-            ret.put(screenShotEntry.getKey(), mapGridsByAreaWidthHeight);
+            if (mapGridsByAreaWidthHeight.keySet().size() > 0)
+                ret.put(screenShotArea.id(), mapGridsByAreaWidthHeight);
 
         }
-        return ret;
+        return new ProcessingData(ret, listScreenShotAreas);
     }
 }

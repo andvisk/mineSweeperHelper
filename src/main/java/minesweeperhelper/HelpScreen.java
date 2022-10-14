@@ -44,15 +44,15 @@ public class HelpScreen {
                 return ImageUtils.writableImageToMat(writableImage);
         }
 
-        public static Mat process(Mat mainScreenShot, Map<UUID, ScreenShotArea> screenShotList,
+        public static Mat process(Mat mainScreenShot, List<ScreenShotArea> screenShotList,
                         Map<UUID, Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, List<Grid>>>>> mapGridsByAreaWidthHeight,
                         BigDecimal tolleranceInPercent) {
 
                 Map<UUID, List<Board>> mapBoards = new HashMap<>();
 
-                for (Map.Entry<UUID, ScreenShotArea> screenShotEntry : screenShotList.entrySet()) {
-                        Mat screenShot = screenShotEntry.getValue().mat();
-                        UUID id = screenShotEntry.getKey();
+                for (ScreenShotArea screenShotArea : screenShotList) {
+                        Mat screenShot = screenShotArea.mat();
+                        UUID id = screenShotArea.id();
                         List<Board> boards = Board.collectBoards(screenShot, mapGridsByAreaWidthHeight.get(id),
                                         tolleranceInPercent);
 
@@ -64,55 +64,55 @@ public class HelpScreen {
                         }
                 }
 
+                Mat screenShotBlured = mainScreenShot.clone();
+                Imgproc.GaussianBlur(screenShotBlured, screenShotBlured, new Size(21, 21), 0);
+
+                Mat squareMat = new Mat(screenShotBlured.height(), screenShotBlured.width(),
+                                CvType.CV_8UC4, new Scalar(0, 0, 0, 0));
+
+                Mat dstImg = new Mat();
+
                 for (Map.Entry<UUID, List<Board>> boardsEntry : mapBoards.entrySet()) {
                         List<Board> boards = boardsEntry.getValue();
                         UUID id = boardsEntry.getKey();
 
-                        Mat screenShotBlured = screenShot.clone();
-                        Imgproc.GaussianBlur(screenShotBlured, screenShotBlured, new Size(21, 21), 0);
+                        for (Board board : boards) {
+                                if (App.debug)
+                                        board.printDebugInfo(screenShotList.stream().filter(p->p.id().compareTo(id)==0).findAny().get().mat());
 
-                        // get only first board
-                        Board board = boards.get(0);
+                                GridLocation gridLocation = new GridLocation(board.getGrid());
 
-                        if (App.debug)
-                                board.printDebugInfo(screenShot);
+                                Imgproc.rectangle(squareMat,
+                                                new Point(gridLocation.minX - gridLocation.cellWidth / 2,
+                                                                gridLocation.minY - gridLocation.cellHeight / 2),
+                                                new Point(gridLocation.maxX + gridLocation.cellWidth * 1.5,
+                                                                gridLocation.maxY + gridLocation.cellHeight * 1.5),
+                                                new Scalar(255, 0, 0, 0), -1);
 
-                        GridLocation gridLocation = new GridLocation(board.getGrid());
-
-                        
-
-                        Mat squareMat = new Mat(screenShotBlured.height(), screenShotBlured.width(),
-                                        CvType.CV_8UC4, new Scalar(0, 0, 0, 0));
-                        Imgproc.rectangle(squareMat,
-                                        new Point(gridLocation.minX - gridLocation.cellWidth / 2,
-                                                        gridLocation.minY - gridLocation.cellHeight / 2),
-                                        new Point(gridLocation.maxX + gridLocation.cellWidth * 1.5,
-                                                        gridLocation.maxY + gridLocation.cellHeight * 1.5),
-                                        new Scalar(255, 0, 0, 0), -1);
-
-                        Mat drawing2gray = new Mat();
-                        Imgproc.cvtColor(squareMat, drawing2gray, Imgproc.COLOR_BGR2GRAY);
-
-                        Mat mask = new Mat();
-                        Imgproc.threshold(drawing2gray, mask, 10, 255, Imgproc.THRESH_BINARY);
-
-                        Mat maskInverted = new Mat();
-                        Core.bitwise_not(mask, maskInverted);
-
-                        Mat screenShotBackground = new Mat();
-                        Core.bitwise_and(screenShotBlured, screenShotBlured, screenShotBackground,
-                                        maskInverted);
-
-                        Mat screenShotForeground = new Mat();
-                        Core.bitwise_and(screenShot, screenShot, screenShotForeground, mask);
-
-                        Mat dstImg = new Mat();
-                        Core.add(screenShotBackground, screenShotForeground, dstImg);
-
-                        return dstImg;
+                        }
 
                 }
-                return null;
+
+                Mat drawing2gray = new Mat();
+                Imgproc.cvtColor(squareMat, drawing2gray, Imgproc.COLOR_BGR2GRAY);
+
+                Mat mask = new Mat();
+                Imgproc.threshold(drawing2gray, mask, 10, 255, Imgproc.THRESH_BINARY);
+
+                Mat maskInverted = new Mat();
+                Core.bitwise_not(mask, maskInverted);
+
+                Mat screenShotBackground = new Mat();
+                Core.bitwise_and(screenShotBlured, screenShotBlured, screenShotBackground,
+                                maskInverted);
+
+                Mat screenShotForeground = new Mat();
+                Core.bitwise_and(mainScreenShot, mainScreenShot, screenShotForeground, mask);
+
+                Core.add(screenShotBackground, screenShotForeground, dstImg);
+
+                return dstImg;
+
         }
 
         public static void showHelpScreen(Mat dstImg, ControllerHelpScreen controllerHelpScreen) {
