@@ -16,7 +16,9 @@ public class ProcessingServiceTest {
                 ProcessingService service = new ProcessingService(screenShot,
                                 ControllerMain.MIN_WIDTH, ControllerMain.MIN_HEIGHT,
                                 ControllerMain.TOLLERANCE_IN_PERCENT);
-                service.prepareData();
+                ProcessingData processingData = service.prepareData();
+
+                int ooo = 0;
 
         }
 }
