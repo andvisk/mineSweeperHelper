@@ -286,7 +286,7 @@ public class Board {
                                         }
 
                                         // remove possibly black border
-                                        double oneSideMarginMultiplier = 0.1;
+                                        double oneSideMarginMultiplier = 0.15;
                                         Rect ocrArea = new Rect(
                                                 (int) (boardCell.rectangle.x
                                                         + (double) boardCell.rectangle.width * oneSideMarginMultiplier),
@@ -298,6 +298,8 @@ public class Board {
                                                         * (1 - oneSideMarginMultiplier * 2)));
 
                                         Mat imageToOcr = screenShotArea.mat().submat(ocrArea);
+
+                                        GridUtils.checkImageHasAnyContours(imageToOcr, new HsvGray());
 
                                         String text = ocrScanner.getNumberFromImage(imageToOcr);
 
