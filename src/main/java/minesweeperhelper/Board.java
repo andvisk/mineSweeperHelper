@@ -11,11 +11,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.opencv.core.Mat;
+import org.opencv.core.Rect;
 
 public class Board {
 
     private MineSweeperGridCell[][] grid;
     private GridLocation gridLocation;
+    public boolean cellIsEnougthSizeToOcr = true;
 
     public Board(int width, int height, GridLocation gridLocation) {
         this.gridLocation = gridLocation;
@@ -162,7 +164,7 @@ public class Board {
             markFlagsAndEmptyCells(list);
     }
 
-    public static List<Board> collectBoards(Mat srcImg,
+    public static List<Board> collectBoards(ScreenShotArea screenShotArea,
             Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, List<Grid>>>> mapGridsByAreaWidthHeight,
             BigDecimal tolleranceInPercent) {
 
@@ -175,117 +177,137 @@ public class Board {
                 for (BigDecimal height : mapGridsByAreaWidthHeight.get(area).get(width).keySet()) {
                     for (Grid grid : mapGridsByAreaWidthHeight.get(area).get(width).get(height)) {
 
-                        GridLocation gridLocation = new GridLocation(grid.getGrid());
-                        List<MineSweeperGridCell> boardCells = new ArrayList<>();
+                        GridLocation gridLocation = new GridLocation(grid.getGrid(), screenShotArea.area().x,
+                                screenShotArea.area().y);
 
-                        for (RectArea rectArea : grid.getGridCells()) {
+                        // skip if grid area has margins bigger than half cell size
+                        if (gridLocation.minX - screenShotArea.area().x <= (double) gridLocation.cellWidth / 2 ||
+                                gridLocation.minY - screenShotArea.area().y <= (double) gridLocation.cellHeight / 2) {
+                            List<MineSweeperGridCell> boardCells = new ArrayList<>();
 
-                            CellTypeEnum cellTypeEnum = null;
+                            for (RectArea rectArea : grid.getGridCells()) {
 
-                            switch (rectArea.color) {
-                                case BLUE:
-                                    cellTypeEnum = CellTypeEnum.UNCHECKED;
-                                    break;
-                                case YELLOW:
-                                    cellTypeEnum = CellTypeEnum.FLAG;
-                                    break;
-                                case WHITE:
-                                    cellTypeEnum = CellTypeEnum.NUMBER;
-                                    break;
+                                CellTypeEnum cellTypeEnum = null;
 
-                            }
+                                switch (rectArea.color) {
+                                    case BLUE:
+                                        cellTypeEnum = CellTypeEnum.UNCHECKED;
+                                        break;
+                                    case YELLOW:
+                                        cellTypeEnum = CellTypeEnum.FLAG;
+                                        break;
+                                    case WHITE:
+                                        cellTypeEnum = CellTypeEnum.NUMBER;
+                                        break;
 
-                            MineSweeperGridCell gridCell = new MineSweeperGridCell(
-                                    cellTypeEnum, rectArea.rectangle, 0, rectArea.color);
-
-                            boardCells.add(gridCell);
-                        }
-
-                        List<RectArea> gridCells = grid.getGridCells();
-
-                        if (boardCells.size() == gridCells.size()) {
-                            for (MineSweeperGridCell boardCell : boardCells) {
-
-                                RectArea gridCell = gridCells.stream().filter(
-                                        p -> {
-                                            BigDecimal bdX = BigDecimal
-                                                    .valueOf(p.rectangle.x)
-                                                    .setScale(2,
-                                                            RoundingMode.HALF_EVEN);
-                                            BigDecimal bdY = BigDecimal
-                                                    .valueOf(p.rectangle.y)
-                                                    .setScale(2,
-                                                            RoundingMode.HALF_EVEN);
-                                            BigDecimal bdWidth = BigDecimal.valueOf(
-                                                    p.rectangle.width)
-                                                    .setScale(2,
-                                                            RoundingMode.HALF_EVEN);
-                                            BigDecimal bdHeight = BigDecimal
-                                                    .valueOf(p.rectangle.height)
-                                                    .setScale(2,
-                                                            RoundingMode.HALF_EVEN);
-
-                                            BigDecimal bdBX = BigDecimal.valueOf(
-                                                    boardCell.rectangle.x)
-                                                    .setScale(2,
-                                                            RoundingMode.HALF_EVEN);
-                                            BigDecimal bdBY = BigDecimal.valueOf(
-                                                    boardCell.rectangle.y)
-                                                    .setScale(2,
-                                                            RoundingMode.HALF_EVEN);
-
-                                            return bdX.subtract(bdBX).abs()
-                                                    .compareTo(
-                                                            bdWidth.divide(BigDecimal
-                                                                    .valueOf(100),
-                                                                    2,
-                                                                    RoundingMode.HALF_EVEN)
-                                                                    .multiply(tolleranceInPercent)) <= 0
-                                                    &&
-                                                    bdY.subtract(bdBY).abs()
-                                                            .compareTo(
-                                                                    bdHeight.divide(BigDecimal
-                                                                            .valueOf(100),
-                                                                            2,
-                                                                            RoundingMode.HALF_EVEN)
-                                                                            .multiply(tolleranceInPercent)) <= 0;
-
-                                        }).findAny().orElse(null);
-
-                                if (gridCell != null) {
-                                    boardCell.positionInGridX = gridCell.positionInGridX;
-                                    boardCell.positionInGridY = gridCell.positionInGridY;
                                 }
+
+                                MineSweeperGridCell gridCell = new MineSweeperGridCell(
+                                        cellTypeEnum, rectArea.rectangle, 0, rectArea.color);
+
+                                boardCells.add(gridCell);
                             }
-                            int maxXpos = boardCells.stream()
-                                    .max((a, b) -> Integer.compare(a.positionInGridX,
-                                            b.positionInGridX))
-                                    .get().positionInGridX;
-                            int maxYpos = boardCells.stream()
-                                    .max((a, b) -> Integer.compare(a.positionInGridY,
-                                            b.positionInGridY))
-                                    .get().positionInGridY;
-                            Board board = new Board(maxXpos + 1, maxYpos + 1, gridLocation);
 
-                            for (MineSweeperGridCell boardCell : boardCells) {
+                            List<RectArea> gridCells = grid.getGridCells();
 
-                                if (boardCell.color.equals(ColorsEnum.WHITE)) {
-                                    Mat imageToOcr = srcImg.submat(boardCell.rectangle);
-                                    String text = ocrScanner.getNumberFromImage(imageToOcr);
+                            if (boardCells.size() == gridCells.size()) {
+                                for (MineSweeperGridCell boardCell : boardCells) {
 
-                                    if (text != null && text.length() > 0) {
-                                        boardCell.setNumber(Integer.parseInt(text));
-                                        boardCell.setCellTypeEnum(CellTypeEnum.NUMBER);
-                                    } else {
-                                        boardCell.setNumber(0);
-                                        boardCell.setCellTypeEnum(CellTypeEnum.EMPTY);
+                                    RectArea gridCell = gridCells.stream().filter(
+                                            p -> {
+                                                BigDecimal bdX = BigDecimal
+                                                        .valueOf(p.rectangle.x)
+                                                        .setScale(2,
+                                                                RoundingMode.HALF_EVEN);
+                                                BigDecimal bdY = BigDecimal
+                                                        .valueOf(p.rectangle.y)
+                                                        .setScale(2,
+                                                                RoundingMode.HALF_EVEN);
+                                                BigDecimal bdWidth = BigDecimal.valueOf(
+                                                        p.rectangle.width)
+                                                        .setScale(2,
+                                                                RoundingMode.HALF_EVEN);
+                                                BigDecimal bdHeight = BigDecimal
+                                                        .valueOf(p.rectangle.height)
+                                                        .setScale(2,
+                                                                RoundingMode.HALF_EVEN);
+
+                                                BigDecimal bdBX = BigDecimal.valueOf(
+                                                        boardCell.rectangle.x)
+                                                        .setScale(2,
+                                                                RoundingMode.HALF_EVEN);
+                                                BigDecimal bdBY = BigDecimal.valueOf(
+                                                        boardCell.rectangle.y)
+                                                        .setScale(2,
+                                                                RoundingMode.HALF_EVEN);
+
+                                                return bdX.subtract(bdBX).abs()
+                                                        .compareTo(
+                                                                bdWidth.divide(BigDecimal
+                                                                        .valueOf(100),
+                                                                        2,
+                                                                        RoundingMode.HALF_EVEN)
+                                                                        .multiply(tolleranceInPercent)) <= 0
+                                                        &&
+                                                        bdY.subtract(bdBY).abs()
+                                                                .compareTo(
+                                                                        bdHeight.divide(BigDecimal
+                                                                                .valueOf(100),
+                                                                                2,
+                                                                                RoundingMode.HALF_EVEN)
+                                                                                .multiply(tolleranceInPercent)) <= 0;
+
+                                            }).findAny().orElse(null);
+
+                                    if (gridCell != null) {
+                                        boardCell.positionInGridX = gridCell.positionInGridX;
+                                        boardCell.positionInGridY = gridCell.positionInGridY;
                                     }
                                 }
+                                int maxXpos = boardCells.stream()
+                                        .max((a, b) -> Integer.compare(a.positionInGridX,
+                                                b.positionInGridX))
+                                        .get().positionInGridX;
+                                int maxYpos = boardCells.stream()
+                                        .max((a, b) -> Integer.compare(a.positionInGridY,
+                                                b.positionInGridY))
+                                        .get().positionInGridY;
+                                Board board = new Board(maxXpos + 1, maxYpos + 1, gridLocation);
 
-                                board.setCell(boardCell.positionInGridX,
-                                        boardCell.positionInGridY, boardCell);
+                                for (MineSweeperGridCell boardCell : boardCells) {
+
+                                    if (boardCell.color.equals(ColorsEnum.WHITE)) {
+
+                                        // remove possibly black border
+                                        double oneSideMarginMultiplier = 0.1;
+                                        Rect ocrArea = new Rect(
+                                                (int) (boardCell.rectangle.x
+                                                        + (double) boardCell.rectangle.width * oneSideMarginMultiplier),
+                                                (int) (boardCell.rectangle.y + (double) boardCell.rectangle.height
+                                                        * oneSideMarginMultiplier),
+                                                (int) ((double) boardCell.rectangle.width
+                                                        * (1 - oneSideMarginMultiplier * 2)),
+                                                (int) ((double) boardCell.rectangle.height
+                                                        * (1 - oneSideMarginMultiplier * 2)));
+
+                                        Mat imageToOcr = screenShotArea.mat().submat(ocrArea);
+
+                                        String text = ocrScanner.getNumberFromImage(imageToOcr);
+
+                                        if (text != null && text.length() > 0) {
+                                            boardCell.setNumber(Integer.parseInt(text));
+                                            boardCell.setCellTypeEnum(CellTypeEnum.NUMBER);
+                                        } else {
+                                            boardCell.setNumber(0);
+                                            boardCell.setCellTypeEnum(CellTypeEnum.EMPTY);
+                                        }
+                                    }
+
+                                    board.setCell(boardCell.positionInGridX,
+                                            boardCell.positionInGridY, boardCell);
+                                }
+                                listBoards.add(board);
                             }
-                            listBoards.add(board);
                         }
                     }
                 }
@@ -320,6 +342,17 @@ public class Board {
         }
         return mat;
     }
+
+    public Mat printNumberValuesOnBoardCells(Mat mat) {
+        for (int i = 0; i < grid.length; i++) {
+            for (int y = 0; y < grid[i].length; y++) {
+                mat = GridUtils.printOnlyNumberValues(mat, grid[i][y]);
+            }
+
+        }
+        return mat;
+    }
+
 
     public List<MineSweeperGridCell> getGridCells() {
         List<MineSweeperGridCell> list = new ArrayList<>();
