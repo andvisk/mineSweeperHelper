@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -17,7 +18,9 @@ public class Board {
 
     private MineSweeperGridCell[][] grid;
     private GridLocation gridLocation;
-    public boolean cellIsEnougthSizeToOcr = true;
+    public boolean cellIsEnougthSizeToOcr = false;
+
+    public static final String increaseBoardSizeMsg = "Increase board size to increase accuracy";
 
     public Board(int width, int height, GridLocation gridLocation) {
         this.gridLocation = gridLocation;
@@ -166,7 +169,7 @@ public class Board {
 
     public static List<Board> collectBoards(ScreenShotArea screenShotArea,
             Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, List<Grid>>>> mapGridsByAreaWidthHeight,
-            BigDecimal tolleranceInPercent) {
+            BigDecimal tolleranceInPercent, Consumer<String> updateMessageConsumer) {
 
         List<Board> listBoards = new ArrayList<>();
 
@@ -277,6 +280,10 @@ public class Board {
                                 for (MineSweeperGridCell boardCell : boardCells) {
 
                                     if (boardCell.color.equals(ColorsEnum.WHITE)) {
+
+                                        if(boardCell.rectangle.width < 32){
+                                            updateMessageConsumer.accept(increaseBoardSizeMsg);
+                                        }
 
                                         // remove possibly black border
                                         double oneSideMarginMultiplier = 0.1;
