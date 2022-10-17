@@ -786,4 +786,12 @@ public class GridUtils {
                 (int) height);
     }
 
+    public static boolean checkImageHasAnyContours(Mat mat, HsvColor hsvColor){
+        Mat colorsMat = ImageUtils.detectColor(mat, hsvColor);
+        List<MatOfPoint> contours = new ArrayList<>();
+        Imgproc.findContours(colorsMat, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        return false;
+    }
+
 }

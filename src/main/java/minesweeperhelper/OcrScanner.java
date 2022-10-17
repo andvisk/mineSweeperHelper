@@ -27,7 +27,7 @@ public class OcrScanner {
 
         Mat mat = srcImg.clone();
         Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2GRAY);
-        Imgproc.GaussianBlur(mat, mat, new Size(5, 5), 0);
+        Imgproc.GaussianBlur(mat, mat, new Size(3, 3), 0);
         Imgproc.threshold(mat, mat, 0, 255, Imgproc.THRESH_OTSU);
 
         byte[] buffer = new byte[(int) mat.total() * mat.channels()];
