@@ -41,15 +41,6 @@ public class GridUtils {
         Mat yellowColors = ImageProcessing.detectColor(screenShot, new HsvYellow());
         Mat whiteColors = ImageProcessing.detectColor(screenShot, new HsvWhite());
 
-        /*
-         * Mat grayMat = new Mat();
-         * Imgproc.cvtColor(screenShot, grayMat, Imgproc.COLOR_BGR2GRAY);
-         * 
-         * Mat thresholdMat = new Mat();
-         * Imgproc.threshold(grayMat, thresholdMat, ControllerMain.THRESH, 255,
-         * Imgproc.THRESH_BINARY);
-         */
-
         List<ContourArea> contoursAll = new ArrayList<>();
 
         List<MatOfPoint> contours = new ArrayList<>();
