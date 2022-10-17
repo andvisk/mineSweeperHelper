@@ -6,6 +6,7 @@ import javafx.scene.image.WritableImage;
 import javafx.scene.robot.Robot;
 import javafx.stage.Screen;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +21,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 public class HelpScreen {
@@ -51,15 +53,18 @@ public class HelpScreen {
                 Map<UUID, List<Board>> mapBoards = new HashMap<>();
 
                 for (ScreenShotArea screenShotArea : screenShotList) {
-                        Mat screenShot = screenShotArea.mat();
                         UUID id = screenShotArea.id();
-                        List<Board> boards = Board.collectBoards(screenShot, mapGridsByAreaWidthHeight.get(id),
-                                        tolleranceInPercent);
 
-                        if (boards.size() > 0) {
-                                mapBoards.put(id, boards);
-                                for (Board board : boards) {
-                                        board.processGrid(mainScreenShot);
+                        if (mapGridsByAreaWidthHeight.get(id) != null) {
+                                List<Board> boards = Board.collectBoards(screenShotArea,
+                                                mapGridsByAreaWidthHeight.get(id),
+                                                tolleranceInPercent);
+
+                                if (boards.size() > 0) {
+                                        mapBoards.put(id, boards);
+                                        for (Board board : boards) {
+                                                board.processGrid(screenShotArea.mat());
+                                        }
                                 }
                         }
                 }
@@ -77,10 +82,27 @@ public class HelpScreen {
                         UUID id = boardsEntry.getKey();
 
                         for (Board board : boards) {
-                                if (App.debug)
-                                        board.printDebugInfo(screenShotList.stream().filter(p->p.id().compareTo(id)==0).findAny().get().mat());
 
-                                GridLocation gridLocation = new GridLocation(board.getGrid());
+                                ScreenShotArea screenShotArea = screenShotList.stream()
+                                                .filter(p -> p.id().compareTo(id) == 0).findAny().get();
+
+                                if (App.debug) {
+                                        Mat screenShotMat = screenShotArea.mat();
+
+                                        board.printDebugInfo(screenShotMat);
+
+                                        Imgcodecs.imwrite(ProcessingService.debugDir + File.separatorChar + "debug_result_"
+                                                        + id + ".jpg", screenShotMat);
+                                } else {
+                                        if (!board.cellIsEnougthSizeToOcr) {
+                                                board.printNumberValuesOnBoardCells(screenShotArea.mat());
+
+                                                aa
+                                        }
+                                }
+
+                                GridLocation gridLocation = new GridLocation(board.getGrid(), screenShotArea.area().x,
+                                                screenShotArea.area().y);
 
                                 Imgproc.rectangle(squareMat,
                                                 new Point(gridLocation.minX - gridLocation.cellWidth / 2,

@@ -39,7 +39,7 @@ public class GridUtils {
 
         String dir = ProcessingService.debugDir + File.separatorChar + screenShotArea.id();
 
-        FileUtils.checkDirExistsAndEmpty(dir);
+        FileUtils.checkDirExists(dir, true);
 
         Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, List<Grid>>>> mapGridsByAreaWidthHeight = new HashMap<>();
 
@@ -181,10 +181,8 @@ public class GridUtils {
 
     private static void printContBoundBoxs(ScreenShotArea screenShotArea,
             Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, ListArea<RectArea>>>> mapByAreaWidthHeight) {
-        String dirName = "debug_contours";
-        FileUtils.checkDirExistsAndEmpty(dirName);
-        final String dirNameFinal = dirName + File.separatorChar + screenShotArea.id();
-        FileUtils.checkDirExistsAndEmpty(dirNameFinal);
+        final String dirNameFinal = ProcessingService.debugContoursDir + File.separatorChar + screenShotArea.id();
+        FileUtils.checkDirExists(dirNameFinal, true);
 
         for (Map.Entry<BigDecimal, Map<BigDecimal, Map<BigDecimal, ListArea<RectArea>>>> entryA : mapByAreaWidthHeight
                 .entrySet()) {
@@ -292,7 +290,7 @@ public class GridUtils {
             BigDecimal tolleranceInPercent) {
         List<Integer> startPos = new ArrayList<>();
         List<Integer> endPos = new ArrayList<>();
-        List<List<Integer>> retList = Arrays.asList(startPos, endPos);
+        List<List<Integer>> retList = new ArrayList<>(Arrays.asList(startPos, endPos));
 
         if (list.size() > 0) {
             int startingPos = 0;
@@ -344,6 +342,19 @@ public class GridUtils {
         Imgproc.putText(mat, String.valueOf(gridCell.getNumber()), position, font, scale, color, thickness);
         Imgproc.putText(mat, gridCell.getCellTypeEnum().name().substring(0, 2), position2, font, scale, color,
                 thickness);
+
+        return mat;
+    }
+
+    public static Mat printOnlyNumberValues(Mat mat, MineSweeperGridCell gridCell) {
+        Point position = new Point(gridCell.rectangle.x,
+                gridCell.rectangle.y + (double) gridCell.rectangle.height / 100 * 50);
+        Scalar color = new Scalar(0, 0, 255);
+        int font = Imgproc.FONT_HERSHEY_PLAIN;
+        double scale = 1;
+        int thickness = 1;
+
+        Imgproc.putText(mat, String.valueOf(gridCell.getNumber()), position, font, scale, color, thickness);
 
         return mat;
     }
@@ -516,9 +527,9 @@ public class GridUtils {
         }
 
         if (mapByX.size() > 0 && mapByY.size() > 0)
-            return Arrays.asList(mapByX, mapByY);
+            return new ArrayList<>(Arrays.asList(mapByX, mapByY));
         else
-            return Arrays.asList(new HashMap<>(), new HashMap<>());
+            return new ArrayList<>(Arrays.asList(new HashMap<>(), new HashMap<>()));
     }
 
     public static List<RectArea> removeCellsToConformSequency(Mat screenShot, List<RectArea> list,
@@ -534,13 +545,10 @@ public class GridUtils {
                             .compareTo(functionPosition.apply(b)))
                     .collect(Collectors.toList());
 
-            int startingPosition = -1;
+            int startingPosition = 0;
             int counter = 0;
 
             for (int i = 1; i < list.size(); i++) {
-
-                if (startingPosition < 0)
-                    startingPosition = i;
 
                 BigDecimal prevPos = functionPosition.apply(list.get(i - 1));
                 BigDecimal thisPos = functionPosition.apply(list.get(i));
@@ -559,25 +567,29 @@ public class GridUtils {
                     counter = 1;
                     startingPosition = i;
                 }
+
+                if (i == list.size() - 1 && counter < minWidthOrHeightCount) {
+                    for (int j = startingPosition; j < list.size(); j++) {
+                        listToRemove.add(list.get(j));
+                    }
+                }
             }
             if (list.size() - listToRemove.size() >= minWidthOrHeightCount) {
                 if (App.debug && listToRemove.size() > 0) {
-                    String dirName = "debug_remove_conform_seq";
-                    FileUtils.checkDirExistsAndEmpty(dirName);
 
                     String uuid = UUID.randomUUID().toString();
 
                     final Mat debugMat = screenShot.clone();
                     listToRemove.stream().forEach(p -> GridUtils.drawLocation(debugMat, p, new Scalar(0, 0, 255)));
                     Imgcodecs
-                            .imwrite(dirName + "_LIST_TO_REMOVE" + File.separatorChar + System.currentTimeMillis() + "_"
-                                    + uuid + ".jpg", debugMat);
+                            .imwrite(ProcessingService.debugRemoveConformSeqDir + File.separatorChar
+                                    + uuid + "_LIST_TO_REMOVE.jpg", debugMat);
 
                     final Mat debugMatLst = screenShot.clone();
                     list.stream().forEach(p -> GridUtils.drawLocation(debugMatLst, p, new Scalar(0, 0, 255)));
                     Imgcodecs
-                            .imwrite(dirName + "_SOURCE_LIST" + File.separatorChar + System.currentTimeMillis() + "_"
-                                    + uuid + ".jpg", debugMatLst);
+                            .imwrite(ProcessingService.debugRemoveConformSeqDir + File.separatorChar
+                                    + uuid + "_SOURCE_LIST.jpg", debugMatLst);
                 }
                 list.removeAll(listToRemove);
                 return list;
@@ -635,7 +647,7 @@ public class GridUtils {
         Mat cdst = new Mat();
         Imgproc.cvtColor(gray, cdst, Imgproc.COLOR_GRAY2BGR);
 
-        Mat groupedIntersectionsMat = cdst.clone();
+        Mat screenShotBW_BGR = cdst.clone();
 
         Mat intersectionsMat = cdst.clone();
 
@@ -710,16 +722,16 @@ public class GridUtils {
                 mapGroupedIntersections.get(entryFromMap.getKey()).add(intersection);
             } else {
                 mapGroupedIntersections.put(UUID.randomUUID(),
-                        new HashSet<>(Arrays.asList(intersection)));
+                        new HashSet<>(new ArrayList<>(Arrays.asList(intersection))));
             }
 
         }
 
         if (App.debug) {
-            Random rng = new Random(12345);
 
             mapGroupedIntersections.entrySet().stream().forEach(p -> {
-                Scalar color = new Scalar(rng.nextInt(256), rng.nextInt(256), rng.nextInt(256));
+                Scalar color = new Scalar(0, 0, 255);
+                Mat groupedIntersectionsMat = screenShotBW_BGR.clone();
                 p.getValue().forEach(i -> {
                     Imgproc.line(groupedIntersectionsMat, i.lineArea1.point1, i.lineArea1.point2,
                             color, 1,
@@ -728,12 +740,14 @@ public class GridUtils {
                             color, 1,
                             Imgproc.LINE_AA, 0);
                 });
+                Imgcodecs.imwrite(
+                        ProcessingService.debugDir + File.separatorChar + "debug_lines_intersections_grouped_"
+                                + p.getKey().toString() + ".png",
+                        groupedIntersectionsMat);
             });
         }
 
         if (App.debug) {
-            Imgcodecs.imwrite(ProcessingService.debugDir + File.separatorChar + "debug_lines_intersections_grouped.png",
-                    groupedIntersectionsMat);
             Imgcodecs.imwrite(ProcessingService.debugDir + File.separatorChar + "debug_lines.png", cdst);
             Imgcodecs.imwrite(ProcessingService.debugDir + File.separatorChar + "debug_lines_intersections.png",
                     intersectionsMat);
