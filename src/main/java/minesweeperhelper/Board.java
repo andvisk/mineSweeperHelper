@@ -281,12 +281,12 @@ public class Board {
 
                                     if (boardCell.color.equals(ColorsEnum.WHITE)) {
 
-                                        if(boardCell.rectangle.width < 32){
+                                        if (boardCell.rectangle.width < 32) {
                                             updateMessageConsumer.accept(increaseBoardSizeMsg);
                                         }
 
                                         // remove possibly black border
-                                        double oneSideMarginMultiplier = 0.1;
+                                        double oneSideMarginMultiplier = 0.15;
                                         Rect ocrArea = new Rect(
                                                 (int) (boardCell.rectangle.x
                                                         + (double) boardCell.rectangle.width * oneSideMarginMultiplier),
@@ -300,6 +300,12 @@ public class Board {
                                         Mat imageToOcr = screenShotArea.mat().submat(ocrArea);
 
                                         String text = ocrScanner.getNumberFromImage(imageToOcr);
+
+                                        if (text.compareTo("6") == 0) {
+                                            int iii = 0;
+                                        }
+                                        
+                                        GridUtils.checkImageHasAnyContours(imageToOcr, new HsvGray());
 
                                         if (text != null && text.length() > 0) {
                                             boardCell.setNumber(Integer.parseInt(text));
@@ -359,7 +365,6 @@ public class Board {
         }
         return mat;
     }
-
 
     public List<MineSweeperGridCell> getGridCells() {
         List<MineSweeperGridCell> list = new ArrayList<>();
