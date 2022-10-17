@@ -1,5 +1,7 @@
 package minesweeperhelper;
 
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import javafx.geometry.Bounds;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.image.WritableImage;
@@ -12,6 +14,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -48,7 +52,7 @@ public class HelpScreen {
 
         public static Mat process(Mat mainScreenShot, List<ScreenShotArea> screenShotList,
                         Map<UUID, Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, List<Grid>>>>> mapGridsByAreaWidthHeight,
-                        BigDecimal tolleranceInPercent) {
+                        BigDecimal tolleranceInPercent, Consumer<String> updateMessageConsumer) {
 
                 Map<UUID, List<Board>> mapBoards = new HashMap<>();
 
@@ -58,7 +62,7 @@ public class HelpScreen {
                         if (mapGridsByAreaWidthHeight.get(id) != null) {
                                 List<Board> boards = Board.collectBoards(screenShotArea,
                                                 mapGridsByAreaWidthHeight.get(id),
-                                                tolleranceInPercent);
+                                                tolleranceInPercent, updateMessageConsumer);
 
                                 if (boards.size() > 0) {
                                         mapBoards.put(id, boards);
@@ -91,14 +95,11 @@ public class HelpScreen {
 
                                         board.printDebugInfo(screenShotMat);
 
-                                        Imgcodecs.imwrite(ProcessingService.debugDir + File.separatorChar + "debug_result_"
+                                        Imgcodecs.imwrite(ProcessingService.debugDir + File.separatorChar
+                                                        + "debug_result_"
                                                         + id + ".jpg", screenShotMat);
                                 } else {
-                                        if (!board.cellIsEnougthSizeToOcr) {
-                                                board.printNumberValuesOnBoardCells(screenShotArea.mat());
-
-                                                aa
-                                        }
+                                        board.printNumberValuesOnBoardCells(screenShotArea.mat());
                                 }
 
                                 GridLocation gridLocation = new GridLocation(board.getGrid(), screenShotArea.area().x,

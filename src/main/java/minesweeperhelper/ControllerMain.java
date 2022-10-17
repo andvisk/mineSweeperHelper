@@ -87,7 +87,7 @@ public class ControllerMain {
         exitButton.setMinWidth(buttonBoxWidth);
         buttonBox.getChildren().add(exitButton);
 
-        infoLabel = new Label(" text text text text text text text");
+        infoLabel = new Label("");
         infoLabel.setMinWidth(buttonBoxWidth);
         infoLabel.setWrapText(true);
         infoLabel.setFont(new Font("Arial", 30));
@@ -128,16 +128,25 @@ public class ControllerMain {
         EventHandler<MouseEvent> showButtonMouseClickHandler = event -> {
             if (MouseButton.PRIMARY.equals(event.getButton())) {
 
+                infoLabel.textProperty().unbind();
+                infoLabel.textProperty().set("");
+
                 Mat screenShot = HelpScreen.getScreenShot(controllerHelpScreen);
 
                 ProcessingService service = new ProcessingService(screenShot, MIN_WIDTH,
-                        MIN_HEIGHT, TOLLERANCE_IN_PERCENT);
+                        MIN_HEIGHT, TOLLERANCE_IN_PERCENT, infoLabel);
                 service.setOnScheduled(e -> progressIndicator.visibleProperty().set(true));
                 service.setOnSucceeded(e -> {
                     Mat helpScreenMat = service.getValue();
                     if (helpScreenMat != null) {
                         HelpScreen.showHelpScreen(helpScreenMat, controllerHelpScreen);
                         closeHelpScreenButton.setDisable(false);
+                        if(Board.increaseBoardSizeMsg.compareTo(infoLabel.textProperty().get())!=0){
+                            infoLabel.textProperty().unbind();
+                            infoLabel.textProperty().set("");
+                        }
+                    }else{
+
                     }
                     progressIndicator.visibleProperty().set(false);
                 });

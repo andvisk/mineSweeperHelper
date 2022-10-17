@@ -354,7 +354,8 @@ public class GridUtils {
         double scale = 1;
         int thickness = 1;
 
-        Imgproc.putText(mat, String.valueOf(gridCell.getNumber()), position, font, scale, color, thickness);
+        if (gridCell.getNumber() > 0)
+            Imgproc.putText(mat, String.valueOf(gridCell.getNumber()), position, font, scale, color, thickness);
 
         return mat;
     }

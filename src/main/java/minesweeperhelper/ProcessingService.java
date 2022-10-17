@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.opencv.core.Mat;
@@ -19,6 +20,7 @@ import org.opencv.imgcodecs.Imgcodecs;
 
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
+import javafx.scene.control.Label;
 
 public class ProcessingService extends Service<Mat> {
 
@@ -26,6 +28,7 @@ public class ProcessingService extends Service<Mat> {
     private int minGridHorizontalMembers;
     private int minGridVerticalMembers;
     private BigDecimal gridPositionAndSizeTolleranceInPercent;
+    private Label infoLabel;
 
     public static String debugDir = "debug";
     public static String debugContoursDir = "debug_contours";
@@ -33,11 +36,12 @@ public class ProcessingService extends Service<Mat> {
 
     public ProcessingService(Mat mainScreenShot, int minGridHorizontalMembers,
             int minGridVerticalMembers,
-            BigDecimal gridPositionAndSizeTolleranceInPercent) {
+            BigDecimal gridPositionAndSizeTolleranceInPercent, Label infoLabel) {
         this.mainScreenShot = mainScreenShot;
         this.minGridHorizontalMembers = minGridHorizontalMembers;
         this.minGridVerticalMembers = minGridVerticalMembers;
         this.gridPositionAndSizeTolleranceInPercent = gridPositionAndSizeTolleranceInPercent;
+        this.infoLabel = infoLabel;
 
         FileUtils.checkDirExists(debugDir, true);
         FileUtils.checkDirExists(debugContoursDir, true);
@@ -50,18 +54,28 @@ public class ProcessingService extends Service<Mat> {
             @Override
             protected Mat call() throws Exception {
 
-                ProcessingData processingData = prepareData();
+                ProcessingData processingData = prepareData(p -> updateMessage(p));
 
-                return HelpScreen.process(mainScreenShot, processingData.listScreenShotAreas(), processingData.map(),
-                        gridPositionAndSizeTolleranceInPercent);
+                if (processingData.map().entrySet().size() > 0) {
+                    return HelpScreen.process(mainScreenShot, processingData.listScreenShotAreas(),
+                            processingData.map(),
+                            gridPositionAndSizeTolleranceInPercent, p -> updateMessage(p));
+                } else {
+                    updateMessage("No boards detected");
+                    return null;
+                }
             }
 
         };
 
+        infoLabel.textProperty().bind(task.messageProperty());
+
         return task;
     }
 
-    public ProcessingData prepareData() {
+    public ProcessingData prepareData(Consumer<String> updateMessageConsumer) {
+
+        updateMessageConsumer.accept("preparing data...");
 
         Map<UUID, Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, List<Grid>>>>> ret = new HashMap<>();
 
