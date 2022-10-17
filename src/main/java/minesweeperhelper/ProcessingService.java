@@ -2,7 +2,9 @@ package minesweeperhelper;
 
 import java.io.File;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -37,9 +39,9 @@ public class ProcessingService extends Service<Mat> {
         this.minGridVerticalMembers = minGridVerticalMembers;
         this.gridPositionAndSizeTolleranceInPercent = gridPositionAndSizeTolleranceInPercent;
 
-        FileUtils.checkDirExistsAndEmpty(debugDir);
-        FileUtils.checkDirExistsAndEmpty(debugContoursDir);
-        FileUtils.checkDirExistsAndEmpty(debugRemoveConformSeqDir);
+        FileUtils.checkDirExists(debugDir, true);
+        FileUtils.checkDirExists(debugContoursDir, true);
+        FileUtils.checkDirExists(debugRemoveConformSeqDir, true);
     }
 
     protected Task<Mat> createTask() {
@@ -71,9 +73,14 @@ public class ProcessingService extends Service<Mat> {
                         p -> GridUtils.getAreaByIntersections(p.getValue())));
 
         List<ScreenShotArea> listScreenShotAreas = gridAreas.entrySet().stream()
-                .map(p -> new ScreenShotArea(p.getValue(), mainScreenShot.submat(p.getValue()), p.getKey())).toList();
+                .map(p -> new ScreenShotArea(p.getValue(), mainScreenShot.submat(p.getValue()), p.getKey()))
+                .collect(Collectors.toCollection(ArrayList::new));
 
-        for (ScreenShotArea screenShotArea : listScreenShotAreas) {
+        Iterator<ScreenShotArea> screenShotAreaIt = listScreenShotAreas.iterator();
+
+        while (screenShotAreaIt.hasNext()) {
+
+            ScreenShotArea screenShotArea = screenShotAreaIt.next();
 
             Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, List<Grid>>>> mapGridsByAreaWidthHeight = GridUtils
                     .collectGrids(
@@ -98,6 +105,8 @@ public class ProcessingService extends Service<Mat> {
 
             if (mapGridsByAreaWidthHeight.keySet().size() > 0)
                 ret.put(screenShotArea.id(), mapGridsByAreaWidthHeight);
+            else
+                screenShotAreaIt.remove();
 
         }
         return new ProcessingData(ret, listScreenShotAreas);

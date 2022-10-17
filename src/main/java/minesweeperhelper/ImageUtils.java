@@ -139,6 +139,6 @@ public class ImageUtils {
         Imgproc.threshold(dest2gray, mask, 10, 255, Imgproc.THRESH_BINARY);
 
         return dest2gray;
-}
+    }
 
 }

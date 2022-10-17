@@ -7,6 +7,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
@@ -16,6 +17,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
@@ -38,7 +40,7 @@ public class ControllerMain {
     // GRID
     public static final int MIN_WIDTH = 9;
     public static final int MIN_HEIGHT = 9;
-    public static final BigDecimal TOLLERANCE_IN_PERCENT = BigDecimal.valueOf(35);
+    public static final BigDecimal TOLLERANCE_IN_PERCENT = BigDecimal.valueOf(30);
     public static final int THRESH = 80;
 
     private Stage stage;
@@ -51,8 +53,10 @@ public class ControllerMain {
     private Button exitButton;
     private ProgressIndicator progressIndicator;
 
+    private Label infoLabel;
+
     private int stageSmallWidth = 250;
-    private int stageSmallHeight = 100;
+    private int stageSmallHeight = 300;
 
     private Stage helpScreenStage;
     private ControllerHelpScreen controllerHelpScreen;
@@ -82,6 +86,15 @@ public class ControllerMain {
         exitButton = new Button("Exit");
         exitButton.setMinWidth(buttonBoxWidth);
         buttonBox.getChildren().add(exitButton);
+
+        infoLabel = new Label(" text text text text text text text");
+        infoLabel.setMinWidth(buttonBoxWidth);
+        infoLabel.setWrapText(true);
+        infoLabel.setFont(new Font("Arial", 30));
+        infoLabel.setAlignment(Pos.CENTER);
+        infoLabel.setTextFill(Color.color(1, 0, 0));
+
+        buttonBox.getChildren().add(infoLabel);
 
         this.closeHelpScreenButton.setOnAction((event) -> {
             controllerHelpScreen.getStage().hide();

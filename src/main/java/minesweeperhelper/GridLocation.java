@@ -8,7 +8,7 @@ public class GridLocation {
     public int cellHeight = -1;
     public int cellWidth = -1;
 
-    public GridLocation(RectArea[][] grid) {
+    public GridLocation(RectArea[][] grid, int matPosXInScreenShot, int matPosYInScreenShot) {
         for (int i = 0; i < grid.length; i++) {
             for (int y = 0; y < grid[i].length; y++) {
                 if (grid[i][y] != null) {
@@ -31,5 +31,13 @@ public class GridLocation {
                 }
             }
         }
+        convertToScreenShotCoord(matPosXInScreenShot, matPosYInScreenShot);
+    }
+
+    private void convertToScreenShotCoord(int matPosXInScreenShot, int matPosYInScreenShot){
+        minX = minX + matPosXInScreenShot;
+        maxX = maxX + matPosXInScreenShot;
+        minY = minY + matPosYInScreenShot;
+        maxY = maxY + matPosYInScreenShot;
     }
 }
