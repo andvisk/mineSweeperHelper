@@ -487,7 +487,7 @@ public class GridUtils {
         Set<UUID> mapByYIDs = mapByY.entrySet().stream().flatMap(p -> p.getValue().list.stream()).map(p -> p.id)
                 .collect(Collectors.toSet());
 
-        // romeve if absent in mapByY
+        // romove if absent in mapByY
         mapByX = mapByX.entrySet().stream().collect(Collectors.toMap(k -> k.getKey(), v -> {
             List<RectArea> list = v.getValue().list.stream().filter(i -> mapByYIDs.contains(i.id))
                     .collect(Collectors.toList());
@@ -548,7 +548,7 @@ public class GridUtils {
                     .collect(Collectors.toList());
 
             int startingPosition = 0;
-            int counter = 0;
+            int counter = 1;
 
             for (int i = 1; i < list.size(); i++) {
 
@@ -787,12 +787,12 @@ public class GridUtils {
                 (int) height);
     }
 
-    public static int howManyContours(Mat mat, HsvColor hsvColor){
+    public static int howManyContours(Mat mat, HsvColor hsvColor) {
         Mat colorsMat = ImageUtils.detectColor(mat, hsvColor);
         List<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(colorsMat, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
 
-        return contours.stream().flatMap(p->p.toList().stream()).toList().size();
+        return contours.stream().flatMap(p -> p.toList().stream()).toList().size();
     }
 
 }

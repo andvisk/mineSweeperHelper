@@ -3,6 +3,7 @@ package minesweeperhelper;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +58,7 @@ public class Board {
                                 p.getCellTypeEnum().equals(CellTypeEnum.FLAG))
                 .collect(Collectors.toList()));
 
-        solveBoard(list);
+        solveBoard2(list);
 
         List<MineSweeperGridCell> cellsForHelp = uncheckedAndFlagsSet.stream()
                 .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.NEEDS_TO_BE_CHECKED) ||
@@ -154,26 +155,45 @@ public class Board {
             }
         }
 
-        // after marking two cells possibly one of them flag, number has other unchecked cells count -> number - 2 (one of them is marked) 
-        // number - flags - other unchecked cells count == 
-        aaa
+        if (anyChanges)
+            solveBoard(list);
+    }
+
+    private void solveBoard2(List<MineSweeperGridCell> list) {
+
+        boolean anyChanges = false;
+        List<MineSweeperGridCell> numbers = list.stream().filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.NUMBER))
+                .collect(Collectors.toList());
+
+        // src/test/resources/src3.png number 6 and number 3 on the right side
+
+        Map<Integer, Set<Set<MineSweeperGridCell>>> mapByToFlagCellsCountOnSetsOfUncheckedCells = new HashMap<>();
+
         for (MineSweeperGridCell number : numbers) {
             List<MineSweeperGridCell> neighbours = getNeighbourCells(list, number);
             List<MineSweeperGridCell> neighboursUnchecked = neighbours.stream()
                     .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.UNCHECKED)).toList();
             List<MineSweeperGridCell> neighboursFlags = neighbours.stream()
                     .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.FLAG)).toList();
-            if (neighboursFlags.size() == number.getNumber() && neighboursUnchecked.size() > 0) {
-                neighboursUnchecked.stream().forEach(p -> {
-                    p.setCellTypeEnum(CellTypeEnum.NEEDS_TO_BE_CHECKED);
-                    p.setNumber(-1);
-                });
-                anyChanges = true;
+
+            if (neighboursFlags.size() < number.getNumber() && neighboursUnchecked.size() > 0) {
+
+                Set<Set<MineSweeperGridCell>> setFromMap = mapByToFlagCellsCountOnSetsOfUncheckedCells
+                        .get(number.getNumber());
+
+                if (setFromMap == null)
+                    setFromMap = new HashSet<>();
+
+                setFromMap.add(neighboursUnchecked.stream().collect(Collectors.toSet()));
+
+                mapByToFlagCellsCountOnSetsOfUncheckedCells.put(number.getNumber() - neighboursFlags.size(),
+                        setFromMap);
+
             }
         }
 
         if (anyChanges)
-            solveBoard(list);
+            solveBoard2(list);
     }
 
     public static List<Board> collectBoards(ScreenShotArea screenShotArea,

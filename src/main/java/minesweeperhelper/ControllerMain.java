@@ -38,8 +38,8 @@ public class ControllerMain {
     private Logger log = LogManager.getLogger(this.getClass());
 
     // GRID
-    public static final int MIN_WIDTH = 9;
-    public static final int MIN_HEIGHT = 9;
+    public static final int MIN_WIDTH = 7;
+    public static final int MIN_HEIGHT = 7;
     public static final BigDecimal TOLLERANCE_IN_PERCENT = BigDecimal.valueOf(30);
     public static final int THRESH = 80;
 
