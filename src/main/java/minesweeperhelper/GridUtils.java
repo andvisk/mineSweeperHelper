@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
@@ -786,12 +787,12 @@ public class GridUtils {
                 (int) height);
     }
 
-    public static boolean checkImageHasAnyContours(Mat mat, HsvColor hsvColor){
+    public static int howManyContours(Mat mat, HsvColor hsvColor){
         Mat colorsMat = ImageUtils.detectColor(mat, hsvColor);
         List<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(colorsMat, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
 
-        return false;
+        return contours.stream().flatMap(p->p.toList().stream()).toList().size();
     }
 
 }

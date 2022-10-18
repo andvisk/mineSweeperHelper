@@ -75,7 +75,8 @@ public class ProcessingService extends Service<Mat> {
 
     public ProcessingData prepareData(Consumer<String> updateMessageConsumer) {
 
-        updateMessageConsumer.accept("preparing data...");
+        if (updateMessageConsumer != null) // updateMessageConsumer eq null in case running tests
+            updateMessageConsumer.accept("preparing data...");
 
         Map<UUID, Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, List<Grid>>>>> ret = new HashMap<>();
 

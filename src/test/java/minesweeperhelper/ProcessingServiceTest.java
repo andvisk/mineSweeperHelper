@@ -13,16 +13,16 @@ public class ProcessingServiceTest {
 
                 System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
-                Mat screenShot = Imgcodecs.imread("debug_aaa1_screenshot.png");
+                Mat screenShot = Imgcodecs.imread("src/test/resources/src3.png");
 
                 ProcessingService service = new ProcessingService(screenShot,
                                 ControllerMain.MIN_WIDTH, ControllerMain.MIN_HEIGHT,
-                                ControllerMain.TOLLERANCE_IN_PERCENT);
-                ProcessingData processingData = service.prepareData();
+                                ControllerMain.TOLLERANCE_IN_PERCENT, null);
+                ProcessingData processingData = service.prepareData(null);
 
                 Mat finalResult = HelpScreen.process(screenShot, processingData.listScreenShotAreas(),
                                 processingData.map(),
-                                ControllerMain.TOLLERANCE_IN_PERCENT);
+                                ControllerMain.TOLLERANCE_IN_PERCENT, null);
 
                 Imgcodecs.imwrite(ProcessingService.debugDir + File.separatorChar + "debug_final.png", finalResult);
 

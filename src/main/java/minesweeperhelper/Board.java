@@ -57,27 +57,18 @@ public class Board {
                                 p.getCellTypeEnum().equals(CellTypeEnum.FLAG))
                 .collect(Collectors.toList()));
 
-        Set<MineSweeperGridCell> usersSetFlagsSet = new HashSet<MineSweeperGridCell>(list.stream()
-                .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.FLAG))
-                .collect(Collectors.toList()));
-
-        markFlagsAndEmptyCells(list);
+        solveBoard(list);
 
         List<MineSweeperGridCell> cellsForHelp = uncheckedAndFlagsSet.stream()
                 .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.NEEDS_TO_BE_CHECKED) ||
                         p.getCellTypeEnum().equals(CellTypeEnum.FLAG))
                 .collect(Collectors.toList());
 
-        // todo picture on these unsafe flags
-        Set<MineSweeperGridCell> usersSetFalseFlagsSet = new HashSet<MineSweeperGridCell>(usersSetFlagsSet.stream()
-                .filter(p -> !p.getCellTypeEnum().equals(CellTypeEnum.FLAG))
-                .collect(Collectors.toList()));
-
         cellsForHelp.stream().forEach(p -> GridUtils.printHelpInfo(screenShot, p));
 
     }
 
-    private void markFlagsAndEmptyCells(List<MineSweeperGridCell> list) {
+    private void solveBoard(List<MineSweeperGridCell> list) {
         boolean anyChanges = false;
         List<MineSweeperGridCell> numbers = list.stream().filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.NUMBER))
                 .collect(Collectors.toList());
@@ -98,7 +89,7 @@ public class Board {
             }
         }
 
-        // check flags for numbers where neighbour unchecked cells count equals number
+        // check flags for numbers where unchecked around cells count equals number
         // minus flags
         // count
         for (MineSweeperGridCell number : numbers) {
@@ -163,8 +154,26 @@ public class Board {
             }
         }
 
+        // after marking two cells possibly one of them flag, number has other unchecked cells count -> number - 2 (one of them is marked) 
+        // number - flags - other unchecked cells count == 
+        aaa
+        for (MineSweeperGridCell number : numbers) {
+            List<MineSweeperGridCell> neighbours = getNeighbourCells(list, number);
+            List<MineSweeperGridCell> neighboursUnchecked = neighbours.stream()
+                    .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.UNCHECKED)).toList();
+            List<MineSweeperGridCell> neighboursFlags = neighbours.stream()
+                    .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.FLAG)).toList();
+            if (neighboursFlags.size() == number.getNumber() && neighboursUnchecked.size() > 0) {
+                neighboursUnchecked.stream().forEach(p -> {
+                    p.setCellTypeEnum(CellTypeEnum.NEEDS_TO_BE_CHECKED);
+                    p.setNumber(-1);
+                });
+                anyChanges = true;
+            }
+        }
+
         if (anyChanges)
-            markFlagsAndEmptyCells(list);
+            solveBoard(list);
     }
 
     public static List<Board> collectBoards(ScreenShotArea screenShotArea,
@@ -281,7 +290,12 @@ public class Board {
 
                                     if (boardCell.color.equals(ColorsEnum.WHITE)) {
 
-                                        if (boardCell.rectangle.width < 32) {
+                                        if (boardCell.rectangle.width < 32 && updateMessageConsumer != null) { // updateMessageConsumer
+                                                                                                               // null
+                                                                                                               // in
+                                                                                                               // case
+                                                                                                               // running
+                                                                                                               // tests
                                             updateMessageConsumer.accept(increaseBoardSizeMsg);
                                         }
 
@@ -301,11 +315,9 @@ public class Board {
 
                                         String text = ocrScanner.getNumberFromImage(imageToOcr);
 
-                                        if (text.compareTo("6") == 0) {
-                                            int iii = 0;
+                                        if (GridUtils.howManyContours(imageToOcr, new HsvGray()) <= 4) {
+                                            text = null;
                                         }
-                                        
-                                        GridUtils.checkImageHasAnyContours(imageToOcr, new HsvGray());
 
                                         if (text != null && text.length() > 0) {
                                             boardCell.setNumber(Integer.parseInt(text));
