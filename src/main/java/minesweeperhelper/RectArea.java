@@ -32,7 +32,6 @@ public class RectArea {
 
     }
 
-    // for tests
     public RectArea(Rect rectangle, BigDecimal tolleranceInPercent) {
         this(null, tolleranceInPercent, ColorsEnum.YELLOW, rectangle);
     }

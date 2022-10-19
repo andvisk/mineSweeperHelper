@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
@@ -39,7 +40,8 @@ public class GridUtils {
 
         String dir = ProcessingService.debugDir + File.separatorChar + screenShotArea.id();
 
-        FileUtils.checkDirExists(dir, true);
+        if (App.debug)
+            FileUtils.checkDirExists(dir, true);
 
         Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, List<Grid>>>> mapGridsByAreaWidthHeight = new HashMap<>();
 
@@ -331,16 +333,16 @@ public class GridUtils {
 
     public static Mat printDebugInfo(Mat mat, MineSweeperGridCell gridCell) {
         Point position = new Point(gridCell.rectangle.x,
-                gridCell.rectangle.y + (double) gridCell.rectangle.height / 100 * 30);
+                gridCell.rectangle.y + (double) gridCell.rectangle.height / 100 * 40);
         Point position2 = new Point(gridCell.rectangle.x,
-                gridCell.rectangle.y + (double) gridCell.rectangle.height / 100 * 80);
+                gridCell.rectangle.y + (double) gridCell.rectangle.height / 100 * 90);
         Scalar color = new Scalar(0, 0, 255);
         int font = Imgproc.FONT_HERSHEY_PLAIN;
-        double scale = 1;
+        double scale = 0.7;
         int thickness = 1;
 
-        Imgproc.putText(mat, String.valueOf(gridCell.getNumber()), position, font, scale, color, thickness);
-        Imgproc.putText(mat, gridCell.getCellTypeEnum().name().substring(0, 2), position2, font, scale, color,
+        Imgproc.putText(mat, String.valueOf(gridCell.getNumber()), position, font, 1, color, thickness);
+        Imgproc.putText(mat, gridCell.positionInGridX + ";" + gridCell.positionInGridY, position2, font, scale, color,
                 thickness);
 
         return mat;
@@ -486,7 +488,7 @@ public class GridUtils {
         Set<UUID> mapByYIDs = mapByY.entrySet().stream().flatMap(p -> p.getValue().list.stream()).map(p -> p.id)
                 .collect(Collectors.toSet());
 
-        // romeve if absent in mapByY
+        // romove if absent in mapByY
         mapByX = mapByX.entrySet().stream().collect(Collectors.toMap(k -> k.getKey(), v -> {
             List<RectArea> list = v.getValue().list.stream().filter(i -> mapByYIDs.contains(i.id))
                     .collect(Collectors.toList());
@@ -547,7 +549,7 @@ public class GridUtils {
                     .collect(Collectors.toList());
 
             int startingPosition = 0;
-            int counter = 0;
+            int counter = 1;
 
             for (int i = 1; i < list.size(); i++) {
 
@@ -784,6 +786,14 @@ public class GridUtils {
 
         return new Rect((int) minX, (int) minY, (int) width,
                 (int) height);
+    }
+
+    public static int howManyContours(Mat mat, HsvColor hsvColor) {
+        Mat colorsMat = ImageUtils.detectColor(mat, hsvColor);
+        List<MatOfPoint> contours = new ArrayList<>();
+        Imgproc.findContours(colorsMat, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        return contours.stream().flatMap(p -> p.toList().stream()).toList().size();
     }
 
 }
