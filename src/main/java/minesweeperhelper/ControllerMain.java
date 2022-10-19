@@ -137,7 +137,7 @@ public class ControllerMain {
                         MIN_HEIGHT, TOLLERANCE_IN_PERCENT, infoLabel);
                 service.setOnScheduled(e -> progressIndicator.visibleProperty().set(true));
                 service.setOnSucceeded(e -> {
-                    Mat helpScreenMat = service.getValue();
+                    Mat helpScreenMat = service.getValue().image();
                     if (helpScreenMat != null) {
                         HelpScreen.showHelpScreen(helpScreenMat, controllerHelpScreen);
                         closeHelpScreenButton.setDisable(false);
