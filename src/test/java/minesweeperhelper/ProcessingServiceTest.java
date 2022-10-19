@@ -14,6 +14,7 @@ public class ProcessingServiceTest {
         @Test
         void runTest() {
 
+                //
                 System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
                 Mat screenShot = Imgcodecs.imread("src/test/resources/screenshot.png");
