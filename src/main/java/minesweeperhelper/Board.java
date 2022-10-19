@@ -7,13 +7,18 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.Rect;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
 
 public class Board {
 
@@ -161,11 +166,46 @@ public class Board {
 
     private void solveBoard2(List<MineSweeperGridCell> list) {
 
-        boolean anyChanges = false;
+        AtomicBoolean anyChanges = new AtomicBoolean(false);
+
+        Map<Integer, Set<Set<MineSweeperGridCell>>> mapByToFlagCellsCountOnSetsOfUncheckedCells = getMapByToFlagCellsCountOnSetsOfUncheckedCells(
+                list);
+
+        while (anyChanges.get()) {
+
+            anyChanges.set(false);
+
+            // to mark count == unchecked count
+
+            mapByToFlagCellsCountOnSetsOfUncheckedCells.entrySet().stream()
+                    .forEach(p -> {
+
+                        int toFlagCount = p.getKey();
+
+                        Set<Set<MineSweeperGridCell>> set = p.getValue();
+
+                        List<Set<MineSweeperGridCell>> listToFlag = set.stream().filter(l -> toFlagCount == l.size())
+                                .toList();
+
+                        listToFlag.stream().flatMap(o -> o.stream()).forEach(k -> {
+                            k.setCellTypeEnum(CellTypeEnum.FLAG);
+                        });
+
+                        if (listToFlag.size() > 0) {
+                            anyChanges.set(true);
+                        }
+
+                    });
+
+            // src/test/resources/src3.png number 6 and number 1 on the right side
+        }
+
+    }
+
+    private Map<Integer, Set<Set<MineSweeperGridCell>>> getMapByToFlagCellsCountOnSetsOfUncheckedCells(
+            List<MineSweeperGridCell> list) {
         List<MineSweeperGridCell> numbers = list.stream().filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.NUMBER))
                 .collect(Collectors.toList());
-
-        // src/test/resources/src3.png number 6 and number 3 on the right side
 
         Map<Integer, Set<Set<MineSweeperGridCell>>> mapByToFlagCellsCountOnSetsOfUncheckedCells = new HashMap<>();
 
@@ -192,8 +232,7 @@ public class Board {
             }
         }
 
-        if (anyChanges)
-            solveBoard2(list);
+        return mapByToFlagCellsCountOnSetsOfUncheckedCells;
     }
 
     public static List<Board> collectBoards(ScreenShotArea screenShotArea,
@@ -319,25 +358,98 @@ public class Board {
                                             updateMessageConsumer.accept(increaseBoardSizeMsg);
                                         }
 
-                                        // remove possibly black border
-                                        double oneSideMarginMultiplier = 0.15;
-                                        Rect ocrArea = new Rect(
-                                                (int) (boardCell.rectangle.x
-                                                        + (double) boardCell.rectangle.width * oneSideMarginMultiplier),
-                                                (int) (boardCell.rectangle.y + (double) boardCell.rectangle.height
-                                                        * oneSideMarginMultiplier),
-                                                (int) ((double) boardCell.rectangle.width
-                                                        * (1 - oneSideMarginMultiplier * 2)),
-                                                (int) ((double) boardCell.rectangle.height
-                                                        * (1 - oneSideMarginMultiplier * 2)));
+                                        Mat imageToOcr = screenShotArea.mat().submat(boardCell.rectangle);
 
-                                        Mat imageToOcr = screenShotArea.mat().submat(ocrArea);
+                                        Mat screenShotGamaCorr = ImageUtils
+                                                .gammaCorrection(imageToOcr, 1.5);
 
-                                        String text = ocrScanner.getNumberFromImage(imageToOcr);
+                                        Mat screenShotBightnessCorr = ImageUtils.contrastAndBrightnessCorrection(
+                                                screenShotGamaCorr, 1.0, 30);
 
-                                        if (GridUtils.howManyContours(imageToOcr, new HsvGray()) <= 4) {
+                                        Mat whiteColors = ImageUtils.detectColor(screenShotBightnessCorr,
+                                                new HsvGray());
+
+                                        double scaleWidthFasctor = (double) 50 / whiteColors.width();
+
+                                        Imgproc.resize(whiteColors, whiteColors, new Size(),
+                                                scaleWidthFasctor,
+                                                scaleWidthFasctor,
+                                                Imgproc.INTER_AREA);
+
+                                        List<MatOfPoint> contours = new ArrayList<>();
+                                        Imgproc.findContours(whiteColors, contours, new Mat(), Imgproc.RETR_LIST,
+                                                Imgproc.CHAIN_APPROX_SIMPLE);
+
+                                        List<RectArea> listRectArea = contours.stream().map(p -> {
+                                            return new RectArea(Imgproc.boundingRect(p), BigDecimal.valueOf(10));
+                                        }).collect(Collectors.toCollection(ArrayList::new));
+
+                                        String text = null;
+
+                                        // all cells has borders, removing contour of border, the second one is
+                                        // contour for number
+                                        listRectArea.sort((a, b) -> a.areaSize.compareTo(b.areaSize));
+
+                                        // some cells has contours from neighbour cells (finding cell accuracy)
+                                        // find bigges contour and leave just all inner contours
+                                        final RectArea biggesRect = listRectArea.get(listRectArea.size() - 1);
+
+                                        listRectArea = listRectArea.stream().filter(p -> {
+                                            Rect rectToTest = p.rectangle;
+
+                                            if (biggesRect.id.compareTo(p.id) != 0) {
+
+                                                if (biggesRect.rectangle.x < rectToTest.x &&
+                                                        biggesRect.rectangle.y < rectToTest.y &&
+                                                        biggesRect.rectangle.x
+                                                                + biggesRect.rectangle.width > rectToTest.x
+                                                                        + rectToTest.width
+                                                        &&
+                                                        biggesRect.rectangle.y
+                                                                + biggesRect.rectangle.height > rectToTest.y
+                                                                        + rectToTest.height) {
+                                                    return true;
+                                                }
+
+                                                return false;
+                                            } else {
+                                                return true; // leave biggest rect
+                                            }
+
+                                        }).collect(Collectors.toCollection(ArrayList::new));
+
+                                        // if not empty cell (white), white cells has only one contour of border
+                                        if (listRectArea.size() > 1) {
+
+                                            Rect rectForNumber = listRectArea
+                                                    .get(listRectArea.size() - 2).rectangle;
+                                            Rect rectForNumberIncreased = new Rect(
+                                                    new double[] {
+                                                            (double) rectForNumber.x
+                                                                    - (double) rectForNumber.width * 0.05,
+                                                            (double) rectForNumber.y
+                                                                    - (double) rectForNumber.height * 0.05,
+                                                            (double) rectForNumber.width
+                                                                    + (double) rectForNumber.width * 0.1,
+                                                            (double) rectForNumber.height
+                                                                    + (double) rectForNumber.height * 0.1,
+                                                    }
+
+                                            );
+
+                                            if (boardCell.positionInGridX == 17 && boardCell.positionInGridY == 14) {
+                                                int ooopa = 0;
+                                            }
+
+                                            text = ocrScanner.getNumberFromImage(
+                                                    whiteColors.submat(rectForNumberIncreased));
+
+                                            int ooop = 0;
+                                        } else {
                                             text = null;
                                         }
+
+                                        // if (text.compareTo("41") == 0) {}
 
                                         if (text != null && text.length() > 0) {
                                             boardCell.setNumber(Integer.parseInt(text));
@@ -352,6 +464,7 @@ public class Board {
                                             boardCell.positionInGridY, boardCell);
                                 }
                                 listBoards.add(board);
+                                printBoard(board);
                             }
                         }
                     }
@@ -360,6 +473,18 @@ public class Board {
         }
         ocrScanner.destructor();
         return listBoards;
+    }
+
+    private static void printBoard(Board board) {
+        MineSweeperGridCell[][] grid = board.getGrid();
+        for (int k = 0; k < grid[0].length; k++) {
+            String line = "new int[] { ";
+            for (int i = 0; i < grid.length; i++) {
+                line = line + ((i > 0) ? "," : "") + grid[i][k].getNumber();
+            }
+            line = line + " },";
+            System.out.println(line);
+        }
     }
 
     private List<MineSweeperGridCell> getNeighbourCells(List<MineSweeperGridCell> list, MineSweeperGridCell cell) {

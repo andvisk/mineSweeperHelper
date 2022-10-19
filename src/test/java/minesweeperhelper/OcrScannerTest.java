@@ -16,7 +16,9 @@ public class OcrScannerTest {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
         OcrScanner ocrScanner = new OcrScanner(System.getProperty("tesseractDataDir"));
+
         Mat patternImage = Imgcodecs.imread("src/main/resources/" + 1 + ".png");
+        //Mat patternImage = Imgcodecs.imread("debug_.png");
 
         String text = ocrScanner.getNumberFromImage(patternImage);
 
