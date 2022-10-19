@@ -360,24 +360,10 @@ public class Board {
 
                                         Mat imageToOcr = screenShotArea.mat().submat(boardCell.rectangle);
 
-                                        Mat screenShotGamaCorr = ImageUtils
-                                                .gammaCorrection(imageToOcr, 1.5);
-
-                                        Mat screenShotBightnessCorr = ImageUtils.contrastAndBrightnessCorrection(
-                                                screenShotGamaCorr, 1.0, 30);
-
-                                        Mat whiteColors = ImageUtils.detectColor(screenShotBightnessCorr,
-                                                new HsvGray());
-
-                                        double scaleWidthFasctor = (double) 50 / whiteColors.width();
-
-                                        Imgproc.resize(whiteColors, whiteColors, new Size(),
-                                                scaleWidthFasctor,
-                                                scaleWidthFasctor,
-                                                Imgproc.INTER_AREA);
+                                        Mat grayColors = ImageUtils.detectColor(imageToOcr, new HsvGray());
 
                                         List<MatOfPoint> contours = new ArrayList<>();
-                                        Imgproc.findContours(whiteColors, contours, new Mat(), Imgproc.RETR_LIST,
+                                        Imgproc.findContours(grayColors, contours, new Mat(), Imgproc.RETR_LIST,
                                                 Imgproc.CHAIN_APPROX_SIMPLE);
 
                                         List<RectArea> listRectArea = contours.stream().map(p -> {
@@ -423,28 +409,18 @@ public class Board {
 
                                             Rect rectForNumber = listRectArea
                                                     .get(listRectArea.size() - 2).rectangle;
-                                            Rect rectForNumberIncreased = new Rect(
-                                                    new double[] {
-                                                            (double) rectForNumber.x
-                                                                    - (double) rectForNumber.width * 0.05,
-                                                            (double) rectForNumber.y
-                                                                    - (double) rectForNumber.height * 0.05,
-                                                            (double) rectForNumber.width
-                                                                    + (double) rectForNumber.width * 0.1,
-                                                            (double) rectForNumber.height
-                                                                    + (double) rectForNumber.height * 0.1,
-                                                    }
 
-                                            );
+                                            int widthDelta = (int) Math.ceil((double) rectForNumber.width * 0.1);
+                                            int heightDelta = (int) Math.ceil((double) rectForNumber.height * 0.1);
 
-                                            if (boardCell.positionInGridX == 17 && boardCell.positionInGridY == 14) {
-                                                int ooopa = 0;
-                                            }
+                                            Rect rectForNumberIncreased = new Rect(rectForNumber.x - widthDelta,
+                                                    rectForNumber.y - heightDelta,
+                                                    rectForNumber.width + widthDelta * 2,
+                                                    rectForNumber.height + heightDelta * 2);
 
                                             text = ocrScanner.getNumberFromImage(
-                                                    whiteColors.submat(rectForNumberIncreased));
+                                                    imageToOcr.submat(rectForNumberIncreased));
 
-                                            int ooop = 0;
                                         } else {
                                             text = null;
                                         }
@@ -464,7 +440,7 @@ public class Board {
                                             boardCell.positionInGridY, boardCell);
                                 }
                                 listBoards.add(board);
-                                printBoard(board);
+                                // printBoard(board);
                             }
                         }
                     }
@@ -477,14 +453,13 @@ public class Board {
 
     private static void printBoard(Board board) {
         MineSweeperGridCell[][] grid = board.getGrid();
+        String line = "";
         for (int k = 0; k < grid[0].length; k++) {
-            String line = "new int[] { ";
             for (int i = 0; i < grid.length; i++) {
-                line = line + ((i > 0) ? "," : "") + grid[i][k].getNumber();
+                line = line + "\ndata[" + i + "][" + k + "] = " + grid[i][k].getNumber() + ";";
             }
-            line = line + " },";
-            System.out.println(line);
         }
+        System.out.println(line);
     }
 
     private List<MineSweeperGridCell> getNeighbourCells(List<MineSweeperGridCell> list, MineSweeperGridCell cell) {

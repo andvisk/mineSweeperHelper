@@ -10,6 +10,7 @@ import org.bytedeco.tesseract.*;
 import org.bytedeco.tesseract.global.tesseract;
 
 import org.opencv.core.Mat;
+import org.opencv.core.Point;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
@@ -35,9 +36,27 @@ public class OcrScanner {
     public String getNumberFromImage(Mat srcImg) {
 
         Mat mat = srcImg.clone();
-        /* Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2GRAY);
+
+        double scaleWidthFasctor = (double) 50 / mat.width();
+
+        Imgproc.resize(mat, mat, new Size(),
+                scaleWidthFasctor,
+                scaleWidthFasctor,
+                Imgproc.INTER_AREA);
+
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(5, 5));
+        Imgproc.morphologyEx(mat, mat, Imgproc.MORPH_OPEN, kernel);
+
         Imgproc.GaussianBlur(mat, mat, new Size(5, 5), 0);
-        Imgproc.threshold(mat, mat, 0, 255, Imgproc.THRESH_OTSU); */
+
+        Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2GRAY);
+        
+        Imgproc.threshold(mat, mat, 0, 255, Imgproc.THRESH_OTSU);
+
+        int kernelSize = 2;
+        Mat element = Imgproc.getStructuringElement(Imgproc.MORPH_ELLIPSE, new Size(2 * kernelSize + 1, 2 * kernelSize + 1),
+                new Point(kernelSize, kernelSize));
+        Imgproc.dilate(mat, mat, element); //background white for OCR, number black: dilate white background -> erode black number
 
         byte[] buffer = new byte[(int) mat.total() * mat.channels()];
         mat.get(0, 0, buffer);
@@ -57,5 +76,5 @@ public class OcrScanner {
     public void destructor() {
         api.End();
     }
-    
+
 }

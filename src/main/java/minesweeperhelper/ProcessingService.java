@@ -22,7 +22,7 @@ import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.scene.control.Label;
 
-public class ProcessingService extends Service<Mat> {
+public class ProcessingService extends Service<HelpScreenResult> {
 
     private Mat mainScreenShot;
     private int minGridHorizontalMembers;
@@ -43,16 +43,18 @@ public class ProcessingService extends Service<Mat> {
         this.gridPositionAndSizeTolleranceInPercent = gridPositionAndSizeTolleranceInPercent;
         this.infoLabel = infoLabel;
 
-        FileUtils.checkDirExists(debugDir, true);
-        FileUtils.checkDirExists(debugContoursDir, true);
-        FileUtils.checkDirExists(debugRemoveConformSeqDir, true);
+        if (App.debug) {
+            FileUtils.checkDirExists(debugDir, true);
+            FileUtils.checkDirExists(debugContoursDir, true);
+            FileUtils.checkDirExists(debugRemoveConformSeqDir, true);
+        }
     }
 
-    protected Task<Mat> createTask() {
-        Task<Mat> task = new Task<Mat>() {
+    protected Task<HelpScreenResult> createTask() {
+        Task<HelpScreenResult> task = new Task<HelpScreenResult>() {
 
             @Override
-            protected Mat call() throws Exception {
+            protected HelpScreenResult call() throws Exception {
 
                 ProcessingData processingData = prepareData(p -> updateMessage(p));
 

@@ -50,7 +50,7 @@ public class HelpScreen {
                 return ImageUtils.writableImageToMat(writableImage);
         }
 
-        public static Mat process(Mat mainScreenShot, List<ScreenShotArea> screenShotList,
+        public static HelpScreenResult process(Mat mainScreenShot, List<ScreenShotArea> screenShotList,
                         Map<UUID, Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, List<Grid>>>>> mapGridsByAreaWidthHeight,
                         BigDecimal tolleranceInPercent, Consumer<String> updateMessageConsumer) {
 
@@ -134,7 +134,7 @@ public class HelpScreen {
 
                 Core.add(screenShotBackground, screenShotForeground, dstImg);
 
-                return dstImg;
+                return new HelpScreenResult(dstImg, mapBoards);
 
         }
 

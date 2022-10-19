@@ -40,7 +40,8 @@ public class GridUtils {
 
         String dir = ProcessingService.debugDir + File.separatorChar + screenShotArea.id();
 
-        FileUtils.checkDirExists(dir, true);
+        if (App.debug)
+            FileUtils.checkDirExists(dir, true);
 
         Map<BigDecimal, Map<BigDecimal, Map<BigDecimal, List<Grid>>>> mapGridsByAreaWidthHeight = new HashMap<>();
 
@@ -332,16 +333,16 @@ public class GridUtils {
 
     public static Mat printDebugInfo(Mat mat, MineSweeperGridCell gridCell) {
         Point position = new Point(gridCell.rectangle.x,
-                gridCell.rectangle.y + (double) gridCell.rectangle.height / 100 * 30);
+                gridCell.rectangle.y + (double) gridCell.rectangle.height / 100 * 40);
         Point position2 = new Point(gridCell.rectangle.x,
-                gridCell.rectangle.y + (double) gridCell.rectangle.height / 100 * 80);
+                gridCell.rectangle.y + (double) gridCell.rectangle.height / 100 * 90);
         Scalar color = new Scalar(0, 0, 255);
         int font = Imgproc.FONT_HERSHEY_PLAIN;
-        double scale = 1;
+        double scale = 0.7;
         int thickness = 1;
 
-        Imgproc.putText(mat, String.valueOf(gridCell.getNumber()), position, font, scale, color, thickness);
-        Imgproc.putText(mat, gridCell.getCellTypeEnum().name().substring(0, 2), position2, font, scale, color,
+        Imgproc.putText(mat, String.valueOf(gridCell.getNumber()), position, font, 1, color, thickness);
+        Imgproc.putText(mat, gridCell.positionInGridX + ";" + gridCell.positionInGridY, position2, font, scale, color,
                 thickness);
 
         return mat;
