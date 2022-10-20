@@ -11,3 +11,5 @@ gradlew run
 
 Tested with java 17, Windows 10
 
+![alt text](https://github.com/andvisk/mineSweeperHelper/blob/master/screenshot.jpg)
+
