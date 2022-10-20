@@ -189,99 +189,6 @@ public class Board {
             anyChanges = false;
 
             //
-            // mark safe cells
-            //
-            for (Map.Entry<Integer, Set<Set<MineSweeperGridCell>>> entry : mapByToFlagCellsCountOnSetsOfUncheckedCells
-                    .entrySet()) {
-                int toFlagCount = entry.getKey();
-
-                Set<Set<MineSweeperGridCell>> entrySet = entry.getValue();
-
-                List<Map.Entry<Integer, Set<Set<MineSweeperGridCell>>>> mapWithLessToFlagMembers = mapByToFlagCellsCountOnSetsOfUncheckedCells
-                        .entrySet().stream().filter(p -> p.getKey() < toFlagCount).toList();
-
-                List<Set<MineSweeperGridCell>> listToFlag = new ArrayList<>();
-
-                for (Map.Entry<Integer, Set<Set<MineSweeperGridCell>>> entryToCheck : mapWithLessToFlagMembers) {
-                    int toFlagCountCheck = entryToCheck.getKey();
-                    Set<Set<MineSweeperGridCell>> setCheck = entryToCheck.getValue();
-                    for (Set<MineSweeperGridCell> setCompare : setCheck) {
-
-                        for (Set<MineSweeperGridCell> p : entrySet) {
-                            if (p.size() > setCompare.size()
-                                    && (p.size() - setCompare.size()) == toFlagCount - toFlagCountCheck) {
-                                Set<MineSweeperGridCell> tmpSet = new HashSet<>(p);
-                                tmpSet.retainAll(setCompare);
-                                Set<MineSweeperGridCell> tmpSetToFlag = new HashSet<>(p);
-                                tmpSetToFlag.removeAll(setCompare);
-
-                                if (p.stream().filter(o -> o.positionInGridX == 8 && o.positionInGridY == 6)
-                                        .findAny().isPresent() &&
-                                        p.stream().filter(o -> o.positionInGridX == 9 && o.positionInGridY == 6)
-                                                .findAny().isPresent()
-                                        &&
-                                        p.stream().filter(o -> o.positionInGridX == 10 && o.positionInGridY == 6)
-                                                .findAny().isPresent()
-                                        &&
-                                        setCompare.stream()
-                                                .filter(o -> o.positionInGridX == 8 && o.positionInGridY == 6)
-                                                .findAny().isPresent()
-                                        &&
-                                        setCompare.stream()
-                                                .filter(o -> o.positionInGridX == 9 && o.positionInGridY == 6)
-                                                .findAny().isPresent()) {
-                                    int kkkk = 0;
-                                }
-
-                                if (tmpSet.size() == setCompare.size()
-                                        && tmpSetToFlag.size() == toFlagCount - toFlagCountCheck) {
-                                    tmpSetToFlag.forEach(o -> o.setCellTypeEnum(CellTypeEnum.FLAG));
-                                    listToFlag.add(tmpSetToFlag);
-                                    anyChanges = true;
-                                }
-                            }
-                            if (anyChanges)
-                                break;
-                        }
-                        if (anyChanges)
-                            break;
-                    }
-                    if (anyChanges)
-                        break;
-                }
-
-                if (listToFlag.size() > 0) {
-                    ++step;
-                    if (App.debug)
-                        printSolveDebugSteps(step, listToFlag.stream().flatMap(p -> p.stream()).toList(), list,
-                                debugDir, debugMat, toFlagCount);
-                    anyChanges = true;
-                    break;
-                }
-                if (anyChanges)
-                    break;
-            }
-
-            /* for (MineSweeperGridCell number : list.stream()
-                    .filter(p -> p.getCellTypeEnum().compareTo(CellTypeEnum.NUMBER) == 0).toList()) {
-                List<MineSweeperGridCell> neighbours = getNeighbourCells(list, number);
-                List<MineSweeperGridCell> neighboursUnchecked = neighbours.stream()
-                        .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.UNCHECKED)).toList();
-                List<MineSweeperGridCell> neighboursFlags = neighbours.stream()
-                        .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.FLAG)).toList();
-                if (neighboursFlags.size() == number.getNumber() && neighboursUnchecked.size() > 0) {
-                    neighboursUnchecked.stream().forEach(p -> {
-                        p.setCellTypeEnum(CellTypeEnum.NEEDS_TO_BE_CHECKED);
-                    });
-                    ++step;
-                    if (App.debug)
-                        printSolveDebugSteps(step, neighboursUnchecked, list, debugDir, debugMat, 0);
-                    anyChanges = true;
-                }
-
-            }
- */
-            //
             // to mark count == unchecked count
             //
             if (!anyChanges)
@@ -383,7 +290,95 @@ public class Board {
                         break;
                 }
 
-            // src/test/resources/src3.png number 6 and number 1 on the right side
+            // check empty slots
+            for (MineSweeperGridCell number : list.stream()
+                    .filter(p -> p.getCellTypeEnum().compareTo(CellTypeEnum.NUMBER) == 0).toList()) {
+                List<MineSweeperGridCell> neighbours = getNeighbourCells(list, number);
+                List<MineSweeperGridCell> neighboursUnchecked = neighbours.stream()
+                        .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.UNCHECKED)).toList();
+                List<MineSweeperGridCell> neighboursFlags = neighbours.stream()
+                        .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.FLAG)).toList();
+                if (neighboursFlags.size() == number.getNumber() && neighboursUnchecked.size() > 0) {
+                    neighboursUnchecked.stream().forEach(p -> {
+                        p.setCellTypeEnum(CellTypeEnum.NEEDS_TO_BE_CHECKED);
+                    });
+                    anyChanges = true;
+                }
+            }
+
+            //
+            // mark safe cells depending on neighbour numbers possibly markings
+            //
+
+            for (Map.Entry<Integer, Set<Set<MineSweeperGridCell>>> entry : mapByToFlagCellsCountOnSetsOfUncheckedCells
+                    .entrySet()) {
+
+                List<Set<MineSweeperGridCell>> listNeetTocheck = new ArrayList<>();
+
+                int toFlagCount = entry.getKey();
+
+                Set<Set<MineSweeperGridCell>> entrySet = entry.getValue();
+
+                for (Map.Entry<Integer, Set<Set<MineSweeperGridCell>>> entryToCheck : mapByToFlagCellsCountOnSetsOfUncheckedCells
+                        .entrySet()) {
+                    int toFlagCountCheck = entryToCheck.getKey();
+                    Set<Set<MineSweeperGridCell>> setCheck = entryToCheck.getValue();
+
+                    for (Set<MineSweeperGridCell> setCompare : setCheck) {
+
+                        for (Set<MineSweeperGridCell> p : entrySet) {
+                            if (p.size() > setCompare.size() && toFlagCount == toFlagCountCheck) {
+                                Set<MineSweeperGridCell> tmpSet = new HashSet<>(p);
+                                tmpSet.retainAll(setCompare);
+                                Set<MineSweeperGridCell> tmpSetNeetTocheck = new HashSet<>(p);
+                                tmpSetNeetTocheck.removeAll(setCompare);
+
+                                if (p.stream().filter(o -> o.positionInGridX == 8 && o.positionInGridY == 6)
+                                        .findAny().isPresent() &&
+                                        p.stream().filter(o -> o.positionInGridX == 9 && o.positionInGridY == 6)
+                                                .findAny().isPresent()
+                                        &&
+                                        p.stream().filter(o -> o.positionInGridX == 10 && o.positionInGridY == 6)
+                                                .findAny().isPresent()
+                                        &&
+                                        setCompare.stream()
+                                                .filter(o -> o.positionInGridX == 8 && o.positionInGridY == 6)
+                                                .findAny().isPresent()
+                                        &&
+                                        setCompare.stream()
+                                                .filter(o -> o.positionInGridX == 9 && o.positionInGridY == 6)
+                                                .findAny().isPresent()) {
+                                    int kkkk = 0;
+                                }
+
+                                if (tmpSet.size() == setCompare.size()) {
+                                    tmpSetNeetTocheck.forEach(o -> o.setCellTypeEnum(CellTypeEnum.NEEDS_TO_BE_CHECKED));
+                                    listNeetTocheck.add(tmpSetNeetTocheck);
+                                    anyChanges = true;
+                                }
+                            }
+                            if (anyChanges)
+                                break;
+                        }
+                        if (anyChanges)
+                            break;
+                    }
+                    if (anyChanges)
+                        break;
+                }
+
+                if (listNeetTocheck.size() > 0) {
+                    ++step;
+                    if (App.debug)
+                        printSolveDebugSteps(step, listNeetTocheck.stream().flatMap(p -> p.stream()).toList(), list,
+                                debugDir, debugMat, toFlagCount);
+                    anyChanges = true;
+                    break;
+                }
+                if (anyChanges)
+                    break;
+            }
+
         }
 
     }
