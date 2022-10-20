@@ -1,5 +1,7 @@
 package minesweeperhelper;
 
+import java.util.UUID;
+
 import org.opencv.core.Rect;
 
 public class MineSweeperGridCell extends RectArea {
@@ -9,6 +11,7 @@ public class MineSweeperGridCell extends RectArea {
     public MineSweeperGridCell(CellTypeEnum cellTypeEnum, Rect rect, int number, ColorsEnum colorsEnum) {
         super.rectangle = rect;
         super.color = colorsEnum;
+        super.id = UUID.randomUUID();
         this.cellTypeEnum = cellTypeEnum;
         this.number = number;
     }

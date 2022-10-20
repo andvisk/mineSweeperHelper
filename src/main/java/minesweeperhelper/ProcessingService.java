@@ -33,6 +33,7 @@ public class ProcessingService extends Service<HelpScreenResult> {
     public static String debugDir = "debug";
     public static String debugContoursDir = "debug_contours";
     public static String debugRemoveConformSeqDir = "debug_remove_conform_seq";
+    public static String debugSolvingDir = "debug_solving";
 
     public ProcessingService(Mat mainScreenShot, int minGridHorizontalMembers,
             int minGridVerticalMembers,
@@ -47,6 +48,7 @@ public class ProcessingService extends Service<HelpScreenResult> {
             FileUtils.checkDirExists(debugDir, true);
             FileUtils.checkDirExists(debugContoursDir, true);
             FileUtils.checkDirExists(debugRemoveConformSeqDir, true);
+            FileUtils.checkDirExists(debugSolvingDir, true);
         }
     }
 

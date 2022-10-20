@@ -1,5 +1,6 @@
 package minesweeperhelper;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -18,10 +20,12 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Rect;
 import org.opencv.core.Size;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 public class Board {
 
+    private UUID id;
     private MineSweeperGridCell[][] grid;
     private GridLocation gridLocation;
     public boolean cellIsEnougthSizeToOcr = false;
@@ -29,6 +33,7 @@ public class Board {
     public static final String increaseBoardSizeMsg = "Increase board size to increase accuracy";
 
     public Board(int width, int height, GridLocation gridLocation) {
+        this.id = UUID.randomUUID();
         this.gridLocation = gridLocation;
         grid = new MineSweeperGridCell[width][height];
     }
@@ -63,7 +68,7 @@ public class Board {
                                 p.getCellTypeEnum().equals(CellTypeEnum.FLAG))
                 .collect(Collectors.toList()));
 
-        solveBoard2(list);
+        solveBoard2(list, screenShot.clone());
 
         List<MineSweeperGridCell> cellsForHelp = uncheckedAndFlagsSet.stream()
                 .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.NEEDS_TO_BE_CHECKED) ||
@@ -164,42 +169,236 @@ public class Board {
             solveBoard(list);
     }
 
-    private void solveBoard2(List<MineSweeperGridCell> list) {
+    private void solveBoard2(List<MineSweeperGridCell> list, Mat debugMat) {
 
-        AtomicBoolean anyChanges = new AtomicBoolean(false);
+        int step = 0;
 
-        Map<Integer, Set<Set<MineSweeperGridCell>>> mapByToFlagCellsCountOnSetsOfUncheckedCells = getMapByToFlagCellsCountOnSetsOfUncheckedCells(
-                list);
+        boolean anyChanges = true;
 
-        while (anyChanges.get()) {
+        String debugDir = ProcessingService.debugSolvingDir + File.separatorChar + this.id.toString();
 
-            anyChanges.set(false);
+        if (App.debug)
+            FileUtils.checkDirExists(debugDir, true);
 
-            // to mark count == unchecked count
+        Map<Integer, Set<Set<MineSweeperGridCell>>> mapByToFlagCellsCountOnSetsOfUncheckedCells = null;
 
-            mapByToFlagCellsCountOnSetsOfUncheckedCells.entrySet().stream()
-                    .forEach(p -> {
+        while (anyChanges) {
 
-                        int toFlagCount = p.getKey();
+            mapByToFlagCellsCountOnSetsOfUncheckedCells = getMapByToFlagCellsCountOnSetsOfUncheckedCells(list);
 
-                        Set<Set<MineSweeperGridCell>> set = p.getValue();
+            anyChanges = false;
 
-                        List<Set<MineSweeperGridCell>> listToFlag = set.stream().filter(l -> toFlagCount == l.size())
-                                .toList();
+            //
+            // mark safe cells
+            //
+            for (Map.Entry<Integer, Set<Set<MineSweeperGridCell>>> entry : mapByToFlagCellsCountOnSetsOfUncheckedCells
+                    .entrySet()) {
+                int toFlagCount = entry.getKey();
 
-                        listToFlag.stream().flatMap(o -> o.stream()).forEach(k -> {
-                            k.setCellTypeEnum(CellTypeEnum.FLAG);
-                        });
+                Set<Set<MineSweeperGridCell>> entrySet = entry.getValue();
 
-                        if (listToFlag.size() > 0) {
-                            anyChanges.set(true);
+                List<Map.Entry<Integer, Set<Set<MineSweeperGridCell>>>> mapWithLessToFlagMembers = mapByToFlagCellsCountOnSetsOfUncheckedCells
+                        .entrySet().stream().filter(p -> p.getKey() < toFlagCount).toList();
+
+                List<Set<MineSweeperGridCell>> listToFlag = new ArrayList<>();
+
+                for (Map.Entry<Integer, Set<Set<MineSweeperGridCell>>> entryToCheck : mapWithLessToFlagMembers) {
+                    int toFlagCountCheck = entryToCheck.getKey();
+                    Set<Set<MineSweeperGridCell>> setCheck = entryToCheck.getValue();
+                    for (Set<MineSweeperGridCell> setCompare : setCheck) {
+
+                        for (Set<MineSweeperGridCell> p : entrySet) {
+                            if (p.size() > setCompare.size()
+                                    && (p.size() - setCompare.size()) == toFlagCount - toFlagCountCheck) {
+                                Set<MineSweeperGridCell> tmpSet = new HashSet<>(p);
+                                tmpSet.retainAll(setCompare);
+                                Set<MineSweeperGridCell> tmpSetToFlag = new HashSet<>(p);
+                                tmpSetToFlag.removeAll(setCompare);
+
+                                if (p.stream().filter(o -> o.positionInGridX == 8 && o.positionInGridY == 6)
+                                        .findAny().isPresent() &&
+                                        p.stream().filter(o -> o.positionInGridX == 9 && o.positionInGridY == 6)
+                                                .findAny().isPresent()
+                                        &&
+                                        p.stream().filter(o -> o.positionInGridX == 10 && o.positionInGridY == 6)
+                                                .findAny().isPresent()
+                                        &&
+                                        setCompare.stream()
+                                                .filter(o -> o.positionInGridX == 8 && o.positionInGridY == 6)
+                                                .findAny().isPresent()
+                                        &&
+                                        setCompare.stream()
+                                                .filter(o -> o.positionInGridX == 9 && o.positionInGridY == 6)
+                                                .findAny().isPresent()) {
+                                    int kkkk = 0;
+                                }
+
+                                if (tmpSet.size() == setCompare.size()
+                                        && tmpSetToFlag.size() == toFlagCount - toFlagCountCheck) {
+                                    tmpSetToFlag.forEach(o -> o.setCellTypeEnum(CellTypeEnum.FLAG));
+                                    listToFlag.add(tmpSetToFlag);
+                                    anyChanges = true;
+                                }
+                            }
+                            if (anyChanges)
+                                break;
                         }
+                        if (anyChanges)
+                            break;
+                    }
+                    if (anyChanges)
+                        break;
+                }
 
+                if (listToFlag.size() > 0) {
+                    ++step;
+                    if (App.debug)
+                        printSolveDebugSteps(step, listToFlag.stream().flatMap(p -> p.stream()).toList(), list,
+                                debugDir, debugMat, toFlagCount);
+                    anyChanges = true;
+                    break;
+                }
+                if (anyChanges)
+                    break;
+            }
+
+            /* for (MineSweeperGridCell number : list.stream()
+                    .filter(p -> p.getCellTypeEnum().compareTo(CellTypeEnum.NUMBER) == 0).toList()) {
+                List<MineSweeperGridCell> neighbours = getNeighbourCells(list, number);
+                List<MineSweeperGridCell> neighboursUnchecked = neighbours.stream()
+                        .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.UNCHECKED)).toList();
+                List<MineSweeperGridCell> neighboursFlags = neighbours.stream()
+                        .filter(p -> p.getCellTypeEnum().equals(CellTypeEnum.FLAG)).toList();
+                if (neighboursFlags.size() == number.getNumber() && neighboursUnchecked.size() > 0) {
+                    neighboursUnchecked.stream().forEach(p -> {
+                        p.setCellTypeEnum(CellTypeEnum.NEEDS_TO_BE_CHECKED);
                     });
+                    ++step;
+                    if (App.debug)
+                        printSolveDebugSteps(step, neighboursUnchecked, list, debugDir, debugMat, 0);
+                    anyChanges = true;
+                }
+
+            }
+ */
+            //
+            // to mark count == unchecked count
+            //
+            if (!anyChanges)
+                for (Map.Entry<Integer, Set<Set<MineSweeperGridCell>>> entry : mapByToFlagCellsCountOnSetsOfUncheckedCells
+                        .entrySet()) {
+                    int toFlagCount = entry.getKey();
+                    Set<Set<MineSweeperGridCell>> set = entry.getValue();
+                    List<Set<MineSweeperGridCell>> listToFlag = set.stream().filter(l -> toFlagCount == l.size())
+                            .toList();
+
+                    listToFlag.stream().flatMap(o -> o.stream()).forEach(k -> {
+                        k.setCellTypeEnum(CellTypeEnum.FLAG);
+                    });
+
+                    if (listToFlag.size() > 0) {
+                        ++step;
+                        if (App.debug)
+                            printSolveDebugSteps(step, listToFlag.stream().flatMap(p -> p.stream()).toList(), list,
+                                    debugDir, debugMat, toFlagCount);
+                        anyChanges = true;
+                        break;
+                    }
+                }
+
+            if (!anyChanges)
+                // if number has left X cells to flag and second number shows, that it will mark
+                // part of X cells and the remainder will be cells count left to mark minus
+                // second number mark count
+                // better explains situation in src/test/resources/image src3.png -> number 6
+                // and number 1 on the right side
+                for (Map.Entry<Integer, Set<Set<MineSweeperGridCell>>> entry : mapByToFlagCellsCountOnSetsOfUncheckedCells
+                        .entrySet()) {
+                    int toFlagCount = entry.getKey();
+
+                    Set<Set<MineSweeperGridCell>> entrySet = entry.getValue();
+
+                    List<Map.Entry<Integer, Set<Set<MineSweeperGridCell>>>> mapWithLessToFlagMembers = mapByToFlagCellsCountOnSetsOfUncheckedCells
+                            .entrySet().stream().filter(p -> p.getKey() < toFlagCount).toList();
+
+                    List<Set<MineSweeperGridCell>> listToFlag = new ArrayList<>();
+
+                    for (Map.Entry<Integer, Set<Set<MineSweeperGridCell>>> entryToCheck : mapWithLessToFlagMembers) {
+                        int toFlagCountCheck = entryToCheck.getKey();
+                        Set<Set<MineSweeperGridCell>> setCheck = entryToCheck.getValue();
+                        for (Set<MineSweeperGridCell> setCompare : setCheck) {
+
+                            for (Set<MineSweeperGridCell> p : entrySet) {
+                                if (p.size() > setCompare.size()
+                                        && (p.size() - setCompare.size()) == toFlagCount - toFlagCountCheck) {
+                                    Set<MineSweeperGridCell> tmpSet = new HashSet<>(p);
+                                    tmpSet.retainAll(setCompare);
+                                    Set<MineSweeperGridCell> tmpSetToFlag = new HashSet<>(p);
+                                    tmpSetToFlag.removeAll(setCompare);
+
+                                    if (p.stream().filter(o -> o.positionInGridX == 8 && o.positionInGridY == 6)
+                                            .findAny().isPresent() &&
+                                            p.stream().filter(o -> o.positionInGridX == 9 && o.positionInGridY == 6)
+                                                    .findAny().isPresent()
+                                            &&
+                                            p.stream().filter(o -> o.positionInGridX == 10 && o.positionInGridY == 6)
+                                                    .findAny().isPresent()
+                                            &&
+                                            setCompare.stream()
+                                                    .filter(o -> o.positionInGridX == 8 && o.positionInGridY == 6)
+                                                    .findAny().isPresent()
+                                            &&
+                                            setCompare.stream()
+                                                    .filter(o -> o.positionInGridX == 9 && o.positionInGridY == 6)
+                                                    .findAny().isPresent()) {
+                                        int kkkk = 0;
+                                    }
+
+                                    if (tmpSet.size() == setCompare.size()
+                                            && tmpSetToFlag.size() == toFlagCount - toFlagCountCheck) {
+                                        tmpSetToFlag.forEach(o -> o.setCellTypeEnum(CellTypeEnum.FLAG));
+                                        listToFlag.add(tmpSetToFlag);
+                                        anyChanges = true;
+                                    }
+                                }
+                                if (anyChanges)
+                                    break;
+                            }
+                            if (anyChanges)
+                                break;
+                        }
+                        if (anyChanges)
+                            break;
+                    }
+
+                    if (listToFlag.size() > 0) {
+                        ++step;
+                        if (App.debug)
+                            printSolveDebugSteps(step, listToFlag.stream().flatMap(p -> p.stream()).toList(), list,
+                                    debugDir, debugMat, toFlagCount);
+                        anyChanges = true;
+                        break;
+                    }
+                    if (anyChanges)
+                        break;
+                }
 
             // src/test/resources/src3.png number 6 and number 1 on the right side
         }
 
+    }
+
+    private void printSolveDebugSteps(int step, List<MineSweeperGridCell> listToFlag,
+            List<MineSweeperGridCell> list, String debugDir, Mat debugMat, int toFlagCount) {
+        listToFlag.stream().forEach(p -> {
+            GridUtils.printHelpInfo(debugMat, p);
+        });
+        list.stream().forEach(p -> {
+            GridUtils.printDebugInfo(debugMat, p);
+        });
+
+        Imgcodecs.imwrite(debugDir + File.separatorChar + step + "_toMark-" + toFlagCount + ".png",
+                debugMat);
     }
 
     private Map<Integer, Set<Set<MineSweeperGridCell>>> getMapByToFlagCellsCountOnSetsOfUncheckedCells(
@@ -219,7 +418,7 @@ public class Board {
             if (neighboursFlags.size() < number.getNumber() && neighboursUnchecked.size() > 0) {
 
                 Set<Set<MineSweeperGridCell>> setFromMap = mapByToFlagCellsCountOnSetsOfUncheckedCells
-                        .get(number.getNumber());
+                        .get(number.getNumber() - neighboursFlags.size());
 
                 if (setFromMap == null)
                     setFromMap = new HashSet<>();
