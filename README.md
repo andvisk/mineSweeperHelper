@@ -1,11 +1,22 @@
-How to:
+Helps to solve Minesweeper game board.
+
+Install:
+
+OpenCV 4.5.4 -> { 
+    from https://opencv.org/opencv-4-5-4/ Download OpenCV 4.5.4 -> Win pack
+    to C:/opencv/ 
+        or if already installed, set the path in mineSweeperHelper/build.gradle file 
+            def opencvPathWindows = 'C:/path/to/opencv/install/path<strong>/build/java/x64</strong>'
+    }
+
+Tesseract 5.2.0 -> {
+    from https://digi.bib.uni-mannheim.de/tesseract/tesseract-ocr-w64-setup-v5.2.0.20220712.exe
+    to C:\Program_Files\Tesseract_OCR
+        or if already installed, set the path in mineSweeperHelper/build.gradle file 
+            def tesseractPathWindows = 'C:/path/to/tesseract'
+}
 
 git clone https://github.com/andvisk/mineSweeperHelper.git
-
-Install OpenCV 4.5.4 to C:/opencv/ 
-    or if opencv is already installed, set the path in mineSweeperHelper/build.gradle file 
-        systemProperties['java.library.path'] = 'C:/path/to/opencv/install/path/build/java/x64'
-
 cd mineSweeperHelper
 gradlew run
 
