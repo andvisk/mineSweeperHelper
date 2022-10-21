@@ -1,12 +1,12 @@
 Helps to solve Minesweeper game board.<br>
 
-```
+
 {
   "firstName": "John",
   "lastName": "Smith",
   "age": 25
 }
-```
+
 
 <br>
 Install:<br>
