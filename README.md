@@ -28,5 +28,5 @@ gradlew run
 Tested with java 17, Windows 10
 
 <br>
-![alt text](https://github.com/andvisk/mineSweeperHelper/blob/master/screenshot.jpg)
+<img src="https://github.com/andvisk/mineSweeperHelper/blob/master/screenshot.jpg" alt="minesweeper opencv tesseract">
 
