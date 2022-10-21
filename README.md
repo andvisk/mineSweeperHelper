@@ -22,6 +22,9 @@ git clone https://github.com/andvisk/mineSweeperHelper.git
 cd mineSweeperHelper
 gradlew run
 
+
+```
+
 Tested with java 17, Windows 10
 ```
 <br>
