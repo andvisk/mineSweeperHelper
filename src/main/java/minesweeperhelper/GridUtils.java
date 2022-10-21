@@ -299,8 +299,7 @@ public class GridUtils {
             for (int i = 1; i < list.size(); i++) {
                 if (list.get(i - 1).add(widthOrHeight).subtract(list.get(i)).abs().compareTo(
                         widthOrHeight.divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_EVEN)
-                                .multiply(tolleranceInPercent.multiply(BigDecimal.valueOf(2)))) >= 0) { // todo mult by
-                                                                                                        // 2 ???
+                                .multiply(tolleranceInPercent.multiply(BigDecimal.valueOf(2)))) >= 0) { 
                     startPos.add(startingPos);
                     endPos.add(i - 1);
                     startingPos = i;
