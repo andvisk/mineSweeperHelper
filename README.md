@@ -3,7 +3,7 @@ Helps to solve Minesweeper game board.<br>
 Install:<br>
 <br>
 OpenCV 4.5.4 -> { <br>
-&nbsp;from https://opencv.org/opencv-4-5-4/ Download OpenCV 4.5.4 -> Win pack<br>
+for (i in 1:4){cat('&nbsp;')}from https://opencv.org/opencv-4-5-4/ Download OpenCV 4.5.4 -> Win pack<br>
 &nbsp;to C:/opencv/ <br>
 &nbsp;&nbsp;or if already installed, set the path in mineSweeperHelper/build.gradle file <br>
 &nbsp;&nbsp;&nbsp;def opencvPathWindows = 'C:/path/to/opencv/install/path<strong>/build/java/x64</strong>'<br>
