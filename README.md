@@ -1,7 +1,7 @@
-Helps to solve Minesweeper game board.
-
-Install:
-
+Helps to solve Minesweeper game board.<br>
+<br>
+Install:<br>
+<br>
 OpenCV 4.5.4 -> { 
     from https://opencv.org/opencv-4-5-4/ Download OpenCV 4.5.4 -> Win pack
     to C:/opencv/ 
