@@ -1,18 +1,11 @@
 Helps to solve Minesweeper game board.<br>
 
-
-{
-  "firstName": "John",
-  "lastName": "Smith",
-  "age": 25
-}
-
-
+```
 <br>
 Install:<br>
 <br>
 OpenCV 4.5.4 -> { <br>
-for (i in 1:4){cat('&nbsp;')}from https://opencv.org/opencv-4-5-4/ Download OpenCV 4.5.4 -> Win pack<br>
+    for (i in 1:4){cat('&nbsp;')}from https://opencv.org/opencv-4-5-4/ Download OpenCV 4.5.4 -> Win pack<br>
 &nbsp;to C:/opencv/ <br>
 &nbsp;&nbsp;or if already installed, set the path in mineSweeperHelper/build.gradle file <br>
 &nbsp;&nbsp;&nbsp;def opencvPathWindows = 'C:/path/to/opencv/install/path<strong>/build/java/x64</strong>'<br>
@@ -30,6 +23,7 @@ cd mineSweeperHelper<br>
 gradlew run<br>
 <br>
 Tested with java 17, Windows 10<br>
+```
 <br>
 ![alt text](https://github.com/andvisk/mineSweeperHelper/blob/master/screenshot.jpg)
 
